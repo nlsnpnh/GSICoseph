@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
-import { type Criticidade, type ComarcaPin } from "@/data/mockDashboard";
+import { type Criticidade } from "@/data/mockDashboard";
 import { ComarcaDetailDrawer } from "./ComarcaDetailDrawer";
 import muniData from "@/data/ro-municipios.json";
-import { useComarcaMetrics } from "@/hooks/useComarcaMetrics";
+import { useComarcaMetrics, type ComarcaMetric } from "@/hooks/useComarcaMetrics";
 
 const fillByNivel: Record<Criticidade, string> = {
   adequado: "hsl(142 65% 55%)",
@@ -31,7 +31,7 @@ function norm(s: string) {
 }
 
 export function ComarcasMap() {
-  const [selected, setSelected] = useState<ComarcaPin | null>(null);
+  const [selected, setSelected] = useState<ComarcaMetric | null>(null);
   const metrics = useComarcaMetrics();
   const byName = useMemo(() => new Map(metrics.map((m) => [norm(m.nome), m])), [metrics]);
 
@@ -99,7 +99,7 @@ export function ComarcasMap() {
                 stroke="hsl(0 0% 100%)"
                 strokeWidth={0.6}
                 className={c ? "cursor-pointer transition-opacity hover:opacity-80" : ""}
-                onClick={() => c && setSelected({ nome: c.nome, lat: c.lat, lng: c.lng, nivel: c.nivel })}
+                onClick={() => c && setSelected(c)}
               >
                 <title>
                   {c
@@ -118,7 +118,7 @@ export function ComarcasMap() {
                 key={c.nome}
                 transform={`translate(${x - 7}, ${y - 16})`}
                 className="cursor-pointer"
-                onClick={() => setSelected({ nome: c.nome, lat: c.lat, lng: c.lng, nivel: c.nivel })}
+                onClick={() => setSelected(c)}
               >
                 <path
                   d="M7,0 C3.1,0 0,3.1 0,7 C0,12.5 7,18 7,18 C7,18 14,12.5 14,7 C14,3.1 10.9,0 7,0 Z"
