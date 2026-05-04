@@ -28,6 +28,15 @@ export function useAlertas(): Alerta[] {
       return fim >= hoje && fim <= em90dias;
     }).length;
     const equipInoperantes   = equipamentos.filter((e) => e.status === "Inoperante").length;
+    const garantiasVencendo  = equipamentos.filter((e) => {
+      if (!e.garantia_ate) return false;
+      const fim = new Date(e.garantia_ate);
+      return fim >= hoje && fim <= em90dias;
+    }).length;
+    const garantiasVencidas  = equipamentos.filter((e) => {
+      if (!e.garantia_ate) return false;
+      return new Date(e.garantia_ate) < hoje;
+    }).length;
     const manutVencidas      = ocorrencias.filter((o) => {
       if (!o.prazo || o.status === "Concluído" || o.status === "Cancelado") return false;
       return new Date(o.prazo) < hoje;
@@ -66,6 +75,18 @@ export function useAlertas(): Alerta[] {
         label: "Portões com manutenção urgente/alta",
         count: portoesUrgentes,
         unidade: portoesUrgentes === 1 ? "portão" : "portões",
+      },
+      garantiasVencidas > 0 && {
+        tipo: "warning" as const,
+        label: "Garantias de equipamentos vencidas",
+        count: garantiasVencidas,
+        unidade: garantiasVencidas === 1 ? "equipamento" : "equipamentos",
+      },
+      garantiasVencendo > 0 && {
+        tipo: "info" as const,
+        label: "Garantias vencendo em 90 dias",
+        count: garantiasVencendo,
+        unidade: garantiasVencendo === 1 ? "equipamento" : "equipamentos",
       },
     ].filter(Boolean) as Alerta[];
   }, [contratos, equipamentos, ocorrencias, portoes]);

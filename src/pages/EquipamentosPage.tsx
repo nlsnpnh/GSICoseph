@@ -38,10 +38,13 @@ const schema = z.object({
   fabricante: z.string().trim().max(80).optional().or(z.literal("")),
   modelo: z.string().trim().max(80).optional().or(z.literal("")),
   numero_serie: z.string().trim().max(80).optional().or(z.literal("")),
+  numero_patrimonio: z.string().trim().max(60).optional().or(z.literal("")),
   localizacao: z.string().trim().min(2, "Informe a localização").max(120),
   data_instalacao: z.string().optional().or(z.literal("")),
   ultima_manutencao: z.string().optional().or(z.literal("")),
   proxima_manutencao: z.string().optional().or(z.literal("")),
+  garantia_ate: z.string().optional().or(z.literal("")),
+  contrato_vinculado: z.string().trim().max(60).optional().or(z.literal("")),
   status: z.enum(STATUS_EQUIPAMENTO),
   observacoes: z.string().max(2000).optional().or(z.literal("")),
 });
@@ -73,8 +76,9 @@ const statusTone: Record<StatusEquipamento, string> = {
 
 const defaults: FormData = {
   unidade_id: "", tipo: "Câmera", identificacao: "", fabricante: "", modelo: "",
-  numero_serie: "", localizacao: "", data_instalacao: "", ultima_manutencao: "",
-  proxima_manutencao: "", status: "Operacional", observacoes: "",
+  numero_serie: "", numero_patrimonio: "", localizacao: "", data_instalacao: "",
+  ultima_manutencao: "", proxima_manutencao: "", garantia_ate: "",
+  contrato_vinculado: "", status: "Operacional", observacoes: "",
 };
 
 const fmtDate = (d: string) => (d ? new Date(d + "T00:00:00").toLocaleDateString("pt-BR") : "—");
@@ -130,10 +134,13 @@ export default function EquipamentosPage() {
       fabricante: data.fabricante ?? "",
       modelo: data.modelo ?? "",
       numero_serie: data.numero_serie ?? "",
+      numero_patrimonio: data.numero_patrimonio ?? "",
       localizacao: data.localizacao,
       data_instalacao: data.data_instalacao ?? "",
       ultima_manutencao: data.ultima_manutencao ?? "",
       proxima_manutencao: data.proxima_manutencao ?? "",
+      garantia_ate: data.garantia_ate ?? "",
+      contrato_vinculado: data.contrato_vinculado ?? "",
       status: data.status,
       observacoes: data.observacoes ?? "",
     };
@@ -193,11 +200,12 @@ export default function EquipamentosPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Identificação</TableHead>
+                <TableHead>Patrimônio</TableHead>
                 <TableHead>Tipo</TableHead>
                 <TableHead>Unidade</TableHead>
-                <TableHead>Localização</TableHead>
                 <TableHead>Modelo</TableHead>
-                <TableHead>Próxima manutenção</TableHead>
+                <TableHead>Garantia até</TableHead>
+                <TableHead>Próx. manutenção</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="w-[100px] text-right">Ações</TableHead>
               </TableRow>
@@ -208,15 +216,18 @@ export default function EquipamentosPage() {
                 return (
                   <TableRow key={e.id}>
                     <TableCell className="font-medium">{e.identificacao}</TableCell>
+                    <TableCell className="text-muted-foreground">{e.numero_patrimonio || "—"}</TableCell>
                     <TableCell>
                       <span className="inline-flex items-center gap-1.5 text-muted-foreground">
                         <Icon className="h-4 w-4" />{e.tipo}
                       </span>
                     </TableCell>
                     <TableCell className="text-muted-foreground">{unidadeNome(e.unidade_id)}</TableCell>
-                    <TableCell className="text-muted-foreground">{e.localizacao}</TableCell>
                     <TableCell className="text-muted-foreground">
                       {[e.fabricante, e.modelo].filter(Boolean).join(" • ") || "—"}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {e.garantia_ate ? <GarantiaBadge data={e.garantia_ate} /> : "—"}
                     </TableCell>
                     <TableCell className="text-muted-foreground">{fmtDate(e.proxima_manutencao)}</TableCell>
                     <TableCell>
@@ -280,16 +291,25 @@ export default function EquipamentosPage() {
                 <Field label="Modelo"><Input {...form.register("modelo")} /></Field>
                 <Field label="Número de série"><Input {...form.register("numero_serie")} /></Field>
               </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="Nº de Patrimônio / Tombamento">
+                  <Input {...form.register("numero_patrimonio")} placeholder="Ex.: 2024-00123" />
+                </Field>
+                <Field label="Contrato vinculado">
+                  <Input {...form.register("contrato_vinculado")} placeholder="Ex.: 058/2023" />
+                </Field>
+              </div>
               <Field label="Localização" error={form.formState.errors.localizacao?.message}>
                 <Input {...form.register("localizacao")} placeholder="Ex.: Hall de entrada" />
               </Field>
             </Section>
 
-            <Section title="Manutenção">
-              <div className="grid gap-4 sm:grid-cols-3">
+            <Section title="Datas">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <Field label="Data de instalação"><Input type="date" {...form.register("data_instalacao")} /></Field>
                 <Field label="Última manutenção"><Input type="date" {...form.register("ultima_manutencao")} /></Field>
                 <Field label="Próxima manutenção"><Input type="date" {...form.register("proxima_manutencao")} /></Field>
+                <Field label="Garantia até"><Input type="date" {...form.register("garantia_ate")} /></Field>
               </div>
             </Section>
 
@@ -341,4 +361,14 @@ function Field({ label, error, children }: { label: string; error?: string; chil
       {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   );
+}
+
+function GarantiaBadge({ data }: { data: string }) {
+  const hoje = new Date();
+  const fim  = new Date(data + "T00:00:00");
+  const dias = Math.ceil((fim.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
+  const txt  = fmtDate(data);
+  if (dias < 0)   return <Badge variant="outline" className="text-[10px] bg-critical/10 text-critical border-critical/30">Vencida {txt}</Badge>;
+  if (dias <= 90) return <Badge variant="outline" className="text-[10px] bg-partial/15 text-partial border-partial/30">Vence {txt}</Badge>;
+  return <span className="text-xs text-muted-foreground">{txt}</span>;
 }
