@@ -34,6 +34,11 @@ const aditivoSchema = z.object({
   data: z.string().min(1),
   descricao: z.string().trim().max(300),
 });
+const apostilamentoSchema = z.object({
+  numero: z.string().trim().min(1).max(40),
+  data: z.string().min(1),
+  descricao: z.string().trim().max(300),
+});
 
 const schema = z.object({
   numero: z.string().trim().min(1, "Informe o número").max(40),
@@ -48,6 +53,7 @@ const schema = z.object({
   gestor: z.string().trim().min(2, "Informe o gestor").max(120),
   sla: z.string().trim().max(500).optional().or(z.literal("")),
   aditivos: z.array(aditivoSchema),
+  apostilamentos: z.array(apostilamentoSchema),
   observacoes: z.string().max(2000).optional().or(z.literal("")),
 });
 type FormData = z.infer<typeof schema>;
@@ -63,7 +69,7 @@ const statusTone: Record<StatusContrato, string> = {
 const defaults: FormData = {
   numero: "", empresa: "SegService", objeto: "", data_inicio: "", data_fim: "",
   valor_mensal: 0, valor_total: 0, unidades_atendidas: [],
-  fiscal: "", gestor: "", sla: "", aditivos: [], observacoes: "",
+  fiscal: "", gestor: "", sla: "", aditivos: [], apostilamentos: [], observacoes: "",
 };
 
 const fmtDate = (d: string) => (d ? new Date(d + "T00:00:00").toLocaleDateString("pt-BR") : "—");
@@ -82,7 +88,8 @@ export default function ContratosPage() {
   useEffect(() => { document.title = "Contratos | COSEPH TJRO"; }, []);
 
   const form = useForm<FormData>({ resolver: zodResolver(schema), defaultValues: defaults });
-  const { fields, append, remove } = useFieldArray({ control: form.control, name: "aditivos" });
+  const { fields: fieldsAdit, append: appendAdit, remove: removeAdit } = useFieldArray({ control: form.control, name: "aditivos" });
+  const { fields: fieldsApost, append: appendApost, remove: removeApost } = useFieldArray({ control: form.control, name: "apostilamentos" });
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
@@ -116,6 +123,7 @@ export default function ContratosPage() {
       ...data,
       sla: data.sla ?? "",
       observacoes: data.observacoes ?? "",
+      apostilamentos: data.apostilamentos,
     } as Omit<Contrato, "id">;
     try {
       if (editing) {
@@ -178,7 +186,7 @@ export default function ContratosPage() {
                 <TableHead>Valor mensal / total</TableHead>
                 <TableHead>Unidades</TableHead>
                 <TableHead>Fiscal / Gestor</TableHead>
-                <TableHead>Aditivos</TableHead>
+                <TableHead>Adit. / Apost.</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="w-[100px] text-right">Ações</TableHead>
               </TableRow>
@@ -210,7 +218,12 @@ export default function ContratosPage() {
                       <div>{c.fiscal}</div>
                       <div className="text-muted-foreground">{c.gestor}</div>
                     </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{c.aditivos.length}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      <span title="Aditivos">{c.aditivos.length} adit.</span>
+                      {c.apostilamentos.length > 0 && (
+                        <span className="ml-1 text-blue-600" title="Apostilamentos">/ {c.apostilamentos.length} apost.</span>
+                      )}
+                    </TableCell>
                     <TableCell>
                       <Badge variant="outline" className={statusTone[st]}>
                         {st === "A vencer" || st === "Vencido" ? <AlertTriangle className="mr-1 h-3 w-3" /> : null}
@@ -309,19 +322,39 @@ export default function ContratosPage() {
             </Section>
 
             <Section title="Aditivos">
+              <p className="text-[11px] text-muted-foreground">Alterações formais de objeto, prazo ou valor contratual.</p>
               <div className="space-y-2">
-                {fields.map((f, idx) => (
+                {fieldsAdit.map((f, idx) => (
                   <div key={f.id} className="grid gap-2 rounded-md border border-border bg-card p-3 sm:grid-cols-[1fr_140px_2fr_auto]">
                     <Input placeholder="Nº do aditivo" {...form.register(`aditivos.${idx}.numero` as const)} />
                     <Input type="date" {...form.register(`aditivos.${idx}.data` as const)} />
                     <Input placeholder="Descrição" {...form.register(`aditivos.${idx}.descricao` as const)} />
-                    <Button type="button" variant="ghost" size="icon" onClick={() => remove(idx)}>
+                    <Button type="button" variant="ghost" size="icon" onClick={() => removeAdit(idx)}>
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
                 ))}
-                <Button type="button" variant="outline" size="sm" onClick={() => append({ numero: "", data: "", descricao: "" })}>
+                <Button type="button" variant="outline" size="sm" onClick={() => appendAdit({ numero: "", data: "", descricao: "" })}>
                   <Plus className="mr-1 h-3.5 w-3.5" />Adicionar aditivo
+                </Button>
+              </div>
+            </Section>
+
+            <Section title="Apostilamentos">
+              <p className="text-[11px] text-muted-foreground">Reajustes e correções simples sem alteração do objeto contratual.</p>
+              <div className="space-y-2">
+                {fieldsApost.map((f, idx) => (
+                  <div key={f.id} className="grid gap-2 rounded-md border border-border bg-card p-3 sm:grid-cols-[1fr_140px_2fr_auto]">
+                    <Input placeholder="Nº do apostilamento" {...form.register(`apostilamentos.${idx}.numero` as const)} />
+                    <Input type="date" {...form.register(`apostilamentos.${idx}.data` as const)} />
+                    <Input placeholder="Descrição (ex.: reajuste INPC)" {...form.register(`apostilamentos.${idx}.descricao` as const)} />
+                    <Button type="button" variant="ghost" size="icon" onClick={() => removeApost(idx)}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                <Button type="button" variant="outline" size="sm" onClick={() => appendApost({ numero: "", data: "", descricao: "" })}>
+                  <Plus className="mr-1 h-3.5 w-3.5" />Adicionar apostilamento
                 </Button>
               </div>
             </Section>

@@ -6,7 +6,8 @@ import { EMPRESAS } from "./terceirizadosMock";
 export const STATUS_CONTRATO = ["Vigente", "A vencer", "Vencido", "Encerrado", "Suspenso"] as const;
 export type StatusContrato = (typeof STATUS_CONTRATO)[number];
 
-export type Aditivo = { numero: string; data: string; descricao: string };
+export type Aditivo        = { numero: string; data: string; descricao: string };
+export type Apostilamento  = { numero: string; data: string; descricao: string };
 
 export type Contrato = {
   id: string;
@@ -22,6 +23,7 @@ export type Contrato = {
   gestor: string;
   sla: string;
   aditivos: Aditivo[];
+  apostilamentos: Apostilamento[];
   observacoes: string;
 };
 
@@ -41,6 +43,7 @@ const mapRow = (r: any): Contrato => ({
   gestor: r.gestor ?? "",
   sla: r.sla ?? "",
   aditivos: Array.isArray(r.aditivos) ? r.aditivos : [],
+  apostilamentos: Array.isArray(r.apostilamentos) ? r.apostilamentos : [],
   observacoes: r.observacoes ?? "",
 });
 
@@ -63,6 +66,7 @@ const toPayload = (d: Omit<Contrato, "id">) => ({
   data_inicio: d.data_inicio || null,
   data_fim: d.data_fim || null,
   aditivos: d.aditivos as any,
+  apostilamentos: d.apostilamentos as any,
 });
 
 export async function addContrato(d: Omit<Contrato, "id">) {
