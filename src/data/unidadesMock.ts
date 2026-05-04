@@ -32,6 +32,8 @@ export type UnidadePredial = {
   imagem_url?: string;
   servidor_titular_id?: string | null;
   servidor_substituto_id?: string | null;
+  lat?: number | null;
+  lng?: number | null;
 };
 
 const KEY = ["unidades"];
@@ -53,6 +55,8 @@ const mapRow = (r: any): UnidadePredial => ({
   imagem_url: r.imagem_url ?? "",
   servidor_titular_id: r.servidor_titular_id ?? null,
   servidor_substituto_id: r.servidor_substituto_id ?? null,
+  lat: r.lat ?? null,
+  lng: r.lng ?? null,
 });
 
 export function useUnidadesMock(): UnidadePredial[] {

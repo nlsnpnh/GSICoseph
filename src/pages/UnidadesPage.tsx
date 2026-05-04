@@ -45,6 +45,8 @@ const schema = z.object({
   imagem_url: z.string().optional().or(z.literal("")),
   servidor_titular_id: z.string().optional().or(z.literal("")),
   servidor_substituto_id: z.string().optional().or(z.literal("")),
+  lat: z.coerce.number().min(-90).max(90).optional().or(z.literal("")),
+  lng: z.coerce.number().min(-180).max(180).optional().or(z.literal("")),
 });
 type FormData = z.infer<typeof schema>;
 
@@ -61,6 +63,7 @@ const defaults: FormData = {
   possui_derso: false, controle_acesso: false, vigilancia_eletronica: false,
   criticidade: "Médio", observacoes: "", imagem_url: "",
   servidor_titular_id: "", servidor_substituto_id: "",
+  lat: "", lng: "",
 };
 
 export default function UnidadesPage() {
@@ -98,7 +101,7 @@ export default function UnidadesPage() {
   const openEdit = (u: UnidadePredial) => {
     setEditing(u);
     const { id: _id, ...rest } = u;
-    form.reset(rest);
+    form.reset({ ...rest, lat: rest.lat ?? "", lng: rest.lng ?? "" });
     setOpen(true);
   };
 
@@ -110,6 +113,8 @@ export default function UnidadesPage() {
       imagem_url: data.imagem_url ?? "",
       servidor_titular_id: data.servidor_titular_id || null,
       servidor_substituto_id: data.servidor_substituto_id || null,
+      lat: data.lat !== "" && data.lat !== undefined ? Number(data.lat) : null,
+      lng: data.lng !== "" && data.lng !== undefined ? Number(data.lng) : null,
     } as Omit<UnidadePredial, "id">;
     try {
       if (editing) {
@@ -248,6 +253,21 @@ export default function UnidadesPage() {
               <Field label="Horário de funcionamento" error={form.formState.errors.horario_funcionamento?.message}>
                 <Input {...form.register("horario_funcionamento")} placeholder="Ex.: 07h às 19h" />
               </Field>
+            </Section>
+
+            {/* Coordenadas */}
+            <Section title="Coordenadas geográficas (para o mapa)">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="Latitude">
+                  <Input type="number" step="any" {...form.register("lat")} placeholder="Ex.: -8.7619" />
+                </Field>
+                <Field label="Longitude">
+                  <Input type="number" step="any" {...form.register("lng")} placeholder="Ex.: -63.9039" />
+                </Field>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Coordenadas para posicionar a unidade no mapa. Deixe em branco se desconhecido.
+              </p>
             </Section>
 
             {/* Segurança */}

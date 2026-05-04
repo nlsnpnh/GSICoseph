@@ -3,12 +3,20 @@ import { type Criticidade } from "@/data/mockDashboard";
 import { ComarcaDetailDrawer } from "./ComarcaDetailDrawer";
 import muniData from "@/data/ro-municipios.json";
 import { useComarcaMetrics, type ComarcaMetric } from "@/hooks/useComarcaMetrics";
+import { useUnidadesMock } from "@/data/unidadesMock";
 
 const fillByNivel: Record<Criticidade, string> = {
-  adequado: "hsl(142 65% 55%)",
-  parcial: "hsl(42 95% 60%)",
-  critico: "hsl(0 75% 58%)",
+  adequado:  "hsl(142 65% 55%)",
+  parcial:   "hsl(42 95% 60%)",
+  critico:   "hsl(0 75% 58%)",
   sem_dados: "hsl(215 15% 78%)",
+};
+
+const pinColorByCriticidade: Record<string, string> = {
+  Baixo:   "hsl(142 65% 45%)",
+  Médio:   "hsl(42 95% 50%)",
+  Alto:    "hsl(25 90% 50%)",
+  Crítico: "hsl(0 75% 50%)",
 };
 
 type Feature = {
@@ -23,18 +31,20 @@ type Feature = {
 const FEATURES = (muniData as { features: Feature[] }).features;
 
 function norm(s: string) {
-  return s
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim();
+  return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
 }
 
 export function ComarcasMap() {
   const [selected, setSelected] = useState<ComarcaMetric | null>(null);
-  const metrics = useComarcaMetrics();
-  const byName = useMemo(() => new Map(metrics.map((m) => [norm(m.nome), m])), [metrics]);
+  const metrics  = useComarcaMetrics();
+  const unidades = useUnidadesMock();
+  const byName   = useMemo(() => new Map(metrics.map((m) => [norm(m.nome), m])), [metrics]);
 
+  // Unidades com coordenadas cadastradas
+  const unidadesComCoords = useMemo(
+    () => unidades.filter((u) => u.lat != null && u.lng != null),
+    [unidades],
+  );
 
   const { paths, project, vbW, vbH } = useMemo(() => {
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -47,13 +57,10 @@ export function ComarcasMap() {
     };
     for (const f of FEATURES) collect(f.geometry.coordinates, f.geometry.type);
 
-    // viewBox proporcional ao bbox real (sem áreas vazias)
-    const pad = 6;
-    const scale = 80; // graus -> "unidades SVG"
-    const w = (maxX - minX) * scale;
-    const h = (maxY - minY) * scale;
-    const vbW = w + pad * 2;
-    const vbH = h + pad * 2;
+    const pad   = 6;
+    const scale = 80;
+    const vbW   = (maxX - minX) * scale + pad * 2;
+    const vbH   = (maxY - minY) * scale + pad * 2;
 
     const project = (lng: number, lat: number): [number, number] => [
       pad + (lng - minX) * scale,
@@ -87,6 +94,7 @@ export function ComarcasMap() {
           role="img"
           aria-label="Mapa de Rondônia — nível de estrutura de segurança por comarca"
         >
+          {/* Regiões dos municípios coloridas por nível */}
           {paths.map((p) => {
             const c = byName.get(norm(p.name));
             const fill = c ? fillByNivel[c.nivel] : fillByNivel.sem_dados;
@@ -110,7 +118,27 @@ export function ComarcasMap() {
             );
           })}
 
-          {/* Pins nas comarcas */}
+          {/* Pins menores para unidades prediais com coordenadas */}
+          {unidadesComCoords.map((u) => {
+            const [x, y] = project(u.lng!, u.lat!);
+            const cor = pinColorByCriticidade[u.criticidade] ?? "hsl(215 15% 50%)";
+            return (
+              <g key={u.id} transform={`translate(${x - 5}, ${y - 5})`}>
+                <rect
+                  width={10}
+                  height={10}
+                  rx={2}
+                  fill={cor}
+                  stroke="white"
+                  strokeWidth={1}
+                  opacity={0.95}
+                />
+                <title>{u.nome} ({u.tipo}) — {u.criticidade}</title>
+              </g>
+            );
+          })}
+
+          {/* Pins maiores para comarcas (teardrop) */}
           {metrics.map((c) => {
             const [x, y] = project(c.lng, c.lat);
             return (
