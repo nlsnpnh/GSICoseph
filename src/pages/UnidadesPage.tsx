@@ -27,6 +27,7 @@ import {
   useUnidadesMock, addUnidade, updateUnidade, removeUnidade,
 } from "@/data/unidadesMock";
 import { useServidoresMock } from "@/data/servidoresMock";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 
 const schema = z.object({
@@ -81,6 +82,7 @@ const defaults: FormData = {
 };
 
 export default function UnidadesPage() {
+  const { isOperador } = useAuth();
   const items = useUnidadesMock();
   const servidores = useServidoresMock();
   const [search, setSearch] = useState("");
@@ -167,7 +169,7 @@ export default function UnidadesPage() {
       <PageHeader
         title="Unidades Prediais"
         description="Gestão das edificações sob responsabilidade do TJRO."
-        actions={<Button onClick={openCreate}><Plus className="mr-1 h-4 w-4" />Nova unidade</Button>}
+        actions={!isOperador ? <Button onClick={openCreate}><Plus className="mr-1 h-4 w-4" />Nova unidade</Button> : undefined}
       />
 
       <CrudTableLayout
@@ -206,8 +208,12 @@ export default function UnidadesPage() {
                     <Badge variant="outline" className={criticidadeTone[u.criticidade]}>{u.criticidade}</Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(u)}><Pencil className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => setDeleting(u)}><Trash2 className="h-4 w-4" /></Button>
+                    {!isOperador && (
+                      <>
+                        <Button variant="ghost" size="icon" onClick={() => openEdit(u)}><Pencil className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => setDeleting(u)}><Trash2 className="h-4 w-4" /></Button>
+                      </>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
