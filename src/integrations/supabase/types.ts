@@ -429,6 +429,8 @@ export type Database = {
           horario_funcionamento: string | null
           id: string
           imagem_url: string | null
+          lat: number | null
+          lng: number | null
           nome: string
           observacoes: string | null
           possui_derso: boolean
@@ -449,6 +451,8 @@ export type Database = {
           horario_funcionamento?: string | null
           id?: string
           imagem_url?: string | null
+          lat?: number | null
+          lng?: number | null
           nome: string
           observacoes?: string | null
           possui_derso?: boolean
@@ -469,6 +473,8 @@ export type Database = {
           horario_funcionamento?: string | null
           id?: string
           imagem_url?: string | null
+          lat?: number | null
+          lng?: number | null
           nome?: string
           observacoes?: string | null
           possui_derso?: boolean

@@ -45,8 +45,22 @@ const schema = z.object({
   imagem_url: z.string().optional().or(z.literal("")),
   servidor_titular_id: z.string().optional().or(z.literal("")),
   servidor_substituto_id: z.string().optional().or(z.literal("")),
-  lat: z.coerce.number().min(-90).max(90).optional().or(z.literal("")),
-  lng: z.coerce.number().min(-180).max(180).optional().or(z.literal("")),
+  lat: z.preprocess(
+    (v) => {
+      if (v === "" || v === null || v === undefined) return undefined;
+      const n = Number(String(v).replace(",", "."));
+      return isNaN(n) ? v : n;
+    },
+    z.number({ invalid_type_error: "Latitude inválida" }).min(-90, "Mín -90").max(90, "Máx 90").optional(),
+  ),
+  lng: z.preprocess(
+    (v) => {
+      if (v === "" || v === null || v === undefined) return undefined;
+      const n = Number(String(v).replace(",", "."));
+      return isNaN(n) ? v : n;
+    },
+    z.number({ invalid_type_error: "Longitude inválida" }).min(-180, "Mín -180").max(180, "Máx 180").optional(),
+  ),
 });
 type FormData = z.infer<typeof schema>;
 
@@ -101,7 +115,13 @@ export default function UnidadesPage() {
   const openEdit = (u: UnidadePredial) => {
     setEditing(u);
     const { id: _id, ...rest } = u;
-    form.reset({ ...rest, lat: rest.lat ?? "", lng: rest.lng ?? "" });
+    form.reset({
+      ...rest,
+      servidor_titular_id: rest.servidor_titular_id ?? "",
+      servidor_substituto_id: rest.servidor_substituto_id ?? "",
+      lat: rest.lat ?? "",
+      lng: rest.lng ?? "",
+    });
     setOpen(true);
   };
 
@@ -113,8 +133,8 @@ export default function UnidadesPage() {
       imagem_url: data.imagem_url ?? "",
       servidor_titular_id: data.servidor_titular_id || null,
       servidor_substituto_id: data.servidor_substituto_id || null,
-      lat: data.lat !== "" && data.lat !== undefined ? Number(data.lat) : null,
-      lng: data.lng !== "" && data.lng !== undefined ? Number(data.lng) : null,
+      lat: data.lat ?? null,
+      lng: data.lng ?? null,
     } as Omit<UnidadePredial, "id">;
     try {
       if (editing) {
@@ -201,7 +221,7 @@ export default function UnidadesPage() {
           <DialogHeader>
             <DialogTitle>{editing ? "Editar unidade predial" : "Nova unidade predial"}</DialogTitle>
           </DialogHeader>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
             {/* Identificação */}
             <Section title="Identificação">
               <div className="grid gap-4 sm:grid-cols-2">
@@ -258,11 +278,11 @@ export default function UnidadesPage() {
             {/* Coordenadas */}
             <Section title="Coordenadas geográficas (para o mapa)">
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Latitude">
-                  <Input type="number" step="any" {...form.register("lat")} placeholder="Ex.: -8.7619" />
+                <Field label="Latitude" error={form.formState.errors.lat?.message}>
+                  <Input type="text" inputMode="decimal" {...form.register("lat")} placeholder="Ex.: -8.7619" />
                 </Field>
-                <Field label="Longitude">
-                  <Input type="number" step="any" {...form.register("lng")} placeholder="Ex.: -63.9039" />
+                <Field label="Longitude" error={form.formState.errors.lng?.message}>
+                  <Input type="text" inputMode="decimal" {...form.register("lng")} placeholder="Ex.: -63.9039" />
                 </Field>
               </div>
               <p className="text-[11px] text-muted-foreground">
