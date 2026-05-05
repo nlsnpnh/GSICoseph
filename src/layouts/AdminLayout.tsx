@@ -1,7 +1,7 @@
 import { Outlet, useNavigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { Bell, LogOut, HelpCircle, Sun, Moon, AlertCircle, AlertTriangle, Info } from "lucide-react";
+import { Bell, LogOut, HelpCircle, Sun, Moon, AlertCircle, AlertTriangle, Info, Building2 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,7 +27,7 @@ const notifIcon = {
 } as const;
 
 export default function AdminLayout() {
-  const { user, roles, signOut } = useAuth();
+  const { user, roles, signOut, isOperador, unidadeNome } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { period, setPeriod } = usePeriod();
   const navigate = useNavigate();
@@ -49,6 +49,12 @@ export default function AdminLayout() {
             </div>
 
             <div className="flex items-center gap-2">
+              {isOperador && unidadeNome && (
+                <Badge variant="outline" className="hidden text-xs md:flex items-center gap-1">
+                  <Building2 className="h-3 w-3" />{unidadeNome}
+                </Badge>
+              )}
+
               <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
                 <SelectTrigger className="h-8 w-[150px] text-xs">
                   <SelectValue />

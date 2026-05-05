@@ -14,21 +14,44 @@ type AuthContextValue = {
   isOperador: boolean;
   canEdit: boolean;
   canDelete: boolean;
+  unidadeId: string | null;
+  unidadeNome: string | null;
+  comarcaNome: string | null;
   signOut: () => Promise<void>;
   refreshRoles: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+const sb = supabase as unknown as { from: (t: string) => any };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [loading, setLoading] = useState(true);
+  const [unidadeId, setUnidadeId] = useState<string | null>(null);
+  const [unidadeNome, setUnidadeNome] = useState<string | null>(null);
+  const [comarcaNome, setComarcaNome] = useState<string | null>(null);
 
   const fetchRoles = async (uid: string) => {
-    const { data } = await supabase.from("user_roles").select("role").eq("user_id", uid);
-    setRoles((data?.map((r) => r.role as AppRole)) ?? []);
+    const { data } = await sb.from("user_roles").select("role").eq("user_id", uid);
+    setRoles((data?.map((r: any) => r.role as AppRole)) ?? []);
+  };
+
+  const fetchProfile = async (uid: string) => {
+    const { data: p } = await sb.from("profiles").select("unidade_id").eq("user_id", uid).single();
+    if (p?.unidade_id) {
+      setUnidadeId(p.unidade_id);
+      const { data: u } = await sb.from("unidades").select("nome, comarca").eq("id", p.unidade_id).single();
+      setUnidadeNome(u?.nome ?? null);
+      setComarcaNome(u?.comarca ?? null);
+    } else {
+      setUnidadeId(null);
+      setUnidadeNome(null);
+      setComarcaNome(null);
+    }
   };
 
   useEffect(() => {
@@ -36,42 +59,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(newSession);
       setUser(newSession?.user ?? null);
       if (newSession?.user) {
-        setTimeout(() => fetchRoles(newSession.user.id), 0);
+        setTimeout(() => {
+          fetchRoles(newSession.user.id);
+          fetchProfile(newSession.user.id);
+        }, 0);
       } else {
         setRoles([]);
+        setUnidadeId(null);
+        setUnidadeNome(null);
+        setComarcaNome(null);
       }
     });
 
     supabase.auth.getSession().then(({ data: { session: s } }) => {
       setSession(s);
       setUser(s?.user ?? null);
-      if (s?.user) fetchRoles(s.user.id).finally(() => setLoading(false));
-      else setLoading(false);
+      if (s?.user) {
+        Promise.all([fetchRoles(s.user.id), fetchProfile(s.user.id)]).finally(() => setLoading(false));
+      } else {
+        setLoading(false);
+      }
     });
 
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  const isAdmin = roles.includes("admin");
-  const isGestor = roles.includes("gestor");
-  const isOperador = roles.includes("operador");
+  const isAdmin    = roles.includes("admin");
+  const isGestor   = roles.includes("gestor");
+  const isOperador = roles.includes("operador") && !isAdmin && !isGestor;
 
   const value: AuthContextValue = {
-    session,
-    user,
-    roles,
-    loading,
-    isAdmin,
-    isGestor,
-    isOperador,
-    canEdit: isAdmin || isGestor,
+    session, user, roles, loading,
+    isAdmin, isGestor, isOperador,
+    canEdit: true,
     canDelete: isAdmin,
-    signOut: async () => {
-      await supabase.auth.signOut();
-    },
-    refreshRoles: async () => {
-      if (user) await fetchRoles(user.id);
-    },
+    unidadeId,
+    unidadeNome,
+    comarcaNome,
+    signOut: async () => { await supabase.auth.signOut(); },
+    refreshRoles: async () => { if (user) await fetchRoles(user.id); },
+    refreshProfile: async () => { if (user) await fetchProfile(user.id); },
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

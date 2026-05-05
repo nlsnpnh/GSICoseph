@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Building2, Map, Users, UserCog, Cpu, DoorOpen,
-  FileText, AlertTriangle, BarChart3, Settings, Shield, ChevronRight,
+  FileText, AlertTriangle, BarChart3, Settings, Shield, ChevronRight, Search,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent,
@@ -10,27 +10,30 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 
 const items = [
-  { title: "Painel Executivo", url: "/", icon: LayoutDashboard },
-  { title: "Unidades Prediais", url: "/unidades", icon: Building2 },
-  { title: "Mapa das Comarcas", url: "/comarcas", icon: Map },
-  { title: "Servidores", url: "/servidores", icon: Users },
-  { title: "Terceirizados", url: "/terceirizados", icon: UserCog },
-  { title: "Equipamentos", url: "/equipamentos", icon: Cpu },
-  { title: "Portões e Acessos", url: "/portoes", icon: DoorOpen },
-  { title: "Contratos", url: "/contratos", icon: FileText },
-  { title: "Ocorrências e Manutenções", url: "/ocorrencias", icon: AlertTriangle },
-  { title: "Relatórios", url: "/relatorios", icon: BarChart3 },
-  { title: "Configurações", url: "/configuracoes", icon: Settings },
+  { title: "Painel Executivo",          url: "/",              icon: LayoutDashboard },
+  { title: "Unidades Prediais",         url: "/unidades",      icon: Building2 },
+  { title: "Mapa das Comarcas",         url: "/comarcas",      icon: Map,           adminOnly: true },
+  { title: "Servidores",                url: "/servidores",    icon: Users },
+  { title: "Terceirizados",             url: "/terceirizados", icon: UserCog },
+  { title: "Equipamentos",              url: "/equipamentos",  icon: Cpu },
+  { title: "Portões e Acessos",         url: "/portoes",       icon: DoorOpen },
+  { title: "Contratos",                 url: "/contratos",     icon: FileText,      adminOnly: true },
+  { title: "Ocorrências e Manutenções", url: "/ocorrencias",   icon: AlertTriangle },
+  { title: "Consultas",                 url: "/consultas",     icon: Search,        adminOnly: true },
+  { title: "Relatórios",                url: "/relatorios",    icon: BarChart3,     adminOnly: true },
+  { title: "Configurações",             url: "/configuracoes", icon: Settings,      adminOnly: true },
 ];
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const { pathname } = useLocation();
-  const { user, roles } = useAuth();
+  const { user, roles, isOperador } = useAuth();
   const isActive = (path: string) => (path === "/" ? pathname === "/" : pathname.startsWith(path));
   const initials = (user?.email ?? "U").slice(0, 2).toUpperCase();
   const role = roles[0] ?? "—";
+
+  const visibleItems = isOperador ? items.filter((i) => !(i as any).adminOnly) : items;
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar">
@@ -52,7 +55,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
+              {visibleItems.map((item) => (
                 <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton
                     asChild

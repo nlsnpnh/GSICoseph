@@ -11,7 +11,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { useAuth, AppRole } from "@/contexts/AuthContext";
+import { useUnidadesMock } from "@/data/unidadesMock";
 import { toast } from "@/hooks/use-toast";
 
 type Row = {
@@ -21,6 +25,7 @@ type Row = {
   cargo: string | null;
   lotacao: string | null;
   roles: AppRole[];
+  unidade_id: string | null;
 };
 
 const ALL_ROLES: AppRole[] = ["admin", "gestor", "operador"];
@@ -28,6 +33,7 @@ const ALL_ROLES: AppRole[] = ["admin", "gestor", "operador"];
 export default function ConfiguracoesPage() {
   const { isAdmin, user } = useAuth();
   const qc = useQueryClient();
+  const unidades = useUnidadesMock();
   useEffect(() => { document.title = "Configurações | SIG-COSEPH"; }, []);
 
   const { data: rows = [], isLoading } = useQuery({
@@ -35,7 +41,7 @@ export default function ConfiguracoesPage() {
     queryFn: async (): Promise<Row[]> => {
       const { data: profiles, error: pErr } = await supabase
         .from("profiles")
-        .select("user_id, nome_completo, matricula, cargo, lotacao");
+        .select("user_id, nome_completo, matricula, cargo, lotacao, unidade_id");
       if (pErr) throw pErr;
       const { data: rolesData, error: rErr } = await supabase.from("user_roles").select("user_id, role");
       if (rErr) throw rErr;
@@ -45,7 +51,11 @@ export default function ConfiguracoesPage() {
         arr.push(r.role as AppRole);
         byUser.set(r.user_id, arr);
       });
-      return (profiles ?? []).map((p) => ({ ...p, roles: byUser.get(p.user_id) ?? [] }));
+      return (profiles ?? []).map((p) => ({
+        ...p,
+        unidade_id: (p as any).unidade_id ?? null,
+        roles: byUser.get(p.user_id) ?? [],
+      }));
     },
     enabled: isAdmin,
   });
@@ -63,6 +73,21 @@ export default function ConfiguracoesPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["users-roles"] });
       toast({ title: "Permissões atualizadas" });
+    },
+    onError: (e: Error) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
+  });
+
+  const assignUnidade = useMutation({
+    mutationFn: async ({ userId, unidadeId }: { userId: string; unidadeId: string | null }) => {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ unidade_id: unidadeId || null } as any)
+        .eq("user_id", userId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["users-roles"] });
+      toast({ title: "Unidade atribuída" });
     },
     onError: (e: Error) => toast({ title: "Erro", description: e.message, variant: "destructive" }),
   });
@@ -123,50 +148,77 @@ export default function ConfiguracoesPage() {
                   {ALL_ROLES.map((r) => (
                     <TableHead key={r} className="text-center capitalize">{r}</TableHead>
                   ))}
+                  <TableHead>Unidade vinculada</TableHead>
                   <TableHead className="text-center w-16">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {rows.map((row) => (
-                  <TableRow key={row.user_id}>
-                    <TableCell className="font-medium">
-                      <div>{row.nome_completo ?? "—"}</div>
-                      <div className="text-xs text-muted-foreground">{row.lotacao}</div>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-xs">
-                      <div className="font-mono">{row.matricula ?? "—"}</div>
-                      <div>{row.cargo}</div>
-                    </TableCell>
-                    {ALL_ROLES.map((r) => {
-                      const has = row.roles.includes(r);
-                      const isSelf = row.user_id === user?.id && r === "admin";
-                      return (
-                        <TableCell key={r} className="text-center">
-                          <Checkbox
-                            checked={has}
-                            disabled={isSelf || toggleRole.isPending}
-                            onCheckedChange={() => toggleRole.mutate({ userId: row.user_id, role: r, has })}
-                          />
-                        </TableCell>
-                      );
-                    })}
-                    <TableCell className="text-center">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-destructive hover:text-destructive"
-                        disabled={row.user_id === user?.id}
-                        title={row.user_id === user?.id ? "Não é possível excluir a si mesmo" : "Excluir usuário"}
-                        onClick={() => setToDelete(row)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {rows.map((row) => {
+                  const isOperadorRow = row.roles.includes("operador") && !row.roles.includes("admin") && !row.roles.includes("gestor");
+                  return (
+                    <TableRow key={row.user_id}>
+                      <TableCell className="font-medium">
+                        <div>{row.nome_completo ?? "—"}</div>
+                        <div className="text-xs text-muted-foreground">{row.lotacao}</div>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-xs">
+                        <div className="font-mono">{row.matricula ?? "—"}</div>
+                        <div>{row.cargo}</div>
+                      </TableCell>
+                      {ALL_ROLES.map((r) => {
+                        const has = row.roles.includes(r);
+                        const isSelf = row.user_id === user?.id && r === "admin";
+                        return (
+                          <TableCell key={r} className="text-center">
+                            <Checkbox
+                              checked={has}
+                              disabled={isSelf || toggleRole.isPending}
+                              onCheckedChange={() => toggleRole.mutate({ userId: row.user_id, role: r, has })}
+                            />
+                          </TableCell>
+                        );
+                      })}
+                      <TableCell>
+                        {isOperadorRow ? (
+                          <Select
+                            value={row.unidade_id ?? "none"}
+                            onValueChange={(v) =>
+                              assignUnidade.mutate({ userId: row.user_id, unidadeId: v === "none" ? null : v })
+                            }
+                            disabled={assignUnidade.isPending}
+                          >
+                            <SelectTrigger className="h-8 w-[200px] text-xs">
+                              <SelectValue placeholder="Sem unidade" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">Sem unidade</SelectItem>
+                              {unidades.map((u) => (
+                                <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          disabled={row.user_id === user?.id}
+                          title={row.user_id === user?.id ? "Não é possível excluir a si mesmo" : "Excluir usuário"}
+                          onClick={() => setToDelete(row)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
                 {rows.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={ALL_ROLES.length + 3} className="p-8 text-center text-sm text-muted-foreground">
+                    <TableCell colSpan={ALL_ROLES.length + 4} className="p-8 text-center text-sm text-muted-foreground">
                       Nenhum usuário cadastrado ainda.
                     </TableCell>
                   </TableRow>
@@ -185,8 +237,8 @@ export default function ConfiguracoesPage() {
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground space-y-1">
           <p>• <strong>Admin</strong>: acesso total, incluindo exclusão de registros e gestão de papéis.</p>
-          <p>• <strong>Gestor</strong>: pode criar e editar registros; não pode excluir nem gerenciar papéis.</p>
-          <p>• <strong>Operador</strong>: somente leitura nos cadastros.</p>
+          <p>• <strong>Gestor</strong>: pode criar e editar registros em todas as unidades; não pode excluir nem gerenciar papéis.</p>
+          <p>• <strong>Operador</strong>: supervisor vinculado a uma única unidade predial; vê e gerencia apenas os dados da própria unidade. Não acessa Contratos, Relatórios, Consultas, Configurações nem o Mapa de Comarcas.</p>
         </CardContent>
       </Card>
 

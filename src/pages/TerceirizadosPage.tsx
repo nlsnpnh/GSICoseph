@@ -22,6 +22,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { COMARCAS, useUnidadesMock } from "@/data/unidadesMock";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   EMPRESAS, FUNCOES, ESCALAS_TERC, TURNOS, SITUACOES_TERC,
   type Terceirizado, type SituacaoTerc,
@@ -32,7 +33,7 @@ import { toast } from "@/hooks/use-toast";
 const schema = z.object({
   nome: z.string().trim().min(2, "Mínimo 2 caracteres").max(120),
   cpf: z.string().trim().min(11, "CPF inválido").max(14),
-  empresa: z.enum(EMPRESAS),
+  empresa: z.string().trim().min(1, "Informe a empresa"),
   contrato: z.string().trim().min(1, "Informe o contrato").max(40),
   funcao: z.enum(FUNCOES),
   posto_trabalho: z.string().trim().min(2, "Informe o posto").max(120),
@@ -55,7 +56,7 @@ const situacaoTone: Record<SituacaoTerc, string> = {
 };
 
 const defaults: FormData = {
-  nome: "", cpf: "", empresa: "SegService", contrato: "", funcao: "Vigilante",
+  nome: "", cpf: "", empresa: "", contrato: "", funcao: "Vigilante",
   posto_trabalho: "", unidade: "", comarca: "Porto Velho",
   escala: "12x36 Diurno", turno: "Diurno", situacao: "Ativo",
   certificacoes: "", validade_certificacao: "", observacoes: "",
@@ -74,6 +75,7 @@ function certStatus(d: string): { label: string; tone: string } | null {
 }
 
 export default function TerceirizadosPage() {
+  const { isOperador, unidadeNome: authUnidadeNome, comarcaNome: authComarcaNome } = useAuth();
   const items = useTerceirizadosMock();
   const unidades = useUnidadesMock();
   const [search, setSearch] = useState("");
@@ -110,7 +112,11 @@ export default function TerceirizadosPage() {
 
   const openCreate = () => {
     setEditing(null);
-    form.reset(defaults);
+    if (isOperador) {
+      form.reset({ ...defaults, unidade: authUnidadeNome ?? "", comarca: (authComarcaNome as any) ?? "Porto Velho" });
+    } else {
+      form.reset(defaults);
+    }
     setOpen(true);
   };
   const openEdit = (t: Terceirizado) => {
@@ -255,13 +261,8 @@ export default function TerceirizadosPage() {
 
             <Section title="Empresa e contrato">
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Empresa">
-                  <Select value={form.watch("empresa")} onValueChange={(v) => form.setValue("empresa", v as FormData["empresa"])}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {EMPRESAS.map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                <Field label="Empresa" error={form.formState.errors.empresa?.message}>
+                  <Input {...form.register("empresa")} placeholder="Ex.: SegService" />
                 </Field>
                 <Field label="Contrato" error={form.formState.errors.contrato?.message}>
                   <Input {...form.register("contrato")} placeholder="Ex.: 058/2023" />
@@ -285,18 +286,24 @@ export default function TerceirizadosPage() {
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="Comarca">
-                  <Select value={form.watch("comarca")} onValueChange={(v) => {
-                    form.setValue("comarca", v as FormData["comarca"]);
-                    form.setValue("unidade", "");
-                  }}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {COMARCAS.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  {isOperador ? (
+                    <Input value={authComarcaNome ?? ""} disabled className="bg-muted" />
+                  ) : (
+                    <Select value={form.watch("comarca")} onValueChange={(v) => {
+                      form.setValue("comarca", v as FormData["comarca"]);
+                      form.setValue("unidade", "");
+                    }}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {COMARCAS.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </Field>
                 <Field label="Unidade" error={form.formState.errors.unidade?.message}>
-                  {unidadesDaComarca.length > 0 ? (
+                  {isOperador ? (
+                    <Input value={authUnidadeNome ?? ""} disabled className="bg-muted" />
+                  ) : unidadesDaComarca.length > 0 ? (
                     <Select value={form.watch("unidade")} onValueChange={(v) => form.setValue("unidade", v, { shouldValidate: true })}>
                       <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
                       <SelectContent>

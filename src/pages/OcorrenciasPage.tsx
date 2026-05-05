@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, Pencil, Plus, Trash2, Wrench, Clock } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { AlertTriangle, Download, FileText, Paperclip, Pencil, Plus, Trash2, Upload, Wrench, Clock } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -22,12 +22,16 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { useUnidadesMock } from "@/data/unidadesMock";
+import { useAuth } from "@/contexts/AuthContext";
 import { EMPRESAS } from "@/data/terceirizadosMock";
 import {
   TIPOS_OCORRENCIA, PRIORIDADES, STATUS_OCO,
   type OcorrenciaManut, type PrioridadeOco, type StatusOco,
   useOcorrenciasMock, addOcorrenciaMock, updateOcorrenciaMock, removeOcorrenciaMock,
 } from "@/data/ocorrenciasMock";
+import {
+  useAnexos, useUploadAnexo, useDeleteAnexo, getAnexoSignedUrl, type OcorrenciaAnexo,
+} from "@/data/api";
 import { toast } from "@/hooks/use-toast";
 
 const RESPONSAVEIS = [...EMPRESAS, "Interno"] as const;
@@ -81,6 +85,7 @@ function prazoStatus(prazo: string, status: StatusOco): { atraso: number; alerta
 }
 
 export default function OcorrenciasPage() {
+  const { isOperador, unidadeId, unidadeNome: authUnidadeNome } = useAuth();
   const items = useOcorrenciasMock();
   const unidades = useUnidadesMock();
   const [search, setSearch] = useState("");
@@ -113,7 +118,7 @@ export default function OcorrenciasPage() {
 
   const openCreate = () => {
     setEditing(null);
-    form.reset({ ...defaults, unidade_id: unidades[0]?.id ?? "" });
+    form.reset({ ...defaults, unidade_id: isOperador ? (unidadeId ?? "") : (unidades[0]?.id ?? "") });
     setOpen(true);
   };
   const openEdit = (o: OcorrenciaManut) => {
@@ -278,12 +283,16 @@ export default function OcorrenciasPage() {
             <Section title="Local e equipamento">
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="Unidade" error={form.formState.errors.unidade_id?.message}>
-                  <Select value={form.watch("unidade_id")} onValueChange={(v) => form.setValue("unidade_id", v, { shouldValidate: true })}>
-                    <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-                    <SelectContent>
-                      {unidades.map((u) => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  {isOperador ? (
+                    <Input value={authUnidadeNome ?? ""} disabled className="bg-muted" />
+                  ) : (
+                    <Select value={form.watch("unidade_id")} onValueChange={(v) => form.setValue("unidade_id", v, { shouldValidate: true })}>
+                      <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                      <SelectContent>
+                        {unidades.map((u) => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </Field>
                 <Field label="Equipamento(s) afetado(s)">
                   <Input {...form.register("equipamento")} placeholder="Ex.: CAM-007; PT-EMG" />
@@ -330,6 +339,8 @@ export default function OcorrenciasPage() {
               <Textarea rows={2} {...form.register("observacoes")} />
             </Field>
 
+            {editing && <AnexosSection ocorrenciaId={editing.id} />}
+
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
               <Button type="submit">{editing ? "Salvar alterações" : "Registrar"}</Button>
@@ -353,6 +364,105 @@ export default function OcorrenciasPage() {
         }}
         description={deleting ? `Excluir a ocorrência "${deleting.protocolo} — ${deleting.titulo}"?` : undefined}
       />
+    </div>
+  );
+}
+
+function AnexosSection({ ocorrenciaId }: { ocorrenciaId: string }) {
+  const { data: anexos = [], isLoading } = useAnexos(ocorrenciaId);
+  const upload = useUploadAnexo();
+  const remove = useDeleteAnexo();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleFiles = async (files: FileList | null) => {
+    if (!files) return;
+    for (const file of Array.from(files)) {
+      try {
+        await upload.mutateAsync({ ocorrenciaId, file });
+        toast({ title: `Arquivo "${file.name}" anexado` });
+      } catch (e: any) {
+        toast({ title: "Erro ao anexar", description: e.message, variant: "destructive" });
+      }
+    }
+    if (inputRef.current) inputRef.current.value = "";
+  };
+
+  const handleDownload = async (anexo: OcorrenciaAnexo) => {
+    try {
+      const url = await getAnexoSignedUrl(anexo.storage_path);
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch (e: any) {
+      toast({ title: "Erro ao baixar", description: e.message, variant: "destructive" });
+    }
+  };
+
+  const handleDelete = async (anexo: OcorrenciaAnexo) => {
+    try {
+      await remove.mutateAsync(anexo);
+      toast({ title: `Arquivo "${anexo.nome_arquivo}" removido` });
+    } catch (e: any) {
+      toast({ title: "Erro ao remover", description: e.message, variant: "destructive" });
+    }
+  };
+
+  const fmtSize = (b: number | null) => {
+    if (!b) return "";
+    if (b < 1024) return `${b} B`;
+    if (b < 1048576) return `${(b / 1024).toFixed(1)} KB`;
+    return `${(b / 1048576).toFixed(1)} MB`;
+  };
+
+  return (
+    <div className="space-y-3 rounded-md border border-border bg-muted/20 p-4">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-1.5">
+          <Paperclip className="h-3.5 w-3.5" />Anexos
+        </p>
+        <Button
+          type="button" size="sm" variant="outline"
+          className="h-7 gap-1 text-xs"
+          disabled={upload.isPending}
+          onClick={() => inputRef.current?.click()}
+        >
+          <Upload className="h-3.5 w-3.5" />
+          {upload.isPending ? "Enviando..." : "Adicionar arquivo"}
+        </Button>
+        <input
+          ref={inputRef} type="file" multiple className="hidden"
+          onChange={(e) => handleFiles(e.target.files)}
+        />
+      </div>
+
+      {isLoading && <p className="text-xs text-muted-foreground">Carregando anexos...</p>}
+
+      {!isLoading && anexos.length === 0 && (
+        <p className="text-xs text-muted-foreground italic">Nenhum arquivo anexado.</p>
+      )}
+
+      {anexos.length > 0 && (
+        <ul className="space-y-1.5">
+          {anexos.map((a) => (
+            <li key={a.id} className="flex items-center gap-2 rounded border border-border bg-background px-3 py-2 text-xs">
+              <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <span className="min-w-0 flex-1 truncate font-medium">{a.nome_arquivo}</span>
+              {a.tamanho && <span className="shrink-0 text-muted-foreground">{fmtSize(a.tamanho)}</span>}
+              <span className="shrink-0 text-muted-foreground">
+                {new Date(a.created_at).toLocaleDateString("pt-BR")}
+              </span>
+              <Button type="button" variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => handleDownload(a)}>
+                <Download className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                type="button" variant="ghost" size="icon" className="h-6 w-6 shrink-0 text-destructive hover:text-destructive"
+                disabled={remove.isPending}
+                onClick={() => handleDelete(a)}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/table";
 import { COMARCAS } from "@/data/unidadesMock";
 import { useUnidadesMock } from "@/data/unidadesMock";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   CARGOS, REGIMES, ESCALAS, SITUACOES, type ServidorSeg, type SituacaoFuncional,
   useServidoresMock, addServidorMock, updateServidorMock, removeServidorMock,
@@ -64,6 +65,7 @@ const defaults: FormData = {
 };
 
 export default function ServidoresPage() {
+  const { isOperador, unidadeNome: authUnidadeNome, comarcaNome: authComarcaNome } = useAuth();
   const items = useServidoresMock();
   const unidades = useUnidadesMock();
   const [search, setSearch] = useState("");
@@ -99,7 +101,11 @@ export default function ServidoresPage() {
 
   const openCreate = () => {
     setEditing(null);
-    form.reset(defaults);
+    if (isOperador) {
+      form.reset({ ...defaults, unidade: authUnidadeNome ?? "", comarca: (authComarcaNome as any) ?? "Porto Velho" });
+    } else {
+      form.reset(defaults);
+    }
     setOpen(true);
   };
   const openEdit = (s: ServidorSeg) => {
@@ -248,18 +254,24 @@ export default function ServidoresPage() {
             <Section title="Lotação">
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="Comarca">
-                  <Select value={form.watch("comarca")} onValueChange={(v) => {
-                    form.setValue("comarca", v as FormData["comarca"]);
-                    form.setValue("unidade", "");
-                  }}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {COMARCAS.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  {isOperador ? (
+                    <Input value={authComarcaNome ?? ""} disabled className="bg-muted" />
+                  ) : (
+                    <Select value={form.watch("comarca")} onValueChange={(v) => {
+                      form.setValue("comarca", v as FormData["comarca"]);
+                      form.setValue("unidade", "");
+                    }}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {COMARCAS.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </Field>
                 <Field label="Unidade" error={form.formState.errors.unidade?.message}>
-                  {unidadesDaComarca.length > 0 ? (
+                  {isOperador ? (
+                    <Input value={authUnidadeNome ?? ""} disabled className="bg-muted" />
+                  ) : unidadesDaComarca.length > 0 ? (
                     <Select value={form.watch("unidade")} onValueChange={(v) => form.setValue("unidade", v, { shouldValidate: true })}>
                       <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
                       <SelectContent>

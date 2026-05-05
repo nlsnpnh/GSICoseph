@@ -22,7 +22,6 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { useUnidadesMock } from "@/data/unidadesMock";
-import { EMPRESAS } from "@/data/terceirizadosMock";
 import {
   type Contrato, type StatusContrato,
   useContratosMock, addContrato, updateContrato, removeContrato, statusFromVigencia,
@@ -42,7 +41,7 @@ const apostilamentoSchema = z.object({
 
 const schema = z.object({
   numero: z.string().trim().min(1, "Informe o número").max(40),
-  empresa: z.enum(EMPRESAS),
+  empresa: z.string().trim().min(1, "Informe a empresa"),
   objeto: z.string().trim().min(3, "Descreva o objeto").max(500),
   data_inicio: z.string().min(1, "Informe a data inicial"),
   data_fim: z.string().min(1, "Informe a data final"),
@@ -67,7 +66,7 @@ const statusTone: Record<StatusContrato, string> = {
 };
 
 const defaults: FormData = {
-  numero: "", empresa: "SegService", objeto: "", data_inicio: "", data_fim: "",
+  numero: "", empresa: "", objeto: "", data_inicio: "", data_fim: "",
   valor_mensal: 0, valor_total: 0, unidades_atendidas: [],
   fiscal: "", gestor: "", sla: "", aditivos: [], apostilamentos: [], observacoes: "",
 };
@@ -253,13 +252,8 @@ export default function ContratosPage() {
                 <Field label="Número do contrato" error={form.formState.errors.numero?.message}>
                   <Input {...form.register("numero")} placeholder="Ex.: 058/2023" />
                 </Field>
-                <Field label="Empresa">
-                  <Select value={form.watch("empresa")} onValueChange={(v) => form.setValue("empresa", v as FormData["empresa"])}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {EMPRESAS.map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                <Field label="Empresa" error={form.formState.errors.empresa?.message}>
+                  <Input {...form.register("empresa")} placeholder="Nome da empresa contratada" />
                 </Field>
               </div>
               <Field label="Objeto" error={form.formState.errors.objeto?.message}>

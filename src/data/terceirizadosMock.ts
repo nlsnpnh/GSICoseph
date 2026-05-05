@@ -25,7 +25,7 @@ export type Terceirizado = {
   id: string;
   nome: string;
   cpf: string;
-  empresa: (typeof EMPRESAS)[number];
+  empresa: string;
   contrato: string;
   funcao: (typeof FUNCOES)[number];
   posto_trabalho: string;

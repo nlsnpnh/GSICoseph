@@ -3,6 +3,7 @@ import {
   Cpu, Pencil, Plus, Trash2, Camera, DoorOpen, Bell, ScanLine, Shield, Zap,
   HardDrive, AlertOctagon, Fingerprint, BatteryCharging, Server, Monitor as MonitorIcon,
 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -84,6 +85,7 @@ const defaults: FormData = {
 const fmtDate = (d: string) => (d ? new Date(d + "T00:00:00").toLocaleDateString("pt-BR") : "—");
 
 export default function EquipamentosPage() {
+  const { isOperador, unidadeId, unidadeNome: authUnidadeNome } = useAuth();
   const items = useEquipamentosMock();
   const unidades = useUnidadesMock();
   const [search, setSearch] = useState("");
@@ -116,7 +118,7 @@ export default function EquipamentosPage() {
 
   const openCreate = () => {
     setEditing(null);
-    form.reset({ ...defaults, unidade_id: unidades[0]?.id ?? "" });
+    form.reset({ ...defaults, unidade_id: isOperador ? (unidadeId ?? "") : (unidades[0]?.id ?? "") });
     setOpen(true);
   };
   const openEdit = (e: Equipamento) => {
@@ -254,12 +256,16 @@ export default function EquipamentosPage() {
             <Section title="Vínculo e classificação">
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="Unidade predial" error={form.formState.errors.unidade_id?.message}>
-                  <Select value={form.watch("unidade_id")} onValueChange={(v) => form.setValue("unidade_id", v, { shouldValidate: true })}>
-                    <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-                    <SelectContent>
-                      {unidades.map((u) => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  {isOperador ? (
+                    <Input value={authUnidadeNome ?? ""} disabled className="bg-muted" />
+                  ) : (
+                    <Select value={form.watch("unidade_id")} onValueChange={(v) => form.setValue("unidade_id", v, { shouldValidate: true })}>
+                      <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                      <SelectContent>
+                        {unidades.map((u) => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </Field>
                 <Field label="Tipo de equipamento">
                   <Select value={form.watch("tipo")} onValueChange={(v) => form.setValue("tipo", v as TipoEquipamento)}>

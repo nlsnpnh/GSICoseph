@@ -23,6 +23,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { useUnidadesMock } from "@/data/unidadesMock";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   TIPOS_PORTAO, AUTOMATIZACOES, CONTROLES_ACESSO, SITUACOES_OP, PRIORIDADES_MANUT,
   type PortaoAcesso, type SituacaoOp, type PrioridadeManut,
@@ -70,6 +71,7 @@ const defaults: FormData = {
 };
 
 export default function PortoesPage() {
+  const { isOperador, unidadeId, unidadeNome: authUnidadeNome } = useAuth();
   const items = usePortoesMock();
   const unidades = useUnidadesMock();
   const [search, setSearch] = useState("");
@@ -101,7 +103,7 @@ export default function PortoesPage() {
 
   const openCreate = () => {
     setEditing(null);
-    form.reset({ ...defaults, unidade_id: unidades[0]?.id ?? "" });
+    form.reset({ ...defaults, unidade_id: isOperador ? (unidadeId ?? "") : (unidades[0]?.id ?? "") });
     setOpen(true);
   };
   const openEdit = (p: PortaoAcesso) => {
@@ -233,12 +235,16 @@ export default function PortoesPage() {
             <Section title="Localização e tipo">
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="Unidade predial" error={form.formState.errors.unidade_id?.message}>
-                  <Select value={form.watch("unidade_id")} onValueChange={(v) => form.setValue("unidade_id", v, { shouldValidate: true })}>
-                    <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-                    <SelectContent>
-                      {unidades.map((u) => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  {isOperador ? (
+                    <Input value={authUnidadeNome ?? ""} disabled className="bg-muted" />
+                  ) : (
+                    <Select value={form.watch("unidade_id")} onValueChange={(v) => form.setValue("unidade_id", v, { shouldValidate: true })}>
+                      <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                      <SelectContent>
+                        {unidades.map((u) => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </Field>
                 <Field label="Identificação" error={form.formState.errors.identificacao?.message}>
                   <Input {...form.register("identificacao")} placeholder="Ex.: PT-01" />
