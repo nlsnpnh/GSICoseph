@@ -15,6 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -44,6 +45,7 @@ const schema = z.object({
   situacao: z.enum(SITUACOES_TERC),
   certificacoes: z.string().trim().max(500).optional().or(z.literal("")),
   validade_certificacao: z.string().optional().or(z.literal("")),
+  curso_libras: z.boolean().default(false),
   observacoes: z.string().max(2000).optional().or(z.literal("")),
 });
 type FormData = z.infer<typeof schema>;
@@ -56,10 +58,10 @@ const situacaoTone: Record<SituacaoTerc, string> = {
 };
 
 const defaults: FormData = {
-  nome: "", cpf: "", empresa: "", contrato: "", funcao: "Vigilante",
+  nome: "", cpf: "", empresa: "", contrato: "Contrato nº 23/2024 — Serviços de Portaria nas unidades do TJRO", funcao: "Agente de Portaria",
   posto_trabalho: "", unidade: "", comarca: "Porto Velho",
-  escala: "12x36 Diurno", turno: "Diurno", situacao: "Ativo",
-  certificacoes: "", validade_certificacao: "", observacoes: "",
+  escala: "12x36 horas", turno: "Diurno", situacao: "Ativo",
+  certificacoes: "", validade_certificacao: "", curso_libras: false, observacoes: "",
 };
 
 const fmtDate = (d: string) => (d ? new Date(d + "T00:00:00").toLocaleDateString("pt-BR") : "—");
@@ -131,6 +133,7 @@ export default function TerceirizadosPage() {
       ...data,
       certificacoes: data.certificacoes ?? "",
       validade_certificacao: data.validade_certificacao ?? "",
+      curso_libras: data.curso_libras ?? false,
       observacoes: data.observacoes ?? "",
     } as Omit<Terceirizado, "id">;
     try {
@@ -348,10 +351,17 @@ export default function TerceirizadosPage() {
 
             <Section title="Documentação e certificações">
               <Field label="Certificações / Cursos">
-                <Textarea rows={2} {...form.register("certificacoes")} placeholder="Ex.: CFV; Reciclagem 2025; Porte de arma" />
+                <Textarea rows={2} {...form.register("certificacoes")} placeholder="Ex.: Reciclagem 2025; Primeiros Socorros" />
               </Field>
-              <Field label="Validade da certificação principal">
-                <Input type="date" {...form.register("validade_certificacao")} />
+              <Field label="">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="curso_libras"
+                    checked={form.watch("curso_libras")}
+                    onCheckedChange={(v) => form.setValue("curso_libras", !!v)}
+                  />
+                  <Label htmlFor="curso_libras" className="cursor-pointer">Curso de Libras</Label>
+                </div>
               </Field>
               <Field label="Observações">
                 <Textarea rows={2} {...form.register("observacoes")} placeholder="Informações complementares..." />

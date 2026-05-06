@@ -1,0 +1,2 @@
+ALTER TABLE public.terceirizados
+  ADD COLUMN IF NOT EXISTS curso_libras BOOLEAN NOT NULL DEFAULT FALSE;

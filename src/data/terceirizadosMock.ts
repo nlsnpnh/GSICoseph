@@ -8,12 +8,11 @@ export const EMPRESAS = [
 ] as const;
 
 export const FUNCOES = [
-  "Vigilante", "Vigilante Armado", "Supervisor", "Monitoramento (CFTV)",
-  "Recepção", "Brigadista", "Bombeiro Civil",
+  "Agente de Portaria",
 ] as const;
 
 export const ESCALAS_TERC = [
-  "12x36 Diurno", "12x36 Noturno", "24x48", "44h semanais", "Sobreaviso",
+  "12x36 horas", "44 horas",
 ] as const;
 
 export const TURNOS = ["Diurno", "Noturno", "Integral", "Revezamento"] as const;
@@ -36,6 +35,7 @@ export type Terceirizado = {
   situacao: SituacaoTerc;
   certificacoes: string;
   validade_certificacao: string;
+  curso_libras: boolean;
   observacoes: string;
 };
 
@@ -56,6 +56,7 @@ const mapRow = (r: any): Terceirizado => ({
   situacao: r.situacao,
   certificacoes: r.certificacoes ?? "",
   validade_certificacao: r.validade_certificacao ?? "",
+  curso_libras: r.curso_libras ?? false,
   observacoes: r.observacoes ?? "",
 });
 
