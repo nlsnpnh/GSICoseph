@@ -9,6 +9,7 @@ import { AlertsPanel } from "@/components/dashboard/AlertsPanel";
 import { MapaComarcasCard } from "@/components/dashboard/MapaComarcasCard";
 import { ServidoresPorComarca, EquipamentosDonut } from "@/components/dashboard/MiniCharts";
 import { ModulosSistema } from "@/components/dashboard/ModulosSistema";
+import { useAuth } from "@/contexts/AuthContext";
 import { useUnidadesMock } from "@/data/unidadesMock";
 import { useServidoresMock } from "@/data/servidoresMock";
 import { useTerceirizadosMock } from "@/data/terceirizadosMock";
@@ -18,6 +19,7 @@ import { usePeriod, applyPeriod } from "@/contexts/PeriodContext";
 
 export default function Dashboard() {
   useEffect(() => { document.title = "Painel Executivo | COSEPH TJRO"; }, []);
+  const { isOperador } = useAuth();
   const updated = format(new Date(), "dd/MM/yyyy HH:mm");
 
   const unidades = useUnidadesMock();
@@ -84,7 +86,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <ModulosSistema />
+      {!isOperador && <ModulosSistema />}
     </div>
   );
 }
