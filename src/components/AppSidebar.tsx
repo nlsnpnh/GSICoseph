@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Building2, Map, Users, UserCog, Cpu, DoorOpen,
-  FileText, AlertTriangle, BarChart3, Settings, Shield, ChevronRight, Search,
+  FileText, AlertTriangle, BarChart3, Settings, ChevronRight, Search,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent,
@@ -39,8 +39,8 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar">
       <SidebarHeader className="border-b border-sidebar-border px-4 py-5">
         <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground shadow-sm">
-            <Shield className="h-5 w-5" />
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md overflow-hidden shadow-sm">
+            <img src="/GSI.png" alt="GSI" className="h-10 w-10 object-contain" />
           </div>
           {!collapsed && (
             <div className="flex flex-col leading-tight">
