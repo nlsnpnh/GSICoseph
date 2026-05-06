@@ -4,7 +4,7 @@ import { queryClient } from "@/lib/queryClient";
 import { COMARCAS } from "./unidadesMock";
 
 export const EMPRESAS = [
-  "SegService", "Grupo Protege", "TechSeg", "Portões RO", "Vigilância Total",
+  "AFS Empreendimentos", "SegService", "Grupo Protege", "TechSeg", "Portões RO", "Vigilância Total",
 ] as const;
 
 export const FUNCOES = [

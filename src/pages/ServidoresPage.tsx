@@ -84,10 +84,12 @@ export default function ServidoresPage() {
     [unidades, watchedComarca],
   );
 
+  const effectiveComarcaFilter = isOperador ? (authComarcaNome ?? "all") : comarcaFilter;
+
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
     return items.filter((s) => {
-      if (comarcaFilter !== "all" && s.comarca !== comarcaFilter) return false;
+      if (effectiveComarcaFilter !== "all" && s.comarca !== effectiveComarcaFilter) return false;
       if (situacaoFilter !== "all" && s.situacao !== situacaoFilter) return false;
       return (
         s.nome.toLowerCase().includes(q) ||
@@ -97,7 +99,7 @@ export default function ServidoresPage() {
         s.email.toLowerCase().includes(q)
       );
     });
-  }, [items, search, comarcaFilter, situacaoFilter]);
+  }, [items, search, effectiveComarcaFilter, situacaoFilter]);
 
   const openCreate = () => {
     setEditing(null);
@@ -152,13 +154,15 @@ export default function ServidoresPage() {
         count={filtered.length}
         filters={
           <div className="flex flex-wrap gap-2">
-            <Select value={comarcaFilter} onValueChange={setComarcaFilter}>
-              <SelectTrigger className="h-9 w-[170px]"><SelectValue placeholder="Comarca" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas as comarcas</SelectItem>
-                {COMARCAS.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            {!isOperador && (
+              <Select value={comarcaFilter} onValueChange={setComarcaFilter}>
+                <SelectTrigger className="h-9 w-[170px]"><SelectValue placeholder="Comarca" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as comarcas</SelectItem>
+                  {COMARCAS.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            )}
             <Select value={situacaoFilter} onValueChange={setSituacaoFilter}>
               <SelectTrigger className="h-9 w-[160px]"><SelectValue placeholder="Situação" /></SelectTrigger>
               <SelectContent>

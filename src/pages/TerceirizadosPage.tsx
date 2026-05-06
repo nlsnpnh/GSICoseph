@@ -58,7 +58,7 @@ const situacaoTone: Record<SituacaoTerc, string> = {
 };
 
 const defaults: FormData = {
-  nome: "", cpf: "", empresa: "", contrato: "Contrato nº 23/2024 — Serviços de Portaria nas unidades do TJRO", funcao: "Agente de Portaria",
+  nome: "", cpf: "", empresa: "", contrato: "Contrato nº 23/2024", funcao: "Agente de Portaria",
   posto_trabalho: "", unidade: "", comarca: "Porto Velho",
   escala: "12x36 horas", turno: "Diurno", situacao: "Ativo",
   certificacoes: "", validade_certificacao: "", curso_libras: false, observacoes: "",
