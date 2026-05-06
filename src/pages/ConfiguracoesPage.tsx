@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ShieldCheck, Trash2 } from "lucide-react";
+import { ShieldCheck, Trash2, Lock } from "lucide-react";
 import { ConfirmDelete } from "@/components/ConfirmDelete";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,6 +26,7 @@ type Row = {
   lotacao: string | null;
   roles: AppRole[];
   unidade_id: string | null;
+  super_admin: boolean;
 };
 
 const ALL_ROLES: AppRole[] = ["admin", "gestor", "operador"];
@@ -41,7 +42,7 @@ export default function ConfiguracoesPage() {
     queryFn: async (): Promise<Row[]> => {
       const { data: profiles, error: pErr } = await supabase
         .from("profiles")
-        .select("user_id, nome_completo, matricula, cargo, lotacao, unidade_id");
+        .select("user_id, nome_completo, matricula, cargo, lotacao, unidade_id, super_admin");
       if (pErr) throw pErr;
       const { data: rolesData, error: rErr } = await supabase.from("user_roles").select("user_id, role");
       if (rErr) throw rErr;
@@ -54,6 +55,7 @@ export default function ConfiguracoesPage() {
       return (profiles ?? []).map((p) => ({
         ...p,
         unidade_id: (p as any).unidade_id ?? null,
+        super_admin: (p as any).super_admin ?? false,
         roles: byUser.get(p.user_id) ?? [],
       }));
     },
@@ -155,6 +157,8 @@ export default function ConfiguracoesPage() {
               <TableBody>
                 {rows.map((row) => {
                   const isOperadorRow = row.roles.includes("operador") && !row.roles.includes("admin") && !row.roles.includes("gestor");
+                  const otherAdmins = rows.filter((r) => r.user_id !== row.user_id && r.roles.includes("admin"));
+                  const isSuperAdmin = row.super_admin;
                   return (
                     <TableRow key={row.user_id}>
                       <TableCell className="font-medium">
@@ -167,14 +171,22 @@ export default function ConfiguracoesPage() {
                       </TableCell>
                       {ALL_ROLES.map((r) => {
                         const has = row.roles.includes(r);
-                        const isSelf = row.user_id === user?.id && r === "admin";
+                        const isLastAdmin = row.user_id === user?.id && r === "admin" && otherAdmins.length === 0;
+                        const isProtected = isSuperAdmin && r === "admin";
                         return (
                           <TableCell key={r} className="text-center">
+                            {isProtected ? (
+                              <div className="flex items-center justify-center gap-1" title="Administrador protegido — não pode ser alterado">
+                                <Checkbox checked disabled />
+                                <Lock className="h-3 w-3 text-muted-foreground" />
+                              </div>
+                            ) : (
                             <Checkbox
                               checked={has}
-                              disabled={isSelf || toggleRole.isPending}
+                              disabled={isLastAdmin || toggleRole.isPending}
                               onCheckedChange={() => toggleRole.mutate({ userId: row.user_id, role: r, has })}
                             />
+                            )}
                           </TableCell>
                         );
                       })}
