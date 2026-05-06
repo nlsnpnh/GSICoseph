@@ -60,7 +60,7 @@ const situacaoTone: Record<SituacaoFuncional, string> = {
 
 const defaults: FormData = {
   nome: "", matricula: "", cargo: "Agente de Segurança", funcao_atual: "", unidade: "", comarca: "Porto Velho",
-  regime: "Estatutário", escala: "Expediente (8h)", situacao: "Ativo", email: "", telefone: "",
+  regime: "Estatutário", escala: "Expediente (7h)", situacao: "Ativo", email: "", telefone: "",
   data_ingresso: "", data_nascimento: "", observacoes: "",
 };
 

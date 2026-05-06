@@ -9,13 +9,13 @@ export const CARGOS = [
   "Analista Judiciário",
   "Chefe de Seção",
   "Coordenador",
-  "Inspetor",
+  "Supervisor de Segurança",
 ] as const;
 
 export const REGIMES = ["Estatutário", "Comissionado", "Cedido", "Requisitado"] as const;
 
 export const ESCALAS = [
-  "Expediente (8h)", "12x36 Diurno", "12x36 Noturno", "24x72", "Revezamento", "Sobreaviso",
+  "Expediente (7h)", "12 x 72 horas", "12 x 48 horas", "12 x 36 horas",
 ] as const;
 
 export const SITUACOES = ["Ativo", "Férias", "Licença", "Afastado", "Cedido", "Aposentado"] as const;
