@@ -36,23 +36,15 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar">
-      <SidebarHeader className="border-b border-sidebar-border px-4 py-4 space-y-3">
-        {/* Logo + título */}
-        <div className="flex items-start gap-3">
+      <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
+        <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md overflow-hidden shadow-sm">
             <img src="/GSI.png" alt="GSI" className="h-10 w-10 object-contain" />
           </div>
           {!collapsed && (
-            <div className="flex flex-col leading-tight">
-              <span className="text-base font-bold text-sidebar-primary">COSEPH TJRO</span>
-              <span className="mt-1 text-[10px] leading-snug text-sidebar-foreground/70">
-                Painel Integrado da Coordenadoria de Segurança Patrimonial e Humana
-              </span>
-            </div>
+            <span className="text-base font-bold text-sidebar-primary">COSEPH TJRO</span>
           )}
         </div>
-
-
       </SidebarHeader>
 
       <SidebarContent className="bg-sidebar">
