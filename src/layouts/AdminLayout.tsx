@@ -1,7 +1,8 @@
 import { Outlet, useNavigate } from "react-router-dom";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Bell, LogOut, HelpCircle, Sun, Moon, AlertCircle, AlertTriangle, Info, Building2 } from "lucide-react";
+
 import { useTheme } from "@/contexts/ThemeContext";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,12 +12,8 @@ import {
 import {
   Popover, PopoverContent, PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
-import { usePeriod, type Period } from "@/contexts/PeriodContext";
 import { useAlertas } from "@/hooks/useAlertas";
 import { cn } from "@/lib/utils";
 
@@ -29,7 +26,6 @@ const notifIcon = {
 export default function AdminLayout() {
   const { user, roles, signOut, isOperador, unidadeNome } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const { period, setPeriod } = usePeriod();
   const navigate = useNavigate();
   const alertas = useAlertas();
   const criticalCount = alertas.filter((a) => a.tipo === "critical").length;
@@ -41,31 +37,15 @@ export default function AdminLayout() {
 
         <div className="flex flex-1 flex-col">
           <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-card px-4 shadow-sm">
-            <div className="flex items-center gap-3">
-              <SidebarTrigger />
-              <span className="hidden text-xs font-medium text-muted-foreground md:inline">
-                Painel Integrado da Coordenadoria de Segurança Patrimonial e Humana
-              </span>
-            </div>
-
             <div className="flex items-center gap-2">
               {isOperador && unidadeNome && (
                 <Badge variant="outline" className="hidden text-xs md:flex items-center gap-1">
                   <Building2 className="h-3 w-3" />{unidadeNome}
                 </Badge>
               )}
+            </div>
 
-              <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
-                <SelectTrigger className="h-8 w-[150px] text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos os dados</SelectItem>
-                  <SelectItem value="mes">Último mês</SelectItem>
-                  <SelectItem value="ano">Último ano</SelectItem>
-                </SelectContent>
-              </Select>
-
+            <div className="flex items-center gap-2">
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="ghost" size="icon" className="relative" aria-label="Notificações">

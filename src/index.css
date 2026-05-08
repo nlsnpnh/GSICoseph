@@ -42,14 +42,14 @@
 
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 215 35% 25%;
-    --sidebar-primary: 215 75% 35%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 65% 96%;
-    --sidebar-accent-foreground: 215 75% 30%;
-    --sidebar-border: 215 20% 92%;
-    --sidebar-ring: 215 75% 35%;
+    --sidebar-background: 215 55% 22%;
+    --sidebar-foreground: 210 40% 90%;
+    --sidebar-primary: 42 95% 65%;
+    --sidebar-primary-foreground: 215 65% 15%;
+    --sidebar-accent: 215 45% 32%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 215 45% 30%;
+    --sidebar-ring: 42 95% 65%;
 
     --critical: 0 75% 55%;
     --critical-foreground: 0 0% 100%;

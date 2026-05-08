@@ -1,7 +1,7 @@
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Building2, Map, Users, UserCog, Cpu, DoorOpen,
-  FileText, AlertTriangle, BarChart3, Settings, ChevronRight, Search,
+  FileText, AlertTriangle, BarChart3, Settings, Search, HelpCircle,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent,
@@ -28,6 +28,7 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const { user, roles, isOperador } = useAuth();
   const isActive = (path: string) => (path === "/" ? pathname === "/" : pathname.startsWith(path));
   const initials = (user?.email ?? "U").slice(0, 2).toUpperCase();
@@ -37,15 +38,31 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar">
-      <SidebarHeader className="border-b border-sidebar-border px-4 py-5">
+      <SidebarHeader className="border-b border-sidebar-border px-4 py-4 space-y-3">
+        {/* Logo + título */}
         <div className="flex items-start gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md overflow-hidden shadow-sm">
             <img src="/GSI.png" alt="GSI" className="h-10 w-10 object-contain" />
           </div>
           {!collapsed && (
             <div className="flex flex-col leading-tight">
-              <span className="text-base font-bold text-sidebar-primary">COSEPH</span>
-              <span className="text-xs font-semibold text-sidebar-foreground">TJRO</span>
+              <span className="text-base font-bold text-sidebar-primary">COSEPH TJRO</span>
+              <span className="mt-1 text-[10px] leading-snug text-sidebar-foreground/70">
+                Painel Integrado da Coordenadoria de Segurança Patrimonial e Humana
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Usuário logado */}
+        <div className="flex items-center gap-3 rounded-md bg-sidebar-accent/40 px-2 py-2">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sidebar-primary text-xs font-bold text-sidebar-primary-foreground">
+            {initials}
+          </div>
+          {!collapsed && (
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-semibold text-sidebar-foreground capitalize">{role}</p>
+              <p className="truncate text-[10px] text-sidebar-foreground/60">GSI/COSEPH</p>
             </div>
           )}
         </div>
@@ -60,7 +77,7 @@ export function AppSidebar() {
                   <SidebarMenuButton
                     asChild
                     isActive={isActive(item.url)}
-                    className="data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-primary data-[active=true]:font-semibold data-[active=true]:border-l-4 data-[active=true]:border-sidebar-primary data-[active=true]:rounded-l-none"
+                    className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-white data-[active=true]:bg-sidebar-accent data-[active=true]:text-white data-[active=true]:font-semibold data-[active=true]:border-l-4 data-[active=true]:border-sidebar-primary data-[active=true]:rounded-l-none"
                   >
                     <NavLink to={item.url} end={item.url === "/"}>
                       <item.icon className="h-4 w-4 shrink-0" />
@@ -75,18 +92,20 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border bg-sidebar p-3">
-        <div className="flex items-center gap-3 rounded-md px-2 py-2">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sidebar-primary text-xs font-semibold text-sidebar-primary-foreground">
-            {initials}
-          </div>
+        <button
+          onClick={() => navigate("/ajuda")}
+          className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-white transition-colors"
+        >
+          <HelpCircle className="h-4 w-4 shrink-0" />
           {!collapsed && (
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-semibold text-sidebar-foreground capitalize">{role}</p>
-              <p className="truncate text-[10px] text-sidebar-foreground/60">GSI/COSEPH</p>
+            <div className="min-w-0">
+              <p className="text-xs font-medium">Precisa de ajuda?</p>
+              <p className="text-[10px] text-sidebar-foreground/50 group-hover:text-white/70">
+                Acesse o guia do sistema
+              </p>
             </div>
           )}
-          {!collapsed && <ChevronRight className="h-4 w-4 text-sidebar-foreground/40" />}
-        </div>
+        </button>
       </SidebarFooter>
     </Sidebar>
   );

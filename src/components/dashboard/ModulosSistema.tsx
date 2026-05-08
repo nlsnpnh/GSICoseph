@@ -1,4 +1,4 @@
-import { Search } from "lucide-react";
+import { Search, Building2, CheckCircle2, XCircle } from "lucide-react";
 import { ReactNode, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -126,28 +126,54 @@ export function ModulosSistema() {
         {/* Unidades */}
         <ModuleCard title="Unidades Prediais" footer="Ver todas as unidades" to="/unidades">
           <SearchBar value={qUni} onChange={setQUni} placeholder="Buscar unidade..." />
-          <table className="w-full text-[11px]">
-            <thead className="text-muted-foreground"><tr>
-              <th className="text-left font-medium">Unidade</th>
-              <th className="text-left font-medium">Comarca</th>
-              <th className="text-left font-medium">Crit.</th>
-            </tr></thead>
-            <tbody>
-              {unidadesFiltered.length === 0 ? <EmptyRow cols={3} /> : unidadesFiltered.slice(0, MAX_ROWS).map((u) => (
-                <tr key={u.id} className="border-t border-border">
-                  <td className="py-1.5 font-medium">{u.nome}</td>
-                  <td className="py-1.5 text-muted-foreground">{u.comarca}</td>
-                  <td className="py-1.5">
-                    <Badge variant="outline" className="border-critical/30 bg-critical/10 text-[10px] text-critical">{u.criticidade}</Badge>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {unidadesFiltered.length > MAX_ROWS && (
-            <p className="mt-1 text-center text-[10px] text-muted-foreground">
-              + {unidadesFiltered.length - MAX_ROWS} resultado(s)
-            </p>
+          {unidadesFiltered.length === 0 ? (
+            <p className="py-6 text-center text-[10px] text-muted-foreground">Nenhum resultado</p>
+          ) : (
+            <>
+              {(() => {
+                const u = unidadesFiltered[0];
+                const critColor =
+                  u.criticidade === "Crítico" ? "border-critical/30 bg-critical/10 text-critical"
+                  : u.criticidade === "Alto"   ? "border-partial/30 bg-partial/10 text-partial"
+                  : u.criticidade === "Médio"  ? "border-partial/30 bg-partial/10 text-partial"
+                  : "border-adequate/30 bg-adequate/10 text-adequate";
+                return (
+                  <div className="overflow-hidden rounded-md border border-border">
+                    {u.imagem_url ? (
+                      <img
+                        src={u.imagem_url}
+                        alt={u.nome}
+                        className="h-24 w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-24 items-center justify-center bg-muted/40">
+                        <Building2 className="h-10 w-10 text-muted-foreground/40" />
+                      </div>
+                    )}
+                    <div className="space-y-1 p-2 text-[11px]">
+                      <p className="truncate font-semibold text-foreground">{u.nome}</p>
+                      <p className="truncate text-muted-foreground">{u.comarca} · {u.tipo}</p>
+                      <p className="truncate text-muted-foreground">{u.endereco}</p>
+                      <p className="truncate text-muted-foreground">Resp.: {u.responsavel_local}</p>
+                      <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                        <Badge variant="outline" className={`text-[10px] ${critColor}`}>{u.criticidade}</Badge>
+                        <span className="flex items-center gap-1 text-[10px]">
+                          {u.possui_derso
+                            ? <><CheckCircle2 className="h-3 w-3 text-adequate" /><span className="text-adequate">DERSO</span></>
+                            : <><XCircle className="h-3 w-3 text-muted-foreground" /><span className="text-muted-foreground">Sem DERSO</span></>
+                          }
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+              {unidadesFiltered.length > 1 && (
+                <p className="mt-1.5 text-center text-[10px] text-muted-foreground">
+                  + {unidadesFiltered.length - 1} outra(s) unidade(s)
+                </p>
+              )}
+            </>
           )}
         </ModuleCard>
 

@@ -1,33 +1,70 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Building2, Landmark, Users, UserCog, Camera, DoorOpen, Cpu, Bell,
+  AlertOctagon, FileSearch, FileBarChart2, RefreshCw,
 } from "lucide-react";
 import { format } from "date-fns";
+import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { AlertsPanel } from "@/components/dashboard/AlertsPanel";
 import { MapaComarcasCard } from "@/components/dashboard/MapaComarcasCard";
-import { ServidoresPorComarca, EquipamentosDonut } from "@/components/dashboard/MiniCharts";
-import { ModulosSistema } from "@/components/dashboard/ModulosSistema";
-import { useAuth } from "@/contexts/AuthContext";
-import { useUnidadesMock } from "@/data/unidadesMock";
+import { ServidoresPorComarca, EquipamentosDonut, OcorrenciasPorMes, ContratosVigencia } from "@/components/dashboard/MiniCharts";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { useUnidadesMock, COMARCAS, CRITICIDADES } from "@/data/unidadesMock";
 import { useServidoresMock } from "@/data/servidoresMock";
 import { useTerceirizadosMock } from "@/data/terceirizadosMock";
 import { useEquipamentosMock } from "@/data/equipamentosMock";
 import { usePortoesMock } from "@/data/portoesMock";
-import { usePeriod, applyPeriod } from "@/contexts/PeriodContext";
+import { usePeriod, applyPeriod, type Period } from "@/contexts/PeriodContext";
+
+const ACOES_RAPIDAS = [
+  { label: "Registrar Unidade",    icon: Building2,      to: "/unidades",   color: "text-blue-600",   bg: "bg-blue-50 dark:bg-blue-950/40"   },
+  { label: "Registrar Ocorrência", icon: AlertOctagon,   to: "/ocorrencias", color: "text-red-600",    bg: "bg-red-50 dark:bg-red-950/40"     },
+  { label: "Consultar Contrato",   icon: FileSearch,     to: "/contratos",  color: "text-amber-600",  bg: "bg-amber-50 dark:bg-amber-950/40" },
+  { label: "Gerar Relatório",      icon: FileBarChart2,  to: "/relatorios", color: "text-green-600",  bg: "bg-green-50 dark:bg-green-950/40" },
+];
 
 export default function Dashboard() {
   useEffect(() => { document.title = "Painel Executivo | COSEPH TJRO"; }, []);
-  const { isOperador } = useAuth();
-  const updated = format(new Date(), "dd/MM/yyyy HH:mm");
+  const navigate = useNavigate();
+  const [updated, setUpdated] = useState(() => format(new Date(), "dd/MM/yyyy HH:mm"));
 
-  const unidades = useUnidadesMock();
-  const servidores = useServidoresMock();
-  const terceirizados = useTerceirizadosMock();
-  const equipamentos = useEquipamentosMock();
-  const portoes = usePortoesMock();
-  const { factor, label: periodLabel } = usePeriod();
+  const [filterComarca, setFilterComarca] = useState("todas");
+  const [filterUnidade, setFilterUnidade] = useState("todas");
+  const [filterStatus, setFilterStatus]   = useState("todos");
+
+  const unidadesRaw     = useUnidadesMock();
+  const servidoresRaw   = useServidoresMock();
+  const terceirizadosRaw = useTerceirizadosMock();
+  const equipamentosRaw = useEquipamentosMock();
+  const portoes         = usePortoesMock();
+  const { period, setPeriod, factor } = usePeriod();
+
+  const unidades = useMemo(() =>
+    unidadesRaw
+      .filter((u) => filterComarca === "todas" || u.comarca === filterComarca)
+      .filter((u) => filterStatus  === "todos"  || u.criticidade === filterStatus),
+    [unidadesRaw, filterComarca, filterStatus],
+  );
+
+  const unidadeIds = useMemo(() => new Set(unidades.map((u) => u.id)), [unidades]);
+
+  const unidadesOpcoes = useMemo(() =>
+    unidadesRaw.filter((u) => filterComarca === "todas" || u.comarca === filterComarca),
+    [unidadesRaw, filterComarca],
+  );
+
+  const servidores    = useMemo(() => servidoresRaw.filter((s) =>
+    filterComarca === "todas" || s.comarca === filterComarca), [servidoresRaw, filterComarca]);
+  const terceirizados = useMemo(() => terceirizadosRaw.filter((t) =>
+    filterComarca === "todas" || t.comarca === filterComarca), [terceirizadosRaw, filterComarca]);
+  const equipamentos  = useMemo(() => equipamentosRaw.filter((e) =>
+    filterUnidade === "todas" || e.unidade_id === filterUnidade), [equipamentosRaw, filterUnidade]);
+
+  const handleRefresh = () => setUpdated(format(new Date(), "dd/MM/yyyy HH:mm"));
 
   const stats = useMemo(() => {
     const comarcasComDerso = new Set(unidades.filter((u) => u.possui_derso).map((u) => u.comarca)).size;
@@ -50,17 +87,62 @@ export default function Dashboard() {
       <PageHeader
         title="Painel Executivo"
         description="Visão geral da segurança institucional do TJRO"
-        actions={
-          <div className="flex items-center gap-2">
-            <span className="hidden rounded-md border border-border bg-muted/40 px-3 py-1.5 text-xs text-foreground md:inline-flex">
-              Período: <strong className="ml-1 font-semibold">{periodLabel}</strong>
-            </span>
-            <span className="hidden rounded-md border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground md:inline-flex">
-              Atualizado em: {updated}
-            </span>
-          </div>
-        }
       />
+
+      {/* Barra de filtros */}
+      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-card px-4 py-3 shadow-sm">
+        <span className="text-xs font-semibold text-muted-foreground">Filtros:</span>
+
+        <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
+          <SelectTrigger className="h-8 w-[140px] text-xs">
+            <SelectValue placeholder="Período" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todos os dados</SelectItem>
+            <SelectItem value="mes">Último mês</SelectItem>
+            <SelectItem value="ano">Último ano</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={filterComarca} onValueChange={(v) => { setFilterComarca(v); setFilterUnidade("todas"); }}>
+          <SelectTrigger className="h-8 w-[160px] text-xs">
+            <SelectValue placeholder="Comarca" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todas">Todas as comarcas</SelectItem>
+            {COMARCAS.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+          </SelectContent>
+        </Select>
+
+        <Select value={filterUnidade} onValueChange={setFilterUnidade}>
+          <SelectTrigger className="h-8 w-[180px] text-xs">
+            <SelectValue placeholder="Unidade" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todas">Todas as unidades</SelectItem>
+            {unidadesOpcoes.map((u) => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
+          </SelectContent>
+        </Select>
+
+        <Select value={filterStatus} onValueChange={setFilterStatus}>
+          <SelectTrigger className="h-8 w-[140px] text-xs">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todos os status</SelectItem>
+            {CRITICIDADES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+          </SelectContent>
+        </Select>
+
+        <div className="ml-auto flex items-center gap-2">
+          <button onClick={handleRefresh} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+            <RefreshCw className="h-3 w-3" />
+          </button>
+          <span className="text-xs text-muted-foreground">
+            Última atualização: <strong className="text-foreground">{updated}</strong>
+          </span>
+        </div>
+      </div>
 
       {/* 8 stat cards */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
@@ -74,19 +156,41 @@ export default function Dashboard() {
         <StatCard label="Alarmes e Sensores" value={stats.alarmesSensores} icon={Bell} tone="destructive" href="/equipamentos" hrefLabel="Ver equipamentos" />
       </div>
 
-      {/* Mapa à esquerda; Alertas + (Servidores | Equipamentos) à direita */}
+      {/* Mapa à esquerda; Alertas à direita */}
       <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
         <MapaComarcasCard />
-        <div className="flex flex-col gap-4">
-          <AlertsPanel />
-          <div className="grid gap-4 sm:grid-cols-2">
-            <ServidoresPorComarca />
-            <EquipamentosDonut />
-          </div>
+        <AlertsPanel />
+      </div>
+
+      {/* 4 gráficos em linha abaixo do mapa */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <ServidoresPorComarca />
+        <EquipamentosDonut />
+        <OcorrenciasPorMes />
+        <ContratosVigencia />
+      </div>
+
+      {/* Ações Rápidas */}
+      <div>
+        <h3 className="mb-3 text-center text-sm font-bold uppercase tracking-wider text-foreground">
+          Ações Rápidas
+        </h3>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {ACOES_RAPIDAS.map(({ label, icon: Icon, to, color, bg }) => (
+            <button
+              key={to}
+              onClick={() => navigate(to)}
+              className={`flex items-center gap-3 rounded-lg border border-border p-4 text-left shadow-sm transition-colors hover:bg-muted/50 ${bg}`}
+            >
+              <span className={`rounded-md p-2 ${bg}`}>
+                <Icon className={`h-5 w-5 ${color}`} />
+              </span>
+              <span className="text-sm font-medium text-foreground">{label}</span>
+            </button>
+          ))}
         </div>
       </div>
 
-      {!isOperador && <ModulosSistema />}
     </div>
   );
 }

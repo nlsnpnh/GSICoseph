@@ -23,6 +23,7 @@ import TerceirizadosPage from "./pages/TerceirizadosPage";
 import PortoesPage from "./pages/PortoesPage";
 import ContratosPage from "./pages/ContratosPage";
 import ConsultasPage from "./pages/ConsultasPage";
+import AjudaPage from "./pages/AjudaPage";
 import AuthPage from "./pages/Auth";
 import BootstrapAdminPage from "./pages/BootstrapAdminPage";
 import ResetPasswordPage from "./pages/ResetPassword";
@@ -56,6 +57,7 @@ const App = () => (
                 <Route path="/relatorios" element={<RelatoriosPage />} />
                 <Route path="/configuracoes" element={<ConfiguracoesPage />} />
                 <Route path="/bootstrap-admin" element={<BootstrapAdminPage />} />
+                <Route path="/ajuda" element={<AjudaPage />} />
               </Route>
             </Route>
 
