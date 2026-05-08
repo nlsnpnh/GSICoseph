@@ -42,7 +42,10 @@ export function AppSidebar() {
             <img src="/GSI.png" alt="GSI" className="h-10 w-10 object-contain" />
           </div>
           {!collapsed && (
-            <span className="text-base font-bold text-sidebar-primary">COSEPH TJRO</span>
+            <div className="flex flex-col leading-tight">
+              <span className="text-base font-bold text-sidebar-primary">COSEPH TJRO</span>
+              <span className="text-[10px] text-sidebar-foreground/70">Coordenadoria de Segurança Patrimonial e Humana</span>
+            </div>
           )}
         </div>
       </SidebarHeader>
