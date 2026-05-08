@@ -19,6 +19,13 @@ import { useTerceirizadosMock } from "@/data/terceirizadosMock";
 import { useEquipamentosMock } from "@/data/equipamentosMock";
 import { usePortoesMock } from "@/data/portoesMock";
 import { usePeriod, applyPeriod, type Period } from "@/contexts/PeriodContext";
+import { useAuth } from "@/contexts/AuthContext";
+
+const ROLE_LABEL: Record<string, string> = {
+  admin:    "Administrador",
+  gestor:   "Gestor",
+  operador: "Operador",
+};
 
 const ACOES_RAPIDAS = [
   { label: "Registrar Unidade",    icon: Building2,      to: "/unidades",   color: "text-blue-600",   bg: "bg-blue-50 dark:bg-blue-950/40"   },
@@ -30,7 +37,14 @@ const ACOES_RAPIDAS = [
 export default function Dashboard() {
   useEffect(() => { document.title = "Painel Executivo | COSEPH TJRO"; }, []);
   const navigate = useNavigate();
+  const { user, roles, nomeCompleto } = useAuth();
   const [updated, setUpdated] = useState(() => format(new Date(), "dd/MM/yyyy HH:mm"));
+
+  const emailUser    = (user?.email ?? "").split("@")[0];
+  const nomeExibido  = nomeCompleto ?? (emailUser.charAt(0).toUpperCase() + emailUser.slice(1));
+  const primeiroNome = nomeExibido.split(" ")[0];
+  const iniciais     = nomeExibido.split(" ").filter(Boolean).slice(0, 2).map((p) => p[0].toUpperCase()).join("") || "?";
+  const roleLabel    = ROLE_LABEL[roles[0]] ?? roles[0] ?? "—";
 
   const [filterComarca, setFilterComarca] = useState("todas");
   const [filterUnidade, setFilterUnidade] = useState("todas");
@@ -87,6 +101,17 @@ export default function Dashboard() {
       <PageHeader
         title="Painel Executivo"
         description="Visão geral da segurança institucional do TJRO"
+        actions={
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
+              {iniciais}
+            </div>
+            <div className="leading-tight">
+              <p className="text-sm font-semibold text-foreground">{primeiroNome}</p>
+              <p className="text-xs text-muted-foreground">{roleLabel}</p>
+            </div>
+          </div>
+        }
       />
 
       {/* Barra de filtros */}

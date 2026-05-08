@@ -17,6 +17,7 @@ type AuthContextValue = {
   unidadeId: string | null;
   unidadeNome: string | null;
   comarcaNome: string | null;
+  nomeCompleto: string | null;
   signOut: () => Promise<void>;
   refreshRoles: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -34,6 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [unidadeId, setUnidadeId] = useState<string | null>(null);
   const [unidadeNome, setUnidadeNome] = useState<string | null>(null);
   const [comarcaNome, setComarcaNome] = useState<string | null>(null);
+  const [nomeCompleto, setNomeCompleto] = useState<string | null>(null);
 
   const fetchRoles = async (uid: string) => {
     const { data } = await sb.from("user_roles").select("role").eq("user_id", uid);
@@ -41,7 +43,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const fetchProfile = async (uid: string) => {
-    const { data: p } = await sb.from("profiles").select("unidade_id").eq("user_id", uid).single();
+    const { data: p } = await sb.from("profiles").select("unidade_id, nome_completo").eq("user_id", uid).single();
+    setNomeCompleto(p?.nome_completo ?? null);
     if (p?.unidade_id) {
       setUnidadeId(p.unidade_id);
       const { data: u } = await sb.from("unidades").select("nome, comarca").eq("id", p.unidade_id).single();
@@ -68,6 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUnidadeId(null);
         setUnidadeNome(null);
         setComarcaNome(null);
+        setNomeCompleto(null);
       }
     });
 
@@ -96,6 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     unidadeId,
     unidadeNome,
     comarcaNome,
+    nomeCompleto,
     signOut: async () => { await supabase.auth.signOut(); },
     refreshRoles: async () => { if (user) await fetchRoles(user.id); },
     refreshProfile: async () => { if (user) await fetchProfile(user.id); },

@@ -29,10 +29,13 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const { user, roles, isOperador } = useAuth();
+  const { user, roles, isOperador, nomeCompleto } = useAuth();
   const isActive = (path: string) => (path === "/" ? pathname === "/" : pathname.startsWith(path));
-  const initials = (user?.email ?? "U").slice(0, 2).toUpperCase();
+  const emailUser  = (user?.email ?? "").split("@")[0];
+  const nomeExibido = nomeCompleto ?? (emailUser.charAt(0).toUpperCase() + emailUser.slice(1));
+  const initials   = nomeExibido.split(" ").filter(Boolean).slice(0, 2).map((p) => p[0].toUpperCase()).join("") || "?";
   const role = roles[0] ?? "—";
+  const ROLE_LABEL: Record<string, string> = { admin: "Administrador", gestor: "Gestor", operador: "Operador" };
 
   const visibleItems = isOperador ? items.filter((i) => !(i as any).adminOnly) : items;
 
@@ -61,8 +64,8 @@ export function AppSidebar() {
           </div>
           {!collapsed && (
             <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-semibold text-sidebar-foreground capitalize">{role}</p>
-              <p className="truncate text-[10px] text-sidebar-foreground/60">GSI/COSEPH</p>
+              <p className="truncate text-xs font-semibold text-sidebar-foreground">{nomeExibido}</p>
+              <p className="truncate text-[10px] text-sidebar-foreground/60">{ROLE_LABEL[role] ?? role} · GSI/COSEPH</p>
             </div>
           )}
         </div>
