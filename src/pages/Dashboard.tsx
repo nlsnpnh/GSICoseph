@@ -5,7 +5,6 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
-import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { AlertsPanel } from "@/components/dashboard/AlertsPanel";
 import { MapaComarcasCard } from "@/components/dashboard/MapaComarcasCard";
@@ -98,74 +97,78 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-5">
-      <PageHeader
-        title="Painel Executivo"
-        description="Visão geral da segurança institucional do TJRO"
-        actions={
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
+      {/* Cabeçalho unificado: título + filtros + usuário */}
+      <div className="rounded-lg border border-border bg-card px-5 py-4 shadow-sm">
+        {/* Linha superior: título e usuário */}
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">Painel Executivo</h1>
+            <p className="mt-0.5 text-sm text-muted-foreground">Visão geral da segurança institucional do TJRO</p>
+          </div>
+          <div className="flex shrink-0 items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
               {iniciais}
             </div>
-            <div className="leading-tight">
+            <div className="leading-tight text-right">
               <p className="text-sm font-semibold text-foreground">{primeiroNome}</p>
               <p className="text-xs text-muted-foreground">{roleLabel}</p>
             </div>
           </div>
-        }
-      />
+        </div>
 
-      {/* Barra de filtros */}
-      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-card px-4 py-3 shadow-sm">
-        <span className="text-xs font-semibold text-muted-foreground">Filtros:</span>
+        {/* Linha inferior: filtros e última atualização */}
+        <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-3">
+          <span className="text-xs font-semibold text-muted-foreground">Filtros:</span>
 
-        <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
-          <SelectTrigger className="h-8 w-[140px] text-xs">
-            <SelectValue placeholder="Período" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos os dados</SelectItem>
-            <SelectItem value="mes">Último mês</SelectItem>
-            <SelectItem value="ano">Último ano</SelectItem>
-          </SelectContent>
-        </Select>
+          <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
+            <SelectTrigger className="h-8 w-[140px] text-xs">
+              <SelectValue placeholder="Período" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos os dados</SelectItem>
+              <SelectItem value="mes">Último mês</SelectItem>
+              <SelectItem value="ano">Último ano</SelectItem>
+            </SelectContent>
+          </Select>
 
-        <Select value={filterComarca} onValueChange={(v) => { setFilterComarca(v); setFilterUnidade("todas"); }}>
-          <SelectTrigger className="h-8 w-[160px] text-xs">
-            <SelectValue placeholder="Comarca" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todas">Todas as comarcas</SelectItem>
-            {COMARCAS.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-          </SelectContent>
-        </Select>
+          <Select value={filterComarca} onValueChange={(v) => { setFilterComarca(v); setFilterUnidade("todas"); }}>
+            <SelectTrigger className="h-8 w-[160px] text-xs">
+              <SelectValue placeholder="Comarca" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todas">Todas as comarcas</SelectItem>
+              {COMARCAS.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+            </SelectContent>
+          </Select>
 
-        <Select value={filterUnidade} onValueChange={setFilterUnidade}>
-          <SelectTrigger className="h-8 w-[180px] text-xs">
-            <SelectValue placeholder="Unidade" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todas">Todas as unidades</SelectItem>
-            {unidadesOpcoes.map((u) => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
-          </SelectContent>
-        </Select>
+          <Select value={filterUnidade} onValueChange={setFilterUnidade}>
+            <SelectTrigger className="h-8 w-[180px] text-xs">
+              <SelectValue placeholder="Unidade" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todas">Todas as unidades</SelectItem>
+              {unidadesOpcoes.map((u) => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
+            </SelectContent>
+          </Select>
 
-        <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="h-8 w-[140px] text-xs">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos os status</SelectItem>
-            {CRITICIDADES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-          </SelectContent>
-        </Select>
+          <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <SelectTrigger className="h-8 w-[140px] text-xs">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos os status</SelectItem>
+              {CRITICIDADES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+            </SelectContent>
+          </Select>
 
-        <div className="ml-auto flex items-center gap-2">
-          <button onClick={handleRefresh} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
-            <RefreshCw className="h-3 w-3" />
-          </button>
-          <span className="text-xs text-muted-foreground">
-            Última atualização: <strong className="text-foreground">{updated}</strong>
-          </span>
+          <div className="ml-auto flex items-center gap-2">
+            <button onClick={handleRefresh} className="text-muted-foreground hover:text-foreground">
+              <RefreshCw className="h-3.5 w-3.5" />
+            </button>
+            <span className="text-xs text-muted-foreground">
+              Última atualização: <strong className="text-foreground">{updated}</strong>
+            </span>
+          </div>
         </div>
       </div>
 
