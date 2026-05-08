@@ -28,7 +28,7 @@ export function StatCard({ label, value, icon: Icon, href, hrefLabel, tone = "de
   const actionClassName = "mt-3 border-t border-border pt-2 text-left text-[11px] font-medium text-primary hover:underline";
 
   return (
-    <Card className="flex items-stretch gap-3 border-border p-3 shadow-sm transition-shadow hover:shadow-md">
+    <Card className="flex items-stretch gap-3 border-border p-3 shadow-sm hover:shadow-lg hover:border-primary/30 cursor-pointer">
       <div className={cn("flex w-12 shrink-0 items-center justify-center rounded-md", t.bg)}>
         <Icon className={cn("h-6 w-6", t.icon)} />
       </div>
