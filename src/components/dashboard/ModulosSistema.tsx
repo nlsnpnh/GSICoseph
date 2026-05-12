@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { useUnidadesMock } from "@/data/unidadesMock";
 import { useServidoresMock } from "@/data/servidoresMock";
 import { useTerceirizadosMock } from "@/data/terceirizadosMock";
-import { useEquipamentosMock } from "@/data/equipamentosMock";
+import { useUnidadeEquipamentos } from "@/data/equipamentos";
 import { useContratosMock, statusFromVigencia } from "@/data/contratosMock";
 
 function ModuleCard({ title, children, footer, to }: { title: string; children: ReactNode; footer: string; to: string }) {
@@ -56,12 +56,6 @@ function matches(query: string, ...fields: (string | number | undefined | null)[
   return fields.some((f) => String(f ?? "").toLowerCase().includes(q));
 }
 
-function statusToneEquip(s: string) {
-  if (s === "Operacional") return "bg-adequate/10 text-adequate border-adequate/30";
-  if (s === "Em manutenção") return "bg-partial/15 text-partial border-partial/30";
-  return "bg-critical/10 text-critical border-critical/30";
-}
-
 function statusToneSituacao(s: string) {
   if (s === "Ativo") return "bg-adequate/10 text-adequate border-adequate/30";
   if (s === "Férias" || s === "Licença") return "bg-partial/15 text-partial border-partial/30";
@@ -80,7 +74,7 @@ export function ModulosSistema() {
   const unidades = useUnidadesMock();
   const servidores = useServidoresMock();
   const terceirizados = useTerceirizadosMock();
-  const equipamentos = useEquipamentosMock();
+  const distribuicao = useUnidadeEquipamentos();
   const contratos = useContratosMock();
 
   const [qUni, setQUni] = useState("");
@@ -89,28 +83,29 @@ export function ModulosSistema() {
   const [qEqp, setQEqp] = useState("");
   const [qCont, setQCont] = useState("");
 
+  const unidadeMap = useMemo(
+    () => Object.fromEntries(unidades.map((u) => [u.id, u])),
+    [unidades],
+  );
+
   const unidadesFiltered = useMemo(
-    () => unidades.filter((u) => matches(qUni, u.nome, u.comarca, u.endereco, u.tipo, u.responsavel_local, u.criticidade)),
+    () => unidades.filter((u) => matches(qUni, u.nome, u.comarca_nome, u.endereco, u.responsavel_local)),
     [unidades, qUni],
   );
   const servidoresFiltered = useMemo(
-    () => servidores.filter((s) => matches(qServ, s.nome, s.matricula, s.cargo, s.comarca, s.unidade, s.situacao, s.email)),
+    () => servidores.filter((s) => matches(qServ, s.nome, s.matricula, s.cargo, s.situacao, s.email)),
     [servidores, qServ],
   );
   const terceirizadosFiltered = useMemo(
-    () => terceirizados.filter((t) => matches(qTerc, t.nome, t.cpf, t.empresa, t.funcao, t.unidade, t.comarca, t.situacao)),
+    () => terceirizados.filter((t) => matches(qTerc, t.nome, t.cpf, t.empresa, t.funcao, t.situacao)),
     [terceirizados, qTerc],
   );
 
-  const unidadeNomeById = useMemo(
-    () => Object.fromEntries(unidades.map((u) => [u.id, u.nome])),
-    [unidades],
-  );
-  const equipamentosFiltered = useMemo(
-    () => equipamentos.filter((e) => matches(
-      qEqp, e.tipo, e.identificacao, e.fabricante, e.modelo, e.numero_serie, e.localizacao, e.status, unidadeNomeById[e.unidade_id],
+  const distribuicaoFiltered = useMemo(
+    () => distribuicao.filter((d) => matches(
+      qEqp, d.descricao, d.unidade_nome, d.comarca_nome, String(d.item_num),
     )),
-    [equipamentos, qEqp, unidadeNomeById],
+    [distribuicao, qEqp],
   );
   const contratosFiltered = useMemo(
     () => contratos.filter((c) => matches(qCont, c.numero, c.empresa, c.objeto, c.fiscal, c.gestor, statusFromVigencia(c.data_fim))),
@@ -132,38 +127,22 @@ export function ModulosSistema() {
             <>
               {(() => {
                 const u = unidadesFiltered[0];
-                const critColor =
-                  u.criticidade === "Crítico" ? "border-critical/30 bg-critical/10 text-critical"
-                  : u.criticidade === "Alto"   ? "border-partial/30 bg-partial/10 text-partial"
-                  : u.criticidade === "Médio"  ? "border-partial/30 bg-partial/10 text-partial"
-                  : "border-adequate/30 bg-adequate/10 text-adequate";
                 return (
                   <div className="overflow-hidden rounded-md border border-border">
-                    {u.imagem_url ? (
-                      <img
-                        src={u.imagem_url}
-                        alt={u.nome}
-                        className="h-24 w-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-24 items-center justify-center bg-muted/40">
-                        <Building2 className="h-10 w-10 text-muted-foreground/40" />
-                      </div>
-                    )}
+                    <div className="flex h-20 items-center justify-center bg-muted/40">
+                      <Building2 className="h-8 w-8 text-muted-foreground/40" />
+                    </div>
                     <div className="space-y-1 p-2 text-[11px]">
                       <p className="truncate font-semibold text-foreground">{u.nome}</p>
-                      <p className="truncate text-muted-foreground">{u.comarca} · {u.tipo}</p>
+                      <p className="truncate text-muted-foreground">{u.comarca_nome}</p>
                       <p className="truncate text-muted-foreground">{u.endereco}</p>
                       <p className="truncate text-muted-foreground">Resp.: {u.responsavel_local}</p>
-                      <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-                        <Badge variant="outline" className={`text-[10px] ${critColor}`}>{u.criticidade}</Badge>
-                        <span className="flex items-center gap-1 text-[10px]">
-                          {u.possui_derso
-                            ? <><CheckCircle2 className="h-3 w-3 text-adequate" /><span className="text-adequate">DERSO</span></>
-                            : <><XCircle className="h-3 w-3 text-muted-foreground" /><span className="text-muted-foreground">Sem DERSO</span></>
-                          }
-                        </span>
-                      </div>
+                      <span className="flex items-center gap-1 text-[10px]">
+                        {u.possui_derso
+                          ? <><CheckCircle2 className="h-3 w-3 text-adequate" /><span className="text-adequate">DERSO</span></>
+                          : <><XCircle className="h-3 w-3 text-muted-foreground" /><span className="text-muted-foreground">Sem DERSO</span></>
+                        }
+                      </span>
                     </div>
                   </div>
                 );
@@ -192,7 +171,7 @@ export function ModulosSistema() {
                 <tr key={s.id} className="border-t border-border">
                   <td className="py-1.5 font-medium">{s.nome}</td>
                   <td className="py-1.5 text-muted-foreground">{s.matricula}</td>
-                  <td className="py-1.5 text-muted-foreground">{s.comarca}</td>
+                  <td className="py-1.5 text-muted-foreground">{s.unidade_id ? (unidadeMap[s.unidade_id]?.comarca_nome ?? "—") : "—"}</td>
                   <td className="py-1.5">
                     <Badge variant="outline" className={`${statusToneSituacao(s.situacao)} text-[10px]`}>{s.situacao}</Badge>
                   </td>
@@ -237,30 +216,30 @@ export function ModulosSistema() {
           )}
         </ModuleCard>
 
-        {/* Equipamentos */}
-        <ModuleCard title="Equipamentos" footer="Ver todos os equipamentos" to="/equipamentos">
-          <SearchBar value={qEqp} onChange={setQEqp} placeholder="Buscar equipamento..." />
+        {/* Equipamentos (distribuição do contrato 115/2023) */}
+        <ModuleCard title="Equipamentos" footer="Ver distribuição completa" to="/equipamentos">
+          <SearchBar value={qEqp} onChange={setQEqp} placeholder="Buscar item ou unidade..." />
           <table className="w-full text-[11px]">
             <thead className="text-muted-foreground"><tr>
-              <th className="text-left font-medium">Identif.</th>
-              <th className="text-left font-medium">Tipo</th>
-              <th className="text-left font-medium">Sit.</th>
+              <th className="text-left font-medium">Item</th>
+              <th className="text-left font-medium">Equipamento</th>
+              <th className="text-left font-medium">Unidade</th>
+              <th className="text-right font-medium">Qtd</th>
             </tr></thead>
             <tbody>
-              {equipamentosFiltered.length === 0 ? <EmptyRow cols={3} /> : equipamentosFiltered.slice(0, MAX_ROWS).map((e) => (
-                <tr key={e.id} className="border-t border-border">
-                  <td className="py-1.5 font-medium">{e.identificacao}</td>
-                  <td className="py-1.5 text-muted-foreground">{e.tipo}</td>
-                  <td className="py-1.5">
-                    <Badge variant="outline" className={`${statusToneEquip(e.status)} text-[10px]`}>{e.status}</Badge>
-                  </td>
+              {distribuicaoFiltered.length === 0 ? <EmptyRow cols={4} /> : distribuicaoFiltered.slice(0, MAX_ROWS).map((d) => (
+                <tr key={d.id} className="border-t border-border">
+                  <td className="py-1.5 font-mono text-[10px] text-muted-foreground">#{String(d.item_num).padStart(2, "0")}</td>
+                  <td className="py-1.5 font-medium truncate max-w-[110px]">{d.descricao}</td>
+                  <td className="py-1.5 text-muted-foreground truncate max-w-[90px]">{d.unidade_nome}</td>
+                  <td className="py-1.5 text-right font-mono">{d.quantidade}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-          {equipamentosFiltered.length > MAX_ROWS && (
+          {distribuicaoFiltered.length > MAX_ROWS && (
             <p className="mt-1 text-center text-[10px] text-muted-foreground">
-              + {equipamentosFiltered.length - MAX_ROWS} resultado(s)
+              + {distribuicaoFiltered.length - MAX_ROWS} resultado(s)
             </p>
           )}
         </ModuleCard>

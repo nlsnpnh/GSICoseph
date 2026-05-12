@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { queryClient } from "@/lib/queryClient";
-import { COMARCAS } from "./unidadesMock";
 
 export const CARGOS = [
   "Agente de Segurança",
@@ -27,15 +26,14 @@ export type ServidorSeg = {
   matricula: string;
   cargo: (typeof CARGOS)[number];
   funcao_atual: string;
-  unidade: string;
-  comarca: (typeof COMARCAS)[number];
+  unidade_id: string | null;
   regime: (typeof REGIMES)[number];
   escala: (typeof ESCALAS)[number];
   situacao: SituacaoFuncional;
   email: string;
   telefone: string;
-  data_ingresso: string; // ISO date
-  data_nascimento: string; // ISO date
+  data_ingresso: string;
+  data_nascimento: string;
   observacoes: string;
 };
 
@@ -47,8 +45,7 @@ const mapRow = (r: any): ServidorSeg => ({
   matricula: r.matricula ?? "",
   cargo: r.cargo,
   funcao_atual: r.funcao_atual ?? "",
-  unidade: r.unidade ?? "",
-  comarca: r.comarca,
+  unidade_id: r.unidade_id ?? null,
   regime: r.regime,
   escala: r.escala,
   situacao: r.situacao,

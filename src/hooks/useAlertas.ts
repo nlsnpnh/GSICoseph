@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useContratosMock } from "@/data/contratosMock";
-import { useEquipamentosMock } from "@/data/equipamentosMock";
+import { useEquipamentosCatalogo, useUnidadeEquipamentos } from "@/data/equipamentos";
+import { useUnidadesMock } from "@/data/unidadesMock";
 import { useOcorrenciasMock } from "@/data/ocorrenciasMock";
 import { usePortoesMock } from "@/data/portoesMock";
 
@@ -13,7 +14,9 @@ export type Alerta = {
 
 export function useAlertas(): Alerta[] {
   const contratos    = useContratosMock();
-  const equipamentos = useEquipamentosMock();
+  const catalogo     = useEquipamentosCatalogo();
+  const distribuicao = useUnidadeEquipamentos();
+  const unidades     = useUnidadesMock();
   const ocorrencias  = useOcorrenciasMock();
   const portoes      = usePortoesMock();
 
@@ -22,27 +25,36 @@ export function useAlertas(): Alerta[] {
     const em90dias = new Date(hoje);
     em90dias.setDate(em90dias.getDate() + 90);
 
-    const contratosVencidos  = contratos.filter((c) => new Date(c.data_fim) < hoje).length;
-    const contratosVencendo  = contratos.filter((c) => {
+    const contratosVencidos = contratos.filter((c) => new Date(c.data_fim) < hoje).length;
+    const contratosVencendo = contratos.filter((c) => {
       const fim = new Date(c.data_fim);
       return fim >= hoje && fim <= em90dias;
     }).length;
-    const equipInoperantes   = equipamentos.filter((e) => e.status === "Inoperante").length;
-    const garantiasVencendo  = equipamentos.filter((e) => {
-      if (!e.garantia_ate) return false;
-      const fim = new Date(e.garantia_ate);
-      return fim >= hoje && fim <= em90dias;
-    }).length;
-    const garantiasVencidas  = equipamentos.filter((e) => {
-      if (!e.garantia_ate) return false;
-      return new Date(e.garantia_ate) < hoje;
-    }).length;
-    const manutVencidas      = ocorrencias.filter((o) => {
+
+    const manutVencidas = ocorrencias.filter((o) => {
       if (!o.prazo || o.status === "Concluído" || o.status === "Cancelado") return false;
       return new Date(o.prazo) < hoje;
     }).length;
-    const portoesUrgentes    = portoes.filter((p) =>
+
+    const portoesUrgentes = portoes.filter((p) =>
       p.necessidade_manutencao === "Alta" || p.necessidade_manutencao === "Urgente"
+    ).length;
+
+    // Unidades sem nenhum equipamento do contrato vinculado
+    const comVinculo = new Set(distribuicao.map((d) => d.unidade_id));
+    const unidadesSemEquip = unidades.filter((u) => !comVinculo.has(u.id)).length;
+
+    // Itens do catálogo sem distribuição em nenhuma unidade
+    const itensComVinculo = new Set(distribuicao.map((d) => d.item_num));
+    const itensSemDistribuicao = catalogo.filter((c) => !itensComVinculo.has(c.item_num)).length;
+
+    // Divergências entre catálogo e soma das unidades
+    const distPorItem = new Map<number, number>();
+    for (const d of distribuicao) {
+      distPorItem.set(d.item_num, (distPorItem.get(d.item_num) ?? 0) + d.quantidade);
+    }
+    const itensDivergentes = catalogo.filter(
+      (c) => (distPorItem.get(c.item_num) ?? 0) !== c.qtd_contrato,
     ).length;
 
     return [
@@ -58,12 +70,6 @@ export function useAlertas(): Alerta[] {
         count: contratosVencendo,
         unidade: contratosVencendo === 1 ? "contrato" : "contratos",
       },
-      equipInoperantes > 0 && {
-        tipo: "critical" as const,
-        label: "Equipamentos inoperantes",
-        count: equipInoperantes,
-        unidade: equipInoperantes === 1 ? "equipamento" : "equipamentos",
-      },
       manutVencidas > 0 && {
         tipo: "warning" as const,
         label: "Manutenções com prazo vencido",
@@ -76,18 +82,24 @@ export function useAlertas(): Alerta[] {
         count: portoesUrgentes,
         unidade: portoesUrgentes === 1 ? "portão" : "portões",
       },
-      garantiasVencidas > 0 && {
+      unidadesSemEquip > 0 && {
         tipo: "warning" as const,
-        label: "Garantias de equipamentos vencidas",
-        count: garantiasVencidas,
-        unidade: garantiasVencidas === 1 ? "equipamento" : "equipamentos",
+        label: "Unidades sem equipamentos cadastrados",
+        count: unidadesSemEquip,
+        unidade: unidadesSemEquip === 1 ? "unidade" : "unidades",
       },
-      garantiasVencendo > 0 && {
+      itensSemDistribuicao > 0 && {
         tipo: "info" as const,
-        label: "Garantias vencendo em 90 dias",
-        count: garantiasVencendo,
-        unidade: garantiasVencendo === 1 ? "equipamento" : "equipamentos",
+        label: "Itens do catálogo sem distribuição",
+        count: itensSemDistribuicao,
+        unidade: itensSemDistribuicao === 1 ? "item" : "itens",
+      },
+      itensDivergentes > 0 && {
+        tipo: "info" as const,
+        label: "Itens com divergência contrato × distribuição",
+        count: itensDivergentes,
+        unidade: itensDivergentes === 1 ? "item" : "itens",
       },
     ].filter(Boolean) as Alerta[];
-  }, [contratos, equipamentos, ocorrencias, portoes]);
+  }, [contratos, catalogo, distribuicao, unidades, ocorrencias, portoes]);
 }

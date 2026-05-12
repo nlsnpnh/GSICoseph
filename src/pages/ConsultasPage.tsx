@@ -10,7 +10,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { useUnidadesMock } from "@/data/unidadesMock";
-import { useEquipamentosMock } from "@/data/equipamentosMock";
+import { useEquipamentosCatalogo, useUnidadeEquipamentos } from "@/data/equipamentos";
 import { usePortoesMock } from "@/data/portoesMock";
 import { useServidoresMock } from "@/data/servidoresMock";
 import { useTerceirizadosMock } from "@/data/terceirizadosMock";
@@ -45,7 +45,8 @@ export default function ConsultasPage() {
   useEffect(() => { document.title = "Consultas | COSEPH TJRO"; }, []);
 
   const unidades    = useUnidadesMock();
-  const equipamentos = useEquipamentosMock();
+  const catalogo    = useEquipamentosCatalogo();
+  const distribuicao = useUnidadeEquipamentos();
   const portoes     = usePortoesMock();
   const servidores  = useServidoresMock();
   const terceirizados = useTerceirizadosMock();
@@ -63,141 +64,147 @@ export default function ConsultasPage() {
 
   const queries = useMemo((): QueryDef[] => [
 
-    // ── Equipamentos ──────────────────────────────────────────────
+    // ── Equipamentos (Contrato 115/2023) ──────────────────────────
     {
       id: "cameras-por-comarca",
       title: "Câmeras por comarca",
-      description: "Quantas câmeras há em cada comarca, com breakdown operacional/inoperante.",
+      description: "Soma de câmeras (Dome, Bullet, Fisheye, PTZ) por comarca.",
       category: "Equipamentos",
       icon: Cpu,
       columns: [
-        { key: "comarca",      label: "Comarca" },
-        { key: "total",        label: "Total" },
-        { key: "operacionais", label: "Operacionais" },
-        { key: "inoperantes",  label: "Inoperantes" },
+        { key: "comarca", label: "Comarca" },
+        { key: "dome",    label: "Dome",     className: "text-right" },
+        { key: "bullet",  label: "Bullet",   className: "text-right" },
+        { key: "fisheye", label: "Fisheye",  className: "text-right" },
+        { key: "ptz",     label: "PTZ",      className: "text-right" },
+        { key: "total",   label: "Total",    className: "text-right font-semibold" },
       ],
       rows: (() => {
-        const map = new Map<string, { total: number; operacionais: number; inoperantes: number }>();
-        equipamentos.filter((e) => e.tipo === "Câmera").forEach((e) => {
-          const comarca = uMap.get(e.unidade_id)?.comarca ?? "—";
-          const cur = map.get(comarca) ?? { total: 0, operacionais: 0, inoperantes: 0 };
-          cur.total++;
-          if (e.status === "Operacional") cur.operacionais++;
-          if (e.status === "Inoperante")  cur.inoperantes++;
+        const map = new Map<string, { comarca: string; dome: number; bullet: number; fisheye: number; ptz: number; total: number }>();
+        distribuicao.filter((d) => [1, 2, 3, 4].includes(d.item_num)).forEach((d) => {
+          const comarca = d.comarca_nome || "—";
+          const cur = map.get(comarca) ?? { comarca, dome: 0, bullet: 0, fisheye: 0, ptz: 0, total: 0 };
+          if (d.item_num === 1) cur.dome += d.quantidade;
+          if (d.item_num === 2) cur.bullet += d.quantidade;
+          if (d.item_num === 3) cur.fisheye += d.quantidade;
+          if (d.item_num === 4) cur.ptz += d.quantidade;
+          cur.total += d.quantidade;
           map.set(comarca, cur);
         });
-        return [...map.entries()]
-          .map(([comarca, v]) => ({ comarca, ...v }))
-          .sort((a, b) => (b.total as number) - (a.total as number));
+        return [...map.values()].sort((a, b) => b.total - a.total);
       })(),
     },
 
     {
-      id: "unidades-scanner",
-      title: "Unidades com Scanner Raio-X",
-      description: "Locais que possuem Scanner Raio-X cadastrado no inventário.",
-      category: "Equipamentos",
-      icon: Shield,
-      columns: [
-        { key: "unidade",      label: "Unidade" },
-        { key: "comarca",      label: "Comarca" },
-        { key: "identificacao", label: "Identificação" },
-        { key: "status",       label: "Status" },
-      ],
-      rows: equipamentos
-        .filter((e) => e.tipo === "Scanner Raio-X")
-        .map((e) => {
-          const u = uMap.get(e.unidade_id);
-          return { unidade: u?.nome ?? "—", comarca: u?.comarca ?? "—", identificacao: e.identificacao, status: e.status };
-        })
-        .sort((a, b) => String(a.comarca).localeCompare(String(b.comarca))),
-    },
-
-    {
-      id: "unidades-detector",
-      title: "Unidades com Detector de Metais",
-      description: "Locais que possuem detector de metais cadastrado.",
-      category: "Equipamentos",
-      icon: Shield,
-      columns: [
-        { key: "unidade",       label: "Unidade" },
-        { key: "comarca",       label: "Comarca" },
-        { key: "identificacao", label: "Identificação" },
-        { key: "status",        label: "Status" },
-      ],
-      rows: equipamentos
-        .filter((e) => e.tipo === "Detector de metais")
-        .map((e) => {
-          const u = uMap.get(e.unidade_id);
-          return { unidade: u?.nome ?? "—", comarca: u?.comarca ?? "—", identificacao: e.identificacao, status: e.status };
-        })
-        .sort((a, b) => String(a.comarca).localeCompare(String(b.comarca))),
-    },
-
-    {
-      id: "equipamentos-inoperantes",
-      title: "Equipamentos inoperantes",
-      description: "Todos os equipamentos com status Inoperante.",
+      id: "unidades-sem-equipamentos",
+      title: "Unidades sem equipamentos cadastrados",
+      description: "Unidades prediais que ainda não têm nenhum item do contrato vinculado.",
       category: "Equipamentos",
       icon: XCircle,
       columns: [
-        { key: "identificacao", label: "Identificação" },
-        { key: "tipo",          label: "Tipo" },
-        { key: "unidade",       label: "Unidade" },
-        { key: "comarca",       label: "Comarca" },
+        { key: "unidade", label: "Unidade" },
+        { key: "comarca", label: "Comarca" },
+        { key: "derso",   label: "DERSO" },
       ],
-      rows: equipamentos
-        .filter((e) => e.status === "Inoperante")
-        .map((e) => {
-          const u = uMap.get(e.unidade_id);
-          return { identificacao: e.identificacao, tipo: e.tipo, unidade: u?.nome ?? "—", comarca: u?.comarca ?? "—" };
-        }),
+      rows: (() => {
+        const comVinculo = new Set(distribuicao.map((d) => d.unidade_id));
+        return unidades
+          .filter((u) => !comVinculo.has(u.id))
+          .map((u) => ({ unidade: u.nome, comarca: u.comarca_nome, derso: u.possui_derso ? "Sim" : "Não" }))
+          .sort((a, b) => a.comarca.localeCompare(b.comarca));
+      })(),
     },
 
     {
-      id: "garantias-vencidas",
-      title: "Garantias vencidas",
-      description: "Equipamentos cuja garantia já expirou.",
+      id: "itens-nao-distribuidos",
+      title: "Itens do catálogo sem distribuição",
+      description: "Itens do contrato 115/2023 que não foram vinculados a nenhuma unidade.",
       category: "Equipamentos",
-      icon: Clock,
+      icon: Shield,
       columns: [
-        { key: "identificacao", label: "Identificação" },
-        { key: "tipo",          label: "Tipo" },
-        { key: "unidade",       label: "Unidade" },
-        { key: "garantia_ate",  label: "Garantia até" },
+        { key: "item",         label: "Item",             className: "font-mono text-xs" },
+        { key: "descricao",    label: "Descrição" },
+        { key: "unidade_med",  label: "Unid.",            className: "text-xs" },
+        { key: "qtd_contrato", label: "Qtd. contrato",    className: "text-right" },
       ],
-      rows: equipamentos
-        .filter((e) => e.garantia_ate && new Date(e.garantia_ate + "T00:00:00") < hoje)
-        .map((e) => {
-          const u = uMap.get(e.unidade_id);
-          return { identificacao: e.identificacao, tipo: e.tipo, unidade: u?.nome ?? "—", garantia_ate: fmtDate(e.garantia_ate) };
-        }),
+      rows: (() => {
+        const itensComVinculo = new Set(distribuicao.map((d) => d.item_num));
+        return catalogo
+          .filter((c) => !itensComVinculo.has(c.item_num))
+          .map((c) => ({
+            item: `#${String(c.item_num).padStart(2, "0")}`,
+            descricao: c.descricao,
+            unidade_med: c.unidade_medida,
+            qtd_contrato: c.qtd_contrato,
+          }))
+          .sort((a, b) => Number(a.item.slice(1)) - Number(b.item.slice(1)));
+      })(),
     },
 
     {
-      id: "garantias-vencendo",
-      title: "Garantias vencendo em 90 dias",
-      description: "Equipamentos com garantia próxima do vencimento.",
+      id: "divergencia-contrato",
+      title: "Divergências contrato × distribuição",
+      description: "Itens cuja soma das quantidades distribuídas difere do total contratado.",
       category: "Equipamentos",
-      icon: Clock,
+      icon: AlertTriangle,
       columns: [
-        { key: "identificacao", label: "Identificação" },
-        { key: "tipo",          label: "Tipo" },
-        { key: "unidade",       label: "Unidade" },
-        { key: "garantia_ate",  label: "Garantia até" },
-        { key: "dias",          label: "Dias restantes", className: "text-right" },
+        { key: "item",         label: "Item",             className: "font-mono text-xs" },
+        { key: "descricao",    label: "Descrição" },
+        { key: "qtd_contrato", label: "Contratado",       className: "text-right" },
+        { key: "qtd_dist",     label: "Distribuído",      className: "text-right" },
+        { key: "diff",         label: "Diferença",        className: "text-right font-semibold" },
       ],
-      rows: equipamentos
-        .filter((e) => {
-          if (!e.garantia_ate) return false;
-          const fim = new Date(e.garantia_ate + "T00:00:00");
-          return fim >= hoje && fim <= em90;
-        })
-        .map((e) => {
-          const u = uMap.get(e.unidade_id);
-          return { identificacao: e.identificacao, tipo: e.tipo, unidade: u?.nome ?? "—", garantia_ate: fmtDate(e.garantia_ate), dias: diffDays(e.garantia_ate, hoje) };
-        })
-        .sort((a, b) => (a.dias as number) - (b.dias as number)),
+      rows: (() => {
+        const distPorItem = new Map<number, number>();
+        for (const d of distribuicao) {
+          distPorItem.set(d.item_num, (distPorItem.get(d.item_num) ?? 0) + d.quantidade);
+        }
+        return catalogo
+          .map((c) => {
+            const qtd_dist = distPorItem.get(c.item_num) ?? 0;
+            const diff = c.qtd_contrato - qtd_dist;
+            return {
+              item: `#${String(c.item_num).padStart(2, "0")}`,
+              descricao: c.descricao,
+              qtd_contrato: c.qtd_contrato,
+              qtd_dist,
+              diff: diff > 0 ? `+${diff}` : String(diff),
+              _diffAbs: Math.abs(diff),
+            };
+          })
+          .filter((r) => r._diffAbs > 0)
+          .sort((a, b) => b._diffAbs - a._diffAbs)
+          .map(({ _diffAbs, ...row }) => row);
+      })(),
+    },
+
+    {
+      id: "valor-por-unidade",
+      title: "Valor mensal estimado por unidade",
+      description: "Top 15 unidades com maior valor mensal de equipamentos vinculados.",
+      category: "Equipamentos",
+      icon: FileText,
+      columns: [
+        { key: "unidade", label: "Unidade" },
+        { key: "comarca", label: "Comarca" },
+        { key: "itens",   label: "Itens distintos", className: "text-right" },
+        { key: "qtd",     label: "Qtd. total",      className: "text-right" },
+        { key: "valor",   label: "Valor mensal",    className: "text-right font-semibold" },
+      ],
+      rows: (() => {
+        const map = new Map<string, { unidade: string; comarca: string; itens: number; qtd: number; valor: number }>();
+        for (const d of distribuicao) {
+          const cur = map.get(d.unidade_id) ?? { unidade: d.unidade_nome, comarca: d.comarca_nome, itens: 0, qtd: 0, valor: 0 };
+          cur.itens++;
+          cur.qtd += d.quantidade;
+          cur.valor += d.quantidade * d.valor_unitario;
+          map.set(d.unidade_id, cur);
+        }
+        return [...map.values()]
+          .sort((a, b) => b.valor - a.valor)
+          .slice(0, 15)
+          .map((r) => ({ ...r, valor: fmtBRL(r.valor) }));
+      })(),
     },
 
     // ── Portões ───────────────────────────────────────────────────
@@ -218,7 +225,7 @@ export default function ConsultasPage() {
         .filter((p) => p.necessidade_manutencao === "Alta" || p.necessidade_manutencao === "Urgente")
         .map((p) => {
           const u = uMap.get(p.unidade_id);
-          return { identificacao: p.identificacao, unidade: u?.nome ?? "—", comarca: u?.comarca ?? "—", necessidade: p.necessidade_manutencao, descricao: p.descricao_manutencao || "—" };
+          return { identificacao: p.identificacao, unidade: u?.nome ?? "—", comarca: u?.comarca_nome ?? "—", necessidade: p.necessidade_manutencao, descricao: p.descricao_manutencao || "—" };
         }),
     },
 
@@ -239,7 +246,7 @@ export default function ConsultasPage() {
         .filter((p) => p.situacao === "Inoperante" || p.situacao === "Em manutenção")
         .map((p) => {
           const u = uMap.get(p.unidade_id);
-          return { identificacao: p.identificacao, tipo: p.tipo, situacao: p.situacao, unidade: u?.nome ?? "—", comarca: u?.comarca ?? "—" };
+          return { identificacao: p.identificacao, tipo: p.tipo, situacao: p.situacao, unidade: u?.nome ?? "—", comarca: u?.comarca_nome ?? "—" };
         }),
     },
 
@@ -257,7 +264,8 @@ export default function ConsultasPage() {
       rows: (() => {
         const map = new Map<string, number>();
         servidores.filter((s) => s.situacao === "Ativo").forEach((s) => {
-          map.set(s.comarca, (map.get(s.comarca) ?? 0) + 1);
+          const comarca = s.unidade_id ? (uMap.get(s.unidade_id)?.comarca_nome ?? "—") : "—";
+          map.set(comarca, (map.get(comarca) ?? 0) + 1);
         });
         return [...map.entries()]
           .map(([comarca, total]) => ({ comarca, total }))
@@ -374,7 +382,7 @@ export default function ConsultasPage() {
           .filter((o) => o.status !== "Concluído" && o.status !== "Cancelado")
           .forEach((o) => {
             const u = uMap.get(o.unidade_id);
-            const cur = map.get(o.unidade_id) ?? { unidade: u?.nome ?? "—", comarca: u?.comarca ?? "—", abertas: 0, urgentes: 0 };
+            const cur = map.get(o.unidade_id) ?? { unidade: u?.nome ?? "—", comarca: u?.comarca_nome ?? "—", abertas: 0, urgentes: 0 };
             cur.abertas++;
             if (o.prioridade === "Urgente") cur.urgentes++;
             map.set(o.unidade_id, cur);
@@ -383,7 +391,7 @@ export default function ConsultasPage() {
       })(),
     },
 
-  ], [unidades, equipamentos, portoes, servidores, terceirizados, contratos, ocorrencias, hoje, em90, uMap]);
+  ], [unidades, catalogo, distribuicao, portoes, servidores, terceirizados, contratos, ocorrencias, hoje, em90, uMap]);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return queries;
@@ -404,7 +412,7 @@ export default function ConsultasPage() {
   }, [filtered]);
 
   const totalAlertas = useMemo(() =>
-    queries.filter((q) => ["equipamentos-inoperantes", "garantias-vencidas", "portoes-urgentes", "portoes-inoperantes", "contratos-vencidos", "ocorrencias-prazo-vencido"].includes(q.id) && q.rows.length > 0).reduce((s, q) => s + q.rows.length, 0),
+    queries.filter((q) => ["unidades-sem-equipamentos", "itens-nao-distribuidos", "divergencia-contrato", "portoes-urgentes", "portoes-inoperantes", "contratos-vencidos", "ocorrencias-prazo-vencido"].includes(q.id) && q.rows.length > 0).reduce((s, q) => s + q.rows.length, 0),
     [queries],
   );
 

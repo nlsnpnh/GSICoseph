@@ -1,98 +1,115 @@
 import { useMemo } from "react";
 import { useUnidadesMock } from "@/data/unidadesMock";
-import { useEquipamentosMock } from "@/data/equipamentosMock";
+import { useUnidadeEquipamentos } from "@/data/equipamentos";
 import { useOcorrenciasMock } from "@/data/ocorrenciasMock";
 import { useComarcas } from "@/data/api";
 import type { Criticidade } from "@/data/mockDashboard";
 
 export type ComarcaMetric = {
+  comarcaId: string;
   nome: string;
   lat: number;
   lng: number;
   nivel: Criticidade;
   unidades: number;
-  equipamentos: number;
-  operacionais: number;
-  pctOperacional: number;
+  itensVinculados: number;
+  quantidadeTotal: number;
+  valorEstimado: number;
+  cobertura: number;
   ocorrenciasAbertas: number;
   possuiDerso: boolean;
 };
 
 export function useComarcaMetrics(): ComarcaMetric[] {
   const { data: comarcasDB = [] } = useComarcas();
-  const unidades    = useUnidadesMock();
-  const equipamentos = useEquipamentosMock();
-  const ocorrencias  = useOcorrenciasMock();
+  const unidades = useUnidadesMock();
+  const distribuicao = useUnidadeEquipamentos();
+  const ocorrencias = useOcorrenciasMock();
 
   return useMemo(() => {
-    // Só comarcas com coordenadas cadastradas aparecem no mapa
-    const comarcasComCoords = comarcasDB.filter(
-      (c) => c.lat != null && c.lng != null
-    );
-
     const unidadesPorComarca = new Map<string, typeof unidades>();
     for (const u of unidades) {
-      const arr = unidadesPorComarca.get(u.comarca) ?? [];
+      if (!u.comarca_id) continue;
+      const arr = unidadesPorComarca.get(u.comarca_id) ?? [];
       arr.push(u);
-      unidadesPorComarca.set(u.comarca, arr);
+      unidadesPorComarca.set(u.comarca_id, arr);
     }
 
-    const equipPorUnidade = new Map<string, typeof equipamentos>();
-    for (const e of equipamentos) {
-      const arr = equipPorUnidade.get(e.unidade_id) ?? [];
-      arr.push(e);
-      equipPorUnidade.set(e.unidade_id, arr);
+    const distPorUnidade = new Map<string, typeof distribuicao>();
+    for (const d of distribuicao) {
+      const arr = distPorUnidade.get(d.unidade_id) ?? [];
+      arr.push(d);
+      distPorUnidade.set(d.unidade_id, arr);
     }
 
-    const ocorrPorUnidade = new Map<string, number>();
+    const ocoPorUnidade = new Map<string, number>();
     for (const o of ocorrencias) {
       if (o.status === "Aberto" || o.status === "Em andamento" || o.status === "Aguardando peça") {
-        ocorrPorUnidade.set(o.unidade_id, (ocorrPorUnidade.get(o.unidade_id) ?? 0) + 1);
+        ocoPorUnidade.set(o.unidade_id, (ocoPorUnidade.get(o.unidade_id) ?? 0) + 1);
       }
     }
 
-    return comarcasComCoords.map((c) => {
-      const us = unidadesPorComarca.get(c.nome) ?? [];
-      let totalEq = 0;
-      let opEq = 0;
+    const result: ComarcaMetric[] = [];
+
+    for (const c of comarcasDB) {
+      const us = unidadesPorComarca.get(c.id) ?? [];
+
+      const comCoords = us.filter((u) => u.lat != null && u.lng != null);
+      if (comCoords.length === 0) continue;
+
+      const lat = comCoords.reduce((s, u) => s + u.lat!, 0) / comCoords.length;
+      const lng = comCoords.reduce((s, u) => s + u.lng!, 0) / comCoords.length;
+
+      let itensVinculados = 0;
+      let quantidadeTotal = 0;
+      let valorEstimado = 0;
       let ocoAbertas = 0;
       let possuiDerso = false;
+      let flagsCobertura = 0;
 
       for (const u of us) {
-        if (u.possui_derso) possuiDerso = true;
-        const eqs = equipPorUnidade.get(u.id) ?? [];
-        totalEq += eqs.length;
-        opEq += eqs.filter((e) => e.status === "Operacional").length;
-        ocoAbertas += ocorrPorUnidade.get(u.id) ?? 0;
+        if (u.possui_derso) { possuiDerso = true; flagsCobertura++; }
+        if (u.controle_acesso) flagsCobertura++;
+        if (u.vigilancia_eletronica) flagsCobertura++;
+
+        const ds = distPorUnidade.get(u.id) ?? [];
+        itensVinculados += ds.length;
+        for (const d of ds) {
+          quantidadeTotal += d.quantidade;
+          valorEstimado += d.quantidade * d.valor_unitario;
+        }
+        ocoAbertas += ocoPorUnidade.get(u.id) ?? 0;
       }
 
-      const pct = totalEq > 0 ? (opEq / totalEq) * 100 : -1;
+      const cobertura = us.length > 0 ? (flagsCobertura / (us.length * 3)) * 100 : 0;
 
       let nivel: Criticidade;
       if (us.length === 0) {
         nivel = "sem_dados";
-      } else if (pct < 0) {
-        nivel = ocoAbertas > 2 ? "critico" : "parcial";
-      } else if (pct >= 90 && ocoAbertas <= 1 && possuiDerso) {
+      } else if (cobertura >= 90 && itensVinculados > 0 && ocoAbertas <= 1) {
         nivel = "adequado";
-      } else if (pct < 60 || ocoAbertas >= 4) {
+      } else if (cobertura < 50 || ocoAbertas >= 4 || itensVinculados === 0) {
         nivel = "critico";
       } else {
         nivel = "parcial";
       }
 
-      return {
+      result.push({
+        comarcaId: c.id,
         nome: c.nome,
-        lat: c.lat!,
-        lng: c.lng!,
+        lat,
+        lng,
         nivel,
         unidades: us.length,
-        equipamentos: totalEq,
-        operacionais: opEq,
-        pctOperacional: pct < 0 ? 0 : Math.round(pct),
+        itensVinculados,
+        quantidadeTotal,
+        valorEstimado,
+        cobertura: Math.round(cobertura),
         ocorrenciasAbertas: ocoAbertas,
         possuiDerso,
-      };
-    });
-  }, [comarcasDB, unidades, equipamentos, ocorrencias]);
+      });
+    }
+
+    return result;
+  }, [comarcasDB, unidades, distribuicao, ocorrencias]);
 }

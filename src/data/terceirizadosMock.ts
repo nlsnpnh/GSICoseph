@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { queryClient } from "@/lib/queryClient";
-import { COMARCAS } from "./unidadesMock";
 
 export const EMPRESAS = [
   "AFS Empreendimentos", "SegService", "Grupo Protege", "TechSeg", "Portões RO", "Vigilância Total",
@@ -28,8 +27,7 @@ export type Terceirizado = {
   contrato: string;
   funcao: (typeof FUNCOES)[number];
   posto_trabalho: string;
-  unidade: string;
-  comarca: (typeof COMARCAS)[number];
+  unidade_id: string | null;
   escala: (typeof ESCALAS_TERC)[number];
   turno: (typeof TURNOS)[number];
   situacao: SituacaoTerc;
@@ -49,8 +47,7 @@ const mapRow = (r: any): Terceirizado => ({
   contrato: r.contrato ?? "",
   funcao: r.funcao,
   posto_trabalho: r.posto_trabalho ?? "",
-  unidade: r.unidade ?? "",
-  comarca: r.comarca,
+  unidade_id: r.unidade_id ?? null,
   escala: r.escala,
   turno: r.turno,
   situacao: r.situacao,

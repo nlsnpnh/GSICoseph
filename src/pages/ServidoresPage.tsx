@@ -20,13 +20,13 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { COMARCAS } from "@/data/unidadesMock";
 import { useUnidadesMock } from "@/data/unidadesMock";
+import { useComarcas } from "@/data/api";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   CARGOS, REGIMES, ESCALAS, SITUACOES, type ServidorSeg, type SituacaoFuncional,
   useServidoresMock, addServidorMock, updateServidorMock, removeServidorMock,
-  calcIdade, faixaEtaria, tempoServicoAnos,
+  calcIdade, tempoServicoAnos,
 } from "@/data/servidoresMock";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
@@ -36,8 +36,7 @@ const schema = z.object({
   matricula: z.string().trim().min(3, "Mínimo 3 caracteres").max(20),
   cargo: z.enum(CARGOS),
   funcao_atual: z.string().trim().max(120).optional().or(z.literal("")),
-  unidade: z.string().trim().min(2, "Selecione a unidade"),
-  comarca: z.enum(COMARCAS),
+  unidade_id: z.string().optional().or(z.literal("")),
   regime: z.enum(REGIMES),
   escala: z.enum(ESCALAS),
   situacao: z.enum(SITUACOES),
@@ -59,18 +58,20 @@ const situacaoTone: Record<SituacaoFuncional, string> = {
 };
 
 const defaults: FormData = {
-  nome: "", matricula: "", cargo: "Agente de Segurança", funcao_atual: "", unidade: "", comarca: "Porto Velho",
+  nome: "", matricula: "", cargo: "Agente de Segurança", funcao_atual: "", unidade_id: "",
   regime: "Estatutário", escala: "Expediente (7h)", situacao: "Ativo", email: "", telefone: "",
   data_ingresso: "", data_nascimento: "", observacoes: "",
 };
 
 export default function ServidoresPage() {
-  const { isOperador, unidadeNome: authUnidadeNome, comarcaNome: authComarcaNome } = useAuth();
+  const { isOperador, unidadeId: authUnidadeId, unidadeNome: authUnidadeNome } = useAuth();
   const items = useServidoresMock();
   const unidades = useUnidadesMock();
+  const { data: comarcas = [] } = useComarcas();
   const [search, setSearch] = useState("");
   const [comarcaFilter, setComarcaFilter] = useState<string>("all");
   const [situacaoFilter, setSituacaoFilter] = useState<string>("all");
+  const [formComarcaId, setFormComarcaId] = useState<string>("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<ServidorSeg | null>(null);
   const [deleting, setDeleting] = useState<ServidorSeg | null>(null);
@@ -78,54 +79,86 @@ export default function ServidoresPage() {
   useEffect(() => { document.title = "Servidores | COSEPH TJRO"; }, []);
 
   const form = useForm<FormData>({ resolver: zodResolver(schema), defaultValues: defaults });
-  const watchedComarca = form.watch("comarca");
+
+  // unidades filtradas pela comarca selecionada no formulário
   const unidadesDaComarca = useMemo(
-    () => unidades.filter((u) => u.comarca === watchedComarca),
-    [unidades, watchedComarca],
+    () => formComarcaId ? unidades.filter((u) => u.comarca_id === formComarcaId) : unidades,
+    [unidades, formComarcaId],
   );
 
-  const effectiveComarcaFilter = isOperador ? (authComarcaNome ?? "all") : comarcaFilter;
+  // mapa unidade_id → {nome, comarca_nome} para exibição na tabela
+  const unidadeMap = useMemo(
+    () => Object.fromEntries(unidades.map((u) => [u.id, u])),
+    [unidades],
+  );
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
     return items.filter((s) => {
-      if (effectiveComarcaFilter !== "all" && s.comarca !== effectiveComarcaFilter) return false;
       if (situacaoFilter !== "all" && s.situacao !== situacaoFilter) return false;
+      if (comarcaFilter !== "all") {
+        const unid = s.unidade_id ? unidadeMap[s.unidade_id] : null;
+        if (!unid || unid.comarca_id !== comarcaFilter) return false;
+      }
       return (
         s.nome.toLowerCase().includes(q) ||
         s.matricula.toLowerCase().includes(q) ||
         s.cargo.toLowerCase().includes(q) ||
-        s.unidade.toLowerCase().includes(q) ||
-        s.email.toLowerCase().includes(q)
+        s.email.toLowerCase().includes(q) ||
+        (s.unidade_id ? (unidadeMap[s.unidade_id]?.nome ?? "").toLowerCase().includes(q) : false)
       );
     });
-  }, [items, search, effectiveComarcaFilter, situacaoFilter]);
+  }, [items, search, comarcaFilter, situacaoFilter, unidadeMap]);
 
   const openCreate = () => {
     setEditing(null);
-    if (isOperador) {
-      form.reset({ ...defaults, unidade: authUnidadeNome ?? "", comarca: (authComarcaNome as any) ?? "Porto Velho" });
+    setFormComarcaId(isOperador && authUnidadeId ? (unidadeMap[authUnidadeId]?.comarca_id ?? "") : "");
+    if (isOperador && authUnidadeId) {
+      form.reset({ ...defaults, unidade_id: authUnidadeId });
     } else {
       form.reset(defaults);
     }
     setOpen(true);
   };
+
   const openEdit = (s: ServidorSeg) => {
     setEditing(s);
-    const { id: _id, ...rest } = s;
-    form.reset(rest);
+    const unid = s.unidade_id ? unidadeMap[s.unidade_id] : null;
+    setFormComarcaId(unid?.comarca_id ?? "");
+    form.reset({
+      nome: s.nome,
+      matricula: s.matricula,
+      cargo: s.cargo,
+      funcao_atual: s.funcao_atual,
+      unidade_id: s.unidade_id ?? "",
+      regime: s.regime,
+      escala: s.escala,
+      situacao: s.situacao,
+      email: s.email,
+      telefone: s.telefone,
+      data_ingresso: s.data_ingresso,
+      data_nascimento: s.data_nascimento,
+      observacoes: s.observacoes,
+    });
     setOpen(true);
   };
 
   const onSubmit = async (data: FormData) => {
-    const payload = {
-      ...data,
-      telefone: data.telefone ?? "",
+    const payload: Omit<ServidorSeg, "id"> = {
+      nome: data.nome,
+      matricula: data.matricula,
+      cargo: data.cargo,
       funcao_atual: data.funcao_atual ?? "",
+      unidade_id: data.unidade_id || null,
+      regime: data.regime,
+      escala: data.escala,
+      situacao: data.situacao,
+      email: data.email,
+      telefone: data.telefone ?? "",
       data_ingresso: data.data_ingresso ?? "",
       data_nascimento: data.data_nascimento ?? "",
       observacoes: data.observacoes ?? "",
-    } as Omit<ServidorSeg, "id">;
+    };
     try {
       if (editing) {
         await updateServidorMock(editing.id, payload);
@@ -156,10 +189,10 @@ export default function ServidoresPage() {
           <div className="flex flex-wrap gap-2">
             {!isOperador && (
               <Select value={comarcaFilter} onValueChange={setComarcaFilter}>
-                <SelectTrigger className="h-9 w-[170px]"><SelectValue placeholder="Comarca" /></SelectTrigger>
+                <SelectTrigger className="h-9 w-[200px]"><SelectValue placeholder="Comarca" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todas as comarcas</SelectItem>
-                  {COMARCAS.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  {comarcas.map((c) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
                 </SelectContent>
               </Select>
             )}
@@ -194,6 +227,7 @@ export default function ServidoresPage() {
               {filtered.map((s) => {
                 const idade = calcIdade(s.data_nascimento);
                 const tempo = tempoServicoAnos(s.data_ingresso);
+                const unid = s.unidade_id ? unidadeMap[s.unidade_id] : null;
                 return (
                   <TableRow key={s.id}>
                     <TableCell className="font-medium">
@@ -206,8 +240,8 @@ export default function ServidoresPage() {
                       {s.funcao_atual && <div className="text-xs">{s.funcao_atual}</div>}
                     </TableCell>
                     <TableCell>
-                      <div>{s.unidade}</div>
-                      <div className="text-xs text-muted-foreground">{s.comarca}</div>
+                      <div>{unid?.nome ?? "—"}</div>
+                      <div className="text-xs text-muted-foreground">{unid?.comarca_nome ?? "—"}</div>
                     </TableCell>
                     <TableCell className="text-muted-foreground">{s.regime}</TableCell>
                     <TableCell className="text-muted-foreground text-xs">{tempo != null ? `${tempo} anos` : "—"}</TableCell>
@@ -257,33 +291,33 @@ export default function ServidoresPage() {
 
             <Section title="Lotação">
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Comarca">
+                <Field label="Comarca (filtro)">
                   {isOperador ? (
-                    <Input value={authComarcaNome ?? ""} disabled className="bg-muted" />
+                    <Input value={authUnidadeNome ? (unidadeMap[authUnidadeId ?? ""]?.comarca_nome ?? "") : ""} disabled className="bg-muted" />
                   ) : (
-                    <Select value={form.watch("comarca")} onValueChange={(v) => {
-                      form.setValue("comarca", v as FormData["comarca"]);
-                      form.setValue("unidade", "");
+                    <Select value={formComarcaId} onValueChange={(v) => {
+                      setFormComarcaId(v);
+                      form.setValue("unidade_id", "");
                     }}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
                       <SelectContent>
-                        {COMARCAS.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                        <SelectItem value="">— Todas —</SelectItem>
+                        {comarcas.map((c) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   )}
                 </Field>
-                <Field label="Unidade" error={form.formState.errors.unidade?.message}>
+                <Field label="Unidade" error={form.formState.errors.unidade_id?.message}>
                   {isOperador ? (
                     <Input value={authUnidadeNome ?? ""} disabled className="bg-muted" />
-                  ) : unidadesDaComarca.length > 0 ? (
-                    <Select value={form.watch("unidade")} onValueChange={(v) => form.setValue("unidade", v, { shouldValidate: true })}>
+                  ) : (
+                    <Select value={form.watch("unidade_id") || "none"} onValueChange={(v) => form.setValue("unidade_id", v === "none" ? "" : v, { shouldValidate: true })}>
                       <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
                       <SelectContent>
-                        {unidadesDaComarca.map((u) => <SelectItem key={u.id} value={u.nome}>{u.nome}</SelectItem>)}
+                        <SelectItem value="none">— Nenhuma —</SelectItem>
+                        {unidadesDaComarca.map((u) => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
                       </SelectContent>
                     </Select>
-                  ) : (
-                    <Input {...form.register("unidade")} placeholder="Digite a unidade" />
                   )}
                 </Field>
               </div>
@@ -338,9 +372,6 @@ export default function ServidoresPage() {
                   <Input type="date" {...form.register("data_nascimento")} />
                 </Field>
               </div>
-              <p className="text-[11px] text-muted-foreground">
-                A idade exata é restrita a admin e gestor; relatórios públicos exibem apenas a faixa etária.
-              </p>
             </Section>
 
             <Section title="Observações administrativas">

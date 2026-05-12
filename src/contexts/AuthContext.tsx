@@ -47,9 +47,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setNomeCompleto(p?.nome_completo ?? null);
     if (p?.unidade_id) {
       setUnidadeId(p.unidade_id);
-      const { data: u } = await sb.from("unidades").select("nome, comarca").eq("id", p.unidade_id).single();
+      const { data: u } = await sb.from("unidades").select("nome, comarcas(nome)").eq("id", p.unidade_id).single();
       setUnidadeNome(u?.nome ?? null);
-      setComarcaNome(u?.comarca ?? null);
+      setComarcaNome((u?.comarcas as any)?.nome ?? null);
     } else {
       setUnidadeId(null);
       setUnidadeNome(null);

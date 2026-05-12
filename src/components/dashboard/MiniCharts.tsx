@@ -3,41 +3,49 @@ import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip,
   PieChart, Pie, Cell, LineChart, Line, CartesianGrid } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useServidoresMock } from "@/data/servidoresMock";
-import { useEquipamentosMock } from "@/data/equipamentosMock";
+import { useUnidadesMock } from "@/data/unidadesMock";
+import { useUnidadeEquipamentos } from "@/data/equipamentos";
 import { useOcorrenciasMock } from "@/data/ocorrenciasMock";
 import { useContratosMock, statusFromVigencia } from "@/data/contratosMock";
 
-const CORES_EQUIP: Record<string, string> = {
-  "Câmera":                   "hsl(217 91% 55%)",
-  "Catraca":                  "hsl(142 65% 45%)",
-  "Portão":                   "hsl(42 95% 55%)",
-  "Sensor":                   "hsl(0 75% 55%)",
-  "Alarme":                   "hsl(270 65% 55%)",
-  "DVR/NVR":                  "hsl(190 70% 50%)",
-  "Porta giratória":          "hsl(30 80% 55%)",
-  "Detector de metais":       "hsl(160 60% 45%)",
-  "Scanner Raio-X":           "hsl(340 70% 55%)",
-  "Botão de pânico":          "hsl(0 90% 45%)",
-  "Controle facial/biométrico": "hsl(250 60% 55%)",
-  "Nobreak":                  "hsl(60 70% 50%)",
-  "Rack":                     "hsl(215 15% 55%)",
-  "Monitor":                  "hsl(200 60% 50%)",
-};
+// Categorias do contrato 115/2023 (mutuamente exclusivas)
+const CATEGORIAS: { nome: string; itens: number[]; cor: string }[] = [
+  { nome: "Câmeras CFTV",         itens: [1, 2, 3, 4],            cor: "hsl(217 91% 55%)" },
+  { nome: "Gravadores IP",        itens: [31, 32, 33, 34],         cor: "hsl(190 70% 50%)" },
+  { nome: "Controle de acesso",   itens: [21, 22, 23, 24, 25, 27], cor: "hsl(142 65% 45%)" },
+  { nome: "Rede e infra",         itens: [11, 12, 44, 45],         cor: "hsl(270 65% 55%)" },
+  { nome: "Servidores e storage", itens: [29, 30, 35, 39, 40, 41], cor: "hsl(0 75% 55%)" },
+  { nome: "Software e licenças",  itens: [28, 36, 37, 38, 42, 43], cor: "hsl(250 60% 55%)" },
+  { nome: "Estações e monitores", itens: [7, 8, 9, 10, 15],        cor: "hsl(200 60% 50%)" },
+  { nome: "Comunicação",          itens: [5, 6, 13, 14, 26],       cor: "hsl(30 80% 55%)" },
+  { nome: "Alarmes e emergência", itens: [19, 20],                 cor: "hsl(0 90% 45%)" },
+  { nome: "Acessórios câmera",    itens: [16, 17, 18],             cor: "hsl(160 60% 45%)" },
+];
+
+const COR_OUTROS = "hsl(215 15% 55%)";
+
+function categoriaParaItem(itemNum: number): { nome: string; cor: string } {
+  const c = CATEGORIAS.find((cat) => cat.itens.includes(itemNum));
+  return c ? { nome: c.nome, cor: c.cor } : { nome: "Outros", cor: COR_OUTROS };
+}
 
 export function ServidoresPorComarca() {
   const servidores = useServidoresMock();
+  const unidades   = useUnidadesMock();
 
   const data = useMemo(() => {
+    const unidadeMap = Object.fromEntries(unidades.map((u) => [u.id, u]));
     const contagem = new Map<string, number>();
     for (const s of servidores) {
       if (s.situacao !== "Ativo") continue;
-      contagem.set(s.comarca, (contagem.get(s.comarca) ?? 0) + 1);
+      const comarca = s.unidade_id ? (unidadeMap[s.unidade_id]?.comarca_nome || "Sem comarca") : "Sem comarca";
+      contagem.set(comarca, (contagem.get(comarca) ?? 0) + 1);
     }
     return Array.from(contagem.entries())
       .map(([comarca, total]) => ({ comarca, total }))
       .sort((a, b) => b.total - a.total)
       .slice(0, 5);
-  }, [servidores]);
+  }, [servidores, unidades]);
 
   return (
     <Card className="shadow-sm">
@@ -64,24 +72,26 @@ export function ServidoresPorComarca() {
 }
 
 export function EquipamentosDonut() {
-  const equipamentos = useEquipamentosMock();
+  const distribuicao = useUnidadeEquipamentos();
 
   const data = useMemo(() => {
-    const contagem = new Map<string, number>();
-    for (const e of equipamentos) {
-      contagem.set(e.tipo, (contagem.get(e.tipo) ?? 0) + 1);
+    const acc = new Map<string, { total: number; cor: string }>();
+    for (const d of distribuicao) {
+      const { nome, cor } = categoriaParaItem(d.item_num);
+      const prev = acc.get(nome);
+      acc.set(nome, { total: (prev?.total ?? 0) + d.quantidade, cor });
     }
-    return Array.from(contagem.entries())
-      .map(([tipo, total]) => ({ tipo, total, color: CORES_EQUIP[tipo] ?? "hsl(215 15% 60%)" }))
+    return Array.from(acc.entries())
+      .map(([categoria, v]) => ({ categoria, total: v.total, color: v.cor }))
       .sort((a, b) => b.total - a.total);
-  }, [equipamentos]);
+  }, [distribuicao]);
 
   const total = data.reduce((s, e) => s + e.total, 0);
 
   return (
     <Card className="shadow-sm">
       <CardHeader className="border-b border-border pb-3">
-        <CardTitle className="text-sm font-semibold">Equipamentos por Tipo</CardTitle>
+        <CardTitle className="text-sm font-semibold">Equipamentos por Categoria</CardTitle>
         <p className="text-[11px] text-muted-foreground">Total: {total.toLocaleString("pt-BR")}</p>
       </CardHeader>
       <CardContent className="grid grid-cols-[110px_1fr] items-center gap-3 p-3">
@@ -92,7 +102,7 @@ export function EquipamentosDonut() {
             <div className="h-[140px] w-[110px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={data} dataKey="total" nameKey="tipo" innerRadius={32} outerRadius={55} paddingAngle={2}>
+                  <Pie data={data} dataKey="total" nameKey="categoria" innerRadius={32} outerRadius={55} paddingAngle={2}>
                     {data.map((e, i) => <Cell key={i} fill={e.color} />)}
                   </Pie>
                   <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", fontSize: 12 }} />
@@ -101,10 +111,10 @@ export function EquipamentosDonut() {
             </div>
             <ul className="space-y-1 text-xs leading-tight">
               {data.map((e) => (
-                <li key={e.tipo} className="flex items-center gap-2">
+                <li key={e.categoria} className="flex items-center gap-2">
                   <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ background: e.color }} />
                   <span className="truncate text-foreground">
-                    {e.tipo} <span className="text-muted-foreground">({e.total})</span>
+                    {e.categoria} <span className="text-muted-foreground">({e.total.toLocaleString("pt-BR")})</span>
                   </span>
                 </li>
               ))}

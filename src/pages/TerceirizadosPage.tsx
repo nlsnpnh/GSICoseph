@@ -22,7 +22,8 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { COMARCAS, useUnidadesMock } from "@/data/unidadesMock";
+import { useUnidadesMock } from "@/data/unidadesMock";
+import { useComarcas } from "@/data/api";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   EMPRESAS, FUNCOES, ESCALAS_TERC, TURNOS, SITUACOES_TERC,
@@ -38,8 +39,7 @@ const schema = z.object({
   contrato: z.string().trim().min(1, "Informe o contrato").max(40),
   funcao: z.enum(FUNCOES),
   posto_trabalho: z.string().trim().min(2, "Informe o posto").max(120),
-  unidade: z.string().trim().min(2, "Selecione a unidade"),
-  comarca: z.enum(COMARCAS),
+  unidade_id: z.string().optional().or(z.literal("")),
   escala: z.enum(ESCALAS_TERC),
   turno: z.enum(TURNOS),
   situacao: z.enum(SITUACOES_TERC),
@@ -59,7 +59,7 @@ const situacaoTone: Record<SituacaoTerc, string> = {
 
 const defaults: FormData = {
   nome: "", cpf: "", empresa: "", contrato: "Contrato nº 23/2024", funcao: "Agente de Portaria",
-  posto_trabalho: "", unidade: "", comarca: "Porto Velho",
+  posto_trabalho: "", unidade_id: "",
   escala: "12x36 horas", turno: "Diurno", situacao: "Ativo",
   certificacoes: "", validade_certificacao: "", curso_libras: false, observacoes: "",
 };
@@ -77,12 +77,14 @@ function certStatus(d: string): { label: string; tone: string } | null {
 }
 
 export default function TerceirizadosPage() {
-  const { isOperador, unidadeNome: authUnidadeNome, comarcaNome: authComarcaNome } = useAuth();
+  const { isOperador, unidadeId: authUnidadeId, unidadeNome: authUnidadeNome } = useAuth();
   const items = useTerceirizadosMock();
   const unidades = useUnidadesMock();
+  const { data: comarcas = [] } = useComarcas();
   const [search, setSearch] = useState("");
   const [empresaFilter, setEmpresaFilter] = useState<string>("all");
   const [situacaoFilter, setSituacaoFilter] = useState<string>("all");
+  const [formComarcaId, setFormComarcaId] = useState<string>("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Terceirizado | null>(null);
   const [deleting, setDeleting] = useState<Terceirizado | null>(null);
@@ -90,10 +92,15 @@ export default function TerceirizadosPage() {
   useEffect(() => { document.title = "Terceirizados | COSEPH TJRO"; }, []);
 
   const form = useForm<FormData>({ resolver: zodResolver(schema), defaultValues: defaults });
-  const watchedComarca = form.watch("comarca");
+
   const unidadesDaComarca = useMemo(
-    () => unidades.filter((u) => u.comarca === watchedComarca),
-    [unidades, watchedComarca],
+    () => formComarcaId ? unidades.filter((u) => u.comarca_id === formComarcaId) : unidades,
+    [unidades, formComarcaId],
+  );
+
+  const unidadeMap = useMemo(
+    () => Object.fromEntries(unidades.map((u) => [u.id, u])),
+    [unidades],
   );
 
   const filtered = useMemo(() => {
@@ -107,35 +114,62 @@ export default function TerceirizadosPage() {
         t.contrato.toLowerCase().includes(q) ||
         t.funcao.toLowerCase().includes(q) ||
         t.posto_trabalho.toLowerCase().includes(q) ||
-        t.unidade.toLowerCase().includes(q)
+        (t.unidade_id ? (unidadeMap[t.unidade_id]?.nome ?? "").toLowerCase().includes(q) : false)
       );
     });
-  }, [items, search, empresaFilter, situacaoFilter]);
+  }, [items, search, empresaFilter, situacaoFilter, unidadeMap]);
 
   const openCreate = () => {
     setEditing(null);
-    if (isOperador) {
-      form.reset({ ...defaults, unidade: authUnidadeNome ?? "", comarca: (authComarcaNome as any) ?? "Porto Velho" });
+    setFormComarcaId(isOperador && authUnidadeId ? (unidadeMap[authUnidadeId]?.comarca_id ?? "") : "");
+    if (isOperador && authUnidadeId) {
+      form.reset({ ...defaults, unidade_id: authUnidadeId });
     } else {
       form.reset(defaults);
     }
     setOpen(true);
   };
+
   const openEdit = (t: Terceirizado) => {
     setEditing(t);
-    const { id: _id, ...rest } = t;
-    form.reset(rest);
+    const unid = t.unidade_id ? unidadeMap[t.unidade_id] : null;
+    setFormComarcaId(unid?.comarca_id ?? "");
+    form.reset({
+      nome: t.nome,
+      cpf: t.cpf,
+      empresa: t.empresa,
+      contrato: t.contrato,
+      funcao: t.funcao,
+      posto_trabalho: t.posto_trabalho,
+      unidade_id: t.unidade_id ?? "",
+      escala: t.escala,
+      turno: t.turno,
+      situacao: t.situacao,
+      certificacoes: t.certificacoes,
+      validade_certificacao: t.validade_certificacao,
+      curso_libras: t.curso_libras,
+      observacoes: t.observacoes,
+    });
     setOpen(true);
   };
 
   const onSubmit = async (data: FormData) => {
-    const payload = {
-      ...data,
+    const payload: Omit<Terceirizado, "id"> = {
+      nome: data.nome,
+      cpf: data.cpf,
+      empresa: data.empresa,
+      contrato: data.contrato,
+      funcao: data.funcao,
+      posto_trabalho: data.posto_trabalho,
+      unidade_id: data.unidade_id || null,
+      escala: data.escala,
+      turno: data.turno,
+      situacao: data.situacao,
       certificacoes: data.certificacoes ?? "",
       validade_certificacao: data.validade_certificacao ?? "",
       curso_libras: data.curso_libras ?? false,
       observacoes: data.observacoes ?? "",
-    } as Omit<Terceirizado, "id">;
+    };
     try {
       if (editing) {
         await updateTerceirizado(editing.id, payload);
@@ -200,6 +234,7 @@ export default function TerceirizadosPage() {
             <TableBody>
               {filtered.map((t) => {
                 const cert = certStatus(t.validade_certificacao);
+                const unid = t.unidade_id ? unidadeMap[t.unidade_id] : null;
                 return (
                   <TableRow key={t.id}>
                     <TableCell className="font-medium">
@@ -213,7 +248,9 @@ export default function TerceirizadosPage() {
                     <TableCell className="text-muted-foreground">{t.funcao}</TableCell>
                     <TableCell>
                       <div>{t.posto_trabalho}</div>
-                      <div className="text-xs text-muted-foreground">{t.unidade} • {t.comarca}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {unid?.nome ?? "—"}{unid?.comarca_nome ? ` • ${unid.comarca_nome}` : ""}
+                      </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       <div>{t.escala}</div>
@@ -288,33 +325,33 @@ export default function TerceirizadosPage() {
                 </Field>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Comarca">
+                <Field label="Comarca (filtro)">
                   {isOperador ? (
-                    <Input value={authComarcaNome ?? ""} disabled className="bg-muted" />
+                    <Input value={unidadeMap[authUnidadeId ?? ""]?.comarca_nome ?? ""} disabled className="bg-muted" />
                   ) : (
-                    <Select value={form.watch("comarca")} onValueChange={(v) => {
-                      form.setValue("comarca", v as FormData["comarca"]);
-                      form.setValue("unidade", "");
+                    <Select value={formComarcaId} onValueChange={(v) => {
+                      setFormComarcaId(v);
+                      form.setValue("unidade_id", "");
                     }}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
                       <SelectContent>
-                        {COMARCAS.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                        <SelectItem value="">— Todas —</SelectItem>
+                        {comarcas.map((c) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   )}
                 </Field>
-                <Field label="Unidade" error={form.formState.errors.unidade?.message}>
+                <Field label="Unidade" error={form.formState.errors.unidade_id?.message}>
                   {isOperador ? (
                     <Input value={authUnidadeNome ?? ""} disabled className="bg-muted" />
-                  ) : unidadesDaComarca.length > 0 ? (
-                    <Select value={form.watch("unidade")} onValueChange={(v) => form.setValue("unidade", v, { shouldValidate: true })}>
+                  ) : (
+                    <Select value={form.watch("unidade_id") || "none"} onValueChange={(v) => form.setValue("unidade_id", v === "none" ? "" : v, { shouldValidate: true })}>
                       <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
                       <SelectContent>
-                        {unidadesDaComarca.map((u) => <SelectItem key={u.id} value={u.nome}>{u.nome}</SelectItem>)}
+                        <SelectItem value="none">— Nenhuma —</SelectItem>
+                        {unidadesDaComarca.map((u) => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
                       </SelectContent>
                     </Select>
-                  ) : (
-                    <Input {...form.register("unidade")} placeholder="Digite a unidade" />
                   )}
                 </Field>
               </div>
@@ -353,15 +390,16 @@ export default function TerceirizadosPage() {
               <Field label="Certificações / Cursos">
                 <Textarea rows={2} {...form.register("certificacoes")} placeholder="Ex.: Reciclagem 2025; Primeiros Socorros" />
               </Field>
-              <Field label="">
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    id="curso_libras"
-                    checked={form.watch("curso_libras")}
-                    onCheckedChange={(v) => form.setValue("curso_libras", !!v)}
-                  />
-                  <Label htmlFor="curso_libras" className="cursor-pointer">Curso de Libras</Label>
-                </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="curso_libras"
+                  checked={form.watch("curso_libras")}
+                  onCheckedChange={(v) => form.setValue("curso_libras", !!v)}
+                />
+                <Label htmlFor="curso_libras" className="cursor-pointer text-xs">Curso de Libras</Label>
+              </div>
+              <Field label="Validade da certificação">
+                <Input type="date" {...form.register("validade_certificacao")} />
               </Field>
               <Field label="Observações">
                 <Textarea rows={2} {...form.register("observacoes")} placeholder="Informações complementares..." />

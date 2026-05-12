@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useUnidadesMock } from "@/data/unidadesMock";
-import { useEquipamentosMock } from "@/data/equipamentosMock";
+import { useEquipamentosCatalogo, useUnidadeEquipamentos } from "@/data/equipamentos";
 import { useServidoresMock, calcIdade, faixaEtaria, tempoServicoAnos } from "@/data/servidoresMock";
 import { useTerceirizadosMock } from "@/data/terceirizadosMock";
 import { usePortoesMock } from "@/data/portoesMock";
@@ -49,9 +49,28 @@ const exportCsv = (rows: Record<string, unknown>[], name: string) => {
   URL.revokeObjectURL(url);
 };
 
+// Categorias do contrato 115/2023 — mesmo mapeamento do MiniCharts
+const CATEGORIAS_CONTRATO: { nome: string; itens: number[] }[] = [
+  { nome: "Câmeras CFTV",         itens: [1, 2, 3, 4] },
+  { nome: "Gravadores IP",        itens: [31, 32, 33, 34] },
+  { nome: "Controle de acesso",   itens: [21, 22, 23, 24, 25, 27] },
+  { nome: "Rede e infra",         itens: [11, 12, 44, 45] },
+  { nome: "Servidores e storage", itens: [29, 30, 35, 39, 40, 41] },
+  { nome: "Software e licenças",  itens: [28, 36, 37, 38, 42, 43] },
+  { nome: "Estações e monitores", itens: [7, 8, 9, 10, 15] },
+  { nome: "Comunicação",          itens: [5, 6, 13, 14, 26] },
+  { nome: "Alarmes e emergência", itens: [19, 20] },
+  { nome: "Acessórios câmera",    itens: [16, 17, 18] },
+];
+
+function categoriaDoItem(itemNum: number): string {
+  return CATEGORIAS_CONTRATO.find((c) => c.itens.includes(itemNum))?.nome ?? "Outros";
+}
+
 export default function RelatoriosPage() {
   const unidades = useUnidadesMock();
-  const equipamentos = useEquipamentosMock();
+  const catalogo = useEquipamentosCatalogo();
+  const distribuicao = useUnidadeEquipamentos();
   const servidores = useServidoresMock();
   const terceirizados = useTerceirizadosMock();
   const portoes = usePortoesMock();
@@ -64,11 +83,25 @@ export default function RelatoriosPage() {
     () => Object.fromEntries(unidades.map((u) => [u.id, u.nome])),
     [unidades],
   );
+  const unidadeMap = useMemo(
+    () => Object.fromEntries(unidades.map((u) => [u.id, u])),
+    [unidades],
+  );
+
+  // Soma quantitativa de equipamentos distribuídos
+  const equipamentosQtd = useMemo(
+    () => distribuicao.reduce((s, d) => s + d.quantidade, 0),
+    [distribuicao],
+  );
+  const valorMensalTotal = useMemo(
+    () => distribuicao.reduce((s, d) => s + d.quantidade * d.valor_unitario, 0),
+    [distribuicao],
+  );
 
   // KPIs gerais
   const totals = {
     unidades: unidades.length,
-    equipamentos: equipamentos.length,
+    equipamentos: equipamentosQtd,
     servidores: servidores.length,
     terceirizados: terceirizados.length,
     portoes: portoes.length,
@@ -86,13 +119,40 @@ export default function RelatoriosPage() {
     };
   }, [unidades]);
 
-  // Equipamentos por tipo / status
-  const equipPorTipo = useMemo(() => groupBy(equipamentos, (e) => e.tipo), [equipamentos]);
-  const equipPorStatus = useMemo(() => groupBy(equipamentos, (e) => e.status), [equipamentos]);
+  // Equipamentos por categoria do contrato (soma quantidades)
+  const equipPorCategoria = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const d of distribuicao) {
+      const cat = categoriaDoItem(d.item_num);
+      map.set(cat, (map.get(cat) ?? 0) + d.quantidade);
+    }
+    return Array.from(map.entries())
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value);
+  }, [distribuicao]);
+
+  // Distribuição vs contrato (top 10 com maior divergência)
+  const divergenciaContrato = useMemo(() => {
+    const distPorItem = new Map<number, number>();
+    for (const d of distribuicao) {
+      distPorItem.set(d.item_num, (distPorItem.get(d.item_num) ?? 0) + d.quantidade);
+    }
+    return catalogo
+      .map((c) => ({
+        name: `#${String(c.item_num).padStart(2, "0")}`,
+        value: Math.abs(c.qtd_contrato - (distPorItem.get(c.item_num) ?? 0)),
+      }))
+      .filter((r) => r.value > 0)
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 10);
+  }, [catalogo, distribuicao]);
 
   // Distribuição por comarca
-  const unidadesPorComarca = useMemo(() => groupBy(unidades, (u) => u.comarca), [unidades]);
-  const servidoresPorComarca = useMemo(() => groupBy(servidores, (s) => s.comarca), [servidores]);
+  const unidadesPorComarca = useMemo(() => groupBy(unidades, (u) => u.comarca_nome || "Sem comarca"), [unidades]);
+  const servidoresPorComarca = useMemo(
+    () => groupBy(servidores, (s) => s.unidade_id ? (unidadeMap[s.unidade_id]?.comarca_nome || "Sem comarca") : "Sem comarca"),
+    [servidores, unidadeMap],
+  );
   const servidoresPorRegime = useMemo(() => groupBy(servidores, (s) => s.regime), [servidores]);
   const servidoresPorFuncao = useMemo(
     () => groupBy(servidores, (s) => s.funcao_atual?.trim() || s.cargo),
@@ -103,8 +163,11 @@ export default function RelatoriosPage() {
     [servidores],
   );
   const servidoresCapInterior = useMemo(
-    () => groupBy(servidores, (s) => (s.comarca === "Porto Velho" ? "Capital" : "Interior")),
-    [servidores],
+    () => groupBy(servidores, (s) => {
+      const comarca = s.unidade_id ? (unidadeMap[s.unidade_id]?.comarca_nome ?? "") : "";
+      return comarca === "Porto Velho" ? "Capital" : "Interior";
+    }),
+    [servidores, unidadeMap],
   );
   const tempoMedio = useMemo(() => {
     const tempos = servidores.map((s) => tempoServicoAnos(s.data_ingresso)).filter((t): t is number => t != null);
@@ -120,7 +183,6 @@ export default function RelatoriosPage() {
   );
 
   // Criticidade
-  const criticidadeUnidades = useMemo(() => groupBy(unidades, (u) => u.criticidade), [unidades]);
 
   // Contratos por status
   const contratosPorStatus = useMemo(
@@ -143,8 +205,17 @@ export default function RelatoriosPage() {
 
   // Datasets exportáveis (com nomes de unidade resolvidos)
   const equipExport = useMemo(
-    () => equipamentos.map((e) => ({ ...e, unidade: unidadeNome[e.unidade_id] ?? "" })),
-    [equipamentos, unidadeNome],
+    () => distribuicao.map((d) => ({
+      item: `#${String(d.item_num).padStart(2, "0")}`,
+      descricao: d.descricao,
+      unidade: d.unidade_nome,
+      comarca: d.comarca_nome,
+      quantidade: d.quantidade,
+      unidade_medida: d.unidade_medida,
+      valor_unitario: d.valor_unitario,
+      valor_total: d.quantidade * d.valor_unitario,
+    })),
+    [distribuicao],
   );
   const portoesExport = useMemo(
     () => portoes.map((p) => ({ ...p, unidade: unidadeNome[p.unidade_id] ?? "" })),
@@ -205,16 +276,13 @@ export default function RelatoriosPage() {
           <BarHorizontal data={servidoresPorComarca} />
         </ChartCard>
 
-        <ChartCard title="Equipamentos por tipo">
-          <BarHorizontal data={equipPorTipo} />
+        <ChartCard title="Equipamentos por categoria do contrato">
+          <BarHorizontal data={equipPorCategoria} />
         </ChartCard>
-        <ChartCard title="Equipamentos por status">
-          <Donut data={equipPorStatus} />
+        <ChartCard title="Divergência contrato × distribuição (top 10)">
+          <BarHorizontal data={divergenciaContrato} />
         </ChartCard>
 
-        <ChartCard title="Criticidade das unidades">
-          <Donut data={criticidadeUnidades} />
-        </ChartCard>
         <ChartCard title="Contratos por situação">
           <Donut data={contratosPorStatus} />
         </ChartCard>
@@ -286,9 +354,20 @@ export default function RelatoriosPage() {
             label="Contratos vencidos"
           />
           <PendRow
-            tone="critical"
-            count={equipamentos.filter((e) => e.status === "Inoperante").length}
-            label="Equipamentos inoperantes"
+            tone="partial"
+            count={(() => {
+              const comVinculo = new Set(distribuicao.map((d) => d.unidade_id));
+              return unidades.filter((u) => !comVinculo.has(u.id)).length;
+            })()}
+            label="Unidades sem equipamentos cadastrados"
+          />
+          <PendRow
+            tone="partial"
+            count={(() => {
+              const itensComVinculo = new Set(distribuicao.map((d) => d.item_num));
+              return catalogo.filter((c) => !itensComVinculo.has(c.item_num)).length;
+            })()}
+            label="Itens do catálogo sem distribuição"
           />
           <PendRow
             tone="partial"

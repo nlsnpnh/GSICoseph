@@ -12,10 +12,11 @@ import { ServidoresPorComarca, EquipamentosDonut, OcorrenciasPorMes, ContratosVi
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { useUnidadesMock, COMARCAS, CRITICIDADES } from "@/data/unidadesMock";
+import { useUnidadesMock } from "@/data/unidadesMock";
 import { useServidoresMock } from "@/data/servidoresMock";
 import { useTerceirizadosMock } from "@/data/terceirizadosMock";
-import { useEquipamentosMock } from "@/data/equipamentosMock";
+import { useComarcas } from "@/data/api";
+import { useUnidadeEquipamentos } from "@/data/equipamentos";
 import { usePortoesMock } from "@/data/portoesMock";
 import { usePeriod, applyPeriod, type Period } from "@/contexts/PeriodContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -47,53 +48,65 @@ export default function Dashboard() {
 
   const [filterComarca, setFilterComarca] = useState("todas");
   const [filterUnidade, setFilterUnidade] = useState("todas");
-  const [filterStatus, setFilterStatus]   = useState("todos");
 
+  const { data: comarcas = [] } = useComarcas();
   const unidadesRaw     = useUnidadesMock();
   const servidoresRaw   = useServidoresMock();
   const terceirizadosRaw = useTerceirizadosMock();
-  const equipamentosRaw = useEquipamentosMock();
+  const distribuicaoRaw = useUnidadeEquipamentos();
   const portoes         = usePortoesMock();
   const { period, setPeriod, factor } = usePeriod();
 
   const unidades = useMemo(() =>
-    unidadesRaw
-      .filter((u) => filterComarca === "todas" || u.comarca === filterComarca)
-      .filter((u) => filterStatus  === "todos"  || u.criticidade === filterStatus),
-    [unidadesRaw, filterComarca, filterStatus],
+    unidadesRaw.filter((u) => filterComarca === "todas" || u.comarca_id === filterComarca),
+    [unidadesRaw, filterComarca],
   );
 
   const unidadeIds = useMemo(() => new Set(unidades.map((u) => u.id)), [unidades]);
 
   const unidadesOpcoes = useMemo(() =>
-    unidadesRaw.filter((u) => filterComarca === "todas" || u.comarca === filterComarca),
+    unidadesRaw.filter((u) => filterComarca === "todas" || u.comarca_id === filterComarca),
+    [unidadesRaw, filterComarca],
+  );
+
+  const unidadeIdsParaComarca = useMemo(() =>
+    new Set(unidadesRaw
+      .filter((u) => filterComarca === "todas" || u.comarca_id === filterComarca)
+      .map((u) => u.id)
+    ),
     [unidadesRaw, filterComarca],
   );
 
   const servidores    = useMemo(() => servidoresRaw.filter((s) =>
-    filterComarca === "todas" || s.comarca === filterComarca), [servidoresRaw, filterComarca]);
+    filterComarca === "todas" || (s.unidade_id != null && unidadeIdsParaComarca.has(s.unidade_id))),
+    [servidoresRaw, filterComarca, unidadeIdsParaComarca]);
   const terceirizados = useMemo(() => terceirizadosRaw.filter((t) =>
-    filterComarca === "todas" || t.comarca === filterComarca), [terceirizadosRaw, filterComarca]);
-  const equipamentos  = useMemo(() => equipamentosRaw.filter((e) =>
-    filterUnidade === "todas" || e.unidade_id === filterUnidade), [equipamentosRaw, filterUnidade]);
+    filterComarca === "todas" || (t.unidade_id != null && unidadeIdsParaComarca.has(t.unidade_id))),
+    [terceirizadosRaw, filterComarca, unidadeIdsParaComarca]);
+  const distribuicao = useMemo(() => distribuicaoRaw.filter((d) => {
+    if (filterUnidade !== "todas") return d.unidade_id === filterUnidade;
+    if (filterComarca !== "todas") return unidadeIdsParaComarca.has(d.unidade_id);
+    return true;
+  }), [distribuicaoRaw, filterUnidade, filterComarca, unidadeIdsParaComarca]);
 
   const handleRefresh = () => setUpdated(format(new Date(), "dd/MM/yyyy HH:mm"));
 
   const stats = useMemo(() => {
-    const comarcasComDerso = new Set(unidades.filter((u) => u.possui_derso).map((u) => u.comarca)).size;
-    const countTipo = (t: string) => equipamentos.filter((e) => e.tipo === t).length;
+    const comarcasComDerso = new Set(unidades.filter((u) => u.possui_derso && u.comarca_id != null).map((u) => u.comarca_id)).size;
+    const somaItens = (...itemNums: number[]) =>
+      distribuicao.filter((d) => itemNums.includes(d.item_num)).reduce((s, d) => s + d.quantidade, 0);
     const f = (n: number) => applyPeriod(n, factor);
     return {
       unidades: f(unidades.length),
       comarcasDerso: f(comarcasComDerso),
       servidoresAtivos: f(servidores.filter((s) => s.situacao === "Ativo").length),
       terceirizadosAtivos: f(terceirizados.filter((t) => t.situacao === "Ativo").length),
-      cameras: f(countTipo("Câmera")),
-      catracas: f(countTipo("Catraca")),
+      cameras: f(somaItens(1, 2, 3, 4)),
+      catracas: f(somaItens(22)),
       portoesAuto: f(portoes.filter((p) => p.automatizacao !== "Manual").length),
-      alarmesSensores: f(equipamentos.filter((e) => e.tipo === "Alarme" || e.tipo === "Sensor" || e.tipo === "Botão de pânico").length),
+      alarmesSensores: f(somaItens(19, 20)),
     };
-  }, [unidades, servidores, terceirizados, equipamentos, portoes, factor]);
+  }, [unidades, servidores, terceirizados, distribuicao, portoes, factor]);
 
   return (
     <div className="space-y-5">
@@ -137,7 +150,7 @@ export default function Dashboard() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="todas">Todas as comarcas</SelectItem>
-              {COMARCAS.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+              {comarcas.map((c) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
             </SelectContent>
           </Select>
 
@@ -148,16 +161,6 @@ export default function Dashboard() {
             <SelectContent>
               <SelectItem value="todas">Todas as unidades</SelectItem>
               {unidadesOpcoes.map((u) => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
-            </SelectContent>
-          </Select>
-
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="h-8 w-[140px] text-xs">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">Todos os status</SelectItem>
-              {CRITICIDADES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
             </SelectContent>
           </Select>
 
@@ -192,10 +195,10 @@ export default function Dashboard() {
 
       {/* 4 gráficos em linha abaixo do mapa */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <ServidoresPorComarca />
         <EquipamentosDonut />
         <OcorrenciasPorMes />
         <ContratosVigencia />
+        <ServidoresPorComarca />
       </div>
 
       {/* Ações Rápidas */}

@@ -13,7 +13,26 @@
       "Bash(git remote *)",
       "Bash(git branch *)",
       "Bash(git push *)",
-      "WebFetch(domain:gsi-coseph.vercel.app)"
+      "WebFetch(domain:gsi-coseph.vercel.app)",
+      "Bash(grep -E \"\\\\.\\(tsx|ts|jsx|js\\)$\")",
+      "Bash(Copy-Item *)",
+      "PowerShell(cmd /c \"cd C:\\\\Users\\\\204144\\\\Documents\\\\VSCODE\\\\GSICOSEPH && npm run dev\")",
+      "Bash(cd /d C:\\\\Users\\\\204144\\\\Documents\\\\VSCODE\\\\GSICOSEPH)",
+      "Bash(dir /s /b *.ts *.tsx *.js *.jsx)",
+      "Bash(findstr /v node_modules)",
+      "Bash(findstr /v dist)",
+      "Bash(npx tsc *)",
+      "Bash(del supabase\\\\migrations\\\\20260508000000_profiles_nome_completo.sql)",
+      "mcp__claude_ai_Google_Drive__read_file_content",
+      "Bash(supabase --version)",
+      "Bash(npx supabase *)",
+      "Bash(node -e \"const d=require\\('./src/data/ro-municipios.json'\\); console.log\\(d.features.map\\(f=>f.properties.name\\).sort\\(\\).join\\('\\\\n'\\)\\)\")",
+      "Bash(npx --version)",
+      "Bash(node *)",
+      "Bash(npm ls *)",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(npx vite *)",
+      "Bash(git rev-list *)"
     ]
   }
 }

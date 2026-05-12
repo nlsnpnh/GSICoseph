@@ -5,13 +5,6 @@ import { supabase } from "@/integrations/supabase/client";
 export type Comarca = {
   id: string;
   nome: string;
-  entrancia: "Inicial" | "Intermediária" | "Final";
-  municipios_atendidos: number;
-  responsavel: string | null;
-  endereco: string | null;
-  telefone: string | null;
-  lat: number | null;
-  lng: number | null;
 };
 
 export type Unidade = {

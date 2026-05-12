@@ -12,12 +12,7 @@ const fillByNivel: Record<Criticidade, string> = {
   sem_dados: "hsl(215 15% 78%)",
 };
 
-const pinColorByCriticidade: Record<string, string> = {
-  Baixo:   "hsl(142 65% 45%)",
-  Médio:   "hsl(42 95% 50%)",
-  Alto:    "hsl(25 90% 50%)",
-  Crítico: "hsl(0 75% 50%)",
-};
+const PIN_UNIDADE = "hsl(217 91% 55%)";
 
 type Feature = {
   type: "Feature";
@@ -111,7 +106,7 @@ export function ComarcasMap() {
               >
                 <title>
                   {c
-                    ? `${p.name} — ${c.nivel} • ${c.unidades} unid. • ${c.equipamentos} equip. (${c.pctOperacional}% op.) • ${c.ocorrenciasAbertas} ocorrências abertas`
+                    ? `${p.name} — ${c.nivel} • ${c.unidades} unid. • ${c.quantidadeTotal} equip. • ${c.itensVinculados} itens • cobertura ${c.cobertura}% • ${c.ocorrenciasAbertas} ocorrência(s)`
                     : p.name}
                 </title>
               </path>
@@ -121,19 +116,18 @@ export function ComarcasMap() {
           {/* Pins menores para unidades prediais com coordenadas */}
           {unidadesComCoords.map((u) => {
             const [x, y] = project(u.lng!, u.lat!);
-            const cor = pinColorByCriticidade[u.criticidade] ?? "hsl(215 15% 50%)";
             return (
               <g key={u.id} transform={`translate(${x - 5}, ${y - 5})`}>
                 <rect
                   width={10}
                   height={10}
                   rx={2}
-                  fill={cor}
+                  fill={PIN_UNIDADE}
                   stroke="white"
                   strokeWidth={1}
                   opacity={0.95}
                 />
-                <title>{u.nome} ({u.tipo}) — {u.criticidade}</title>
+                <title>{u.nome}</title>
               </g>
             );
           })}
