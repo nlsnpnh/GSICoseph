@@ -81,9 +81,9 @@ export function AppSidebar() {
           <HelpCircle className="h-4 w-4 shrink-0" />
           {!collapsed && (
             <div className="min-w-0">
-              <p className="text-xs font-medium">Precisa de ajuda?</p>
+              <p className="text-xs font-medium">Manual do Sistema</p>
               <p className="text-[10px] text-sidebar-foreground/50 group-hover:text-white/70">
-                Acesse o guia do sistema
+                Documentação e tutoriais
               </p>
             </div>
           )}
