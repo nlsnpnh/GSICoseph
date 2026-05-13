@@ -1,7 +1,7 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Building2, Map, Users, UserCog, Cpu, DoorOpen,
-  FileText, AlertTriangle, BarChart3, Settings, Search, HelpCircle,
+  FileText, AlertTriangle, BarChart3, Settings, Search, HelpCircle, ClipboardList,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent,
@@ -18,7 +18,8 @@ const items = [
   { title: "Equipamentos",              url: "/equipamentos",  icon: Cpu },
   { title: "Portões e Acessos",         url: "/portoes",       icon: DoorOpen },
   { title: "Contratos",                 url: "/contratos",     icon: FileText,      adminOnly: true },
-  { title: "Ocorrências e Manutenções", url: "/ocorrencias",   icon: AlertTriangle },
+  { title: "Boletim Operacional",       url: "/boletim",       icon: ClipboardList },
+  { title: "Manutenção",                url: "/ocorrencias",   icon: AlertTriangle },
   { title: "Consultas",                 url: "/consultas",     icon: Search,        adminOnly: true },
   { title: "Relatórios",                url: "/relatorios",    icon: BarChart3,     adminOnly: true },
   { title: "Configurações",             url: "/configuracoes", icon: Settings,      adminOnly: true },

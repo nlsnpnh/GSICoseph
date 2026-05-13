@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { StatCard } from "@/components/StatCard";
 import { AlertsPanel } from "@/components/dashboard/AlertsPanel";
 import { MapaComarcasCard } from "@/components/dashboard/MapaComarcasCard";
-import { ServidoresPorComarca, EquipamentosDonut, OcorrenciasPorMes, ContratosVigencia } from "@/components/dashboard/MiniCharts";
+import { ServidoresPorComarca, EquipamentosDonut, ResultadosOperacionaisPie, ContratosVigencia } from "@/components/dashboard/MiniCharts";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -196,8 +196,11 @@ export default function Dashboard() {
       {/* 4 gráficos em linha abaixo do mapa */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <EquipamentosDonut />
-        <OcorrenciasPorMes />
         <ContratosVigencia />
+        <ResultadosOperacionaisPie
+          unidadeId={filterUnidade === "todas" ? null : filterUnidade}
+          comarcaId={filterComarca === "todas" ? null : filterComarca}
+        />
         <ServidoresPorComarca />
       </div>
 

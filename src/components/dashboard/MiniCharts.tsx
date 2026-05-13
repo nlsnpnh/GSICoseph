@@ -7,6 +7,8 @@ import { useUnidadesMock } from "@/data/unidadesMock";
 import { useUnidadeEquipamentos } from "@/data/equipamentos";
 import { useOcorrenciasMock } from "@/data/ocorrenciasMock";
 import { useContratosMock, statusFromVigencia } from "@/data/contratosMock";
+import { useResultadosOperacionais } from "@/data/boletim";
+import { usePeriod } from "@/contexts/PeriodContext";
 
 // Categorias do contrato 115/2023 (mutuamente exclusivas)
 const CATEGORIAS: { nome: string; itens: number[]; cor: string }[] = [
@@ -127,6 +129,59 @@ export function EquipamentosDonut() {
 }
 
 const MESES_ABREV = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+
+export function ResultadosOperacionaisPie({
+  unidadeId, comarcaId,
+}: { unidadeId?: string | null; comarcaId?: string | null }) {
+  const { ano, period } = usePeriod();
+  // "mes" => filtra somente o mês corrente; "ano"/"todos" => ano inteiro
+  const mes = period === "mes" ? new Date().getMonth() + 1 : null;
+  const { data: rows = [] } = useResultadosOperacionais({ ano, mes, unidadeId, comarcaId });
+  const total = rows.reduce((s, r) => s + r.total, 0);
+  const data = rows.filter((r) => r.total > 0);
+
+  return (
+    <Card className="shadow-sm">
+      <CardHeader className="border-b border-border pb-3">
+        <CardTitle className="text-sm font-semibold">Resultados Operacionais</CardTitle>
+        <p className="text-[11px] text-muted-foreground">
+          {period === "mes" ? `Mês ${String(mes).padStart(2, "0")}/${ano}` : `Ano ${ano}`}
+          {" · "}Total: {total.toLocaleString("pt-BR")}
+        </p>
+      </CardHeader>
+      <CardContent className="grid grid-cols-[100px_1fr] items-center gap-3 p-3">
+        {data.length === 0 ? (
+          <p className="col-span-2 py-8 text-center text-xs text-muted-foreground">
+            Sem lançamentos no período.
+          </p>
+        ) : (
+          <>
+            <div className="h-[140px] w-[100px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={data} dataKey="total" nameKey="label" innerRadius={28} outerRadius={48} paddingAngle={2}>
+                    {data.map((c, i) => <Cell key={i} fill={c.color} />)}
+                  </Pie>
+                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", fontSize: 12 }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <ul className="space-y-1 text-xs leading-tight">
+              {rows.map((c) => (
+                <li key={c.item} className="flex items-center gap-2">
+                  <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ background: c.color }} />
+                  <span className="truncate text-foreground">
+                    {c.label} <span className="text-muted-foreground">({c.total.toLocaleString("pt-BR")})</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 export function OcorrenciasPorMes() {
   const ocorrencias = useOcorrenciasMock();
