@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  Building2, Landmark, Users, UserCog, Camera, DoorOpen, Cpu, Bell,
+  Building2, Cpu, PowerOff, Siren, FileCheck, UserCog, Users, ClipboardList,
   AlertOctagon, FileSearch, FileBarChart2, RefreshCw,
 } from "lucide-react";
 import { format } from "date-fns";
@@ -17,7 +17,9 @@ import { useServidoresMock } from "@/data/servidoresMock";
 import { useTerceirizadosMock } from "@/data/terceirizadosMock";
 import { useComarcas } from "@/data/api";
 import { useUnidadeEquipamentos } from "@/data/equipamentos";
-import { usePortoesMock } from "@/data/portoesMock";
+import { useContratosMock } from "@/data/contratosMock";
+import { useOcorrenciasMock } from "@/data/ocorrenciasMock";
+import { useAlertas } from "@/hooks/useAlertas";
 import { usePeriod, applyPeriod, type Period } from "@/contexts/PeriodContext";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -54,7 +56,9 @@ export default function Dashboard() {
   const servidoresRaw   = useServidoresMock();
   const terceirizadosRaw = useTerceirizadosMock();
   const distribuicaoRaw = useUnidadeEquipamentos();
-  const portoes         = usePortoesMock();
+  const contratosRaw    = useContratosMock();
+  const ocorrenciasRaw  = useOcorrenciasMock();
+  const alertas         = useAlertas();
   const { period, setPeriod, factor } = usePeriod();
 
   const unidades = useMemo(() =>
@@ -88,25 +92,47 @@ export default function Dashboard() {
     if (filterComarca !== "todas") return unidadeIdsParaComarca.has(d.unidade_id);
     return true;
   }), [distribuicaoRaw, filterUnidade, filterComarca, unidadeIdsParaComarca]);
+  const ocorrencias = useMemo(() => ocorrenciasRaw.filter((o) =>
+    filterUnidade !== "todas"
+      ? o.unidade_id === filterUnidade
+      : filterComarca === "todas" || (o.unidade_id != null && unidadeIdsParaComarca.has(o.unidade_id))),
+    [ocorrenciasRaw, filterUnidade, filterComarca, unidadeIdsParaComarca]);
 
   const handleRefresh = () => setUpdated(format(new Date(), "dd/MM/yyyy HH:mm"));
 
   const stats = useMemo(() => {
-    const comarcasComDerso = new Set(unidades.filter((u) => u.possui_derso && u.comarca_id != null).map((u) => u.comarca_id)).size;
-    const somaItens = (...itemNums: number[]) =>
-      distribuicao.filter((d) => itemNums.includes(d.item_num)).reduce((s, d) => s + d.quantidade, 0);
     const f = (n: number) => applyPeriod(n, factor);
+    const equipamentosInstalados = distribuicao.reduce((s, d) => s + d.quantidade, 0);
+    const statusAbertos = new Set(["Aberto", "Em andamento", "Aguardando peça"]);
+    const ocorrenciasAbertas = ocorrencias.filter((o) => statusAbertos.has(o.status)).length;
+    const contratosVigentes = contratosRaw.filter((c) => c.status === "Vigente").length;
+
+    // Equipamentos únicos (unidade + equipamento) com ocorrência em aberto do tipo Falha ou Manutenção corretiva
+    const equipamentosInoperantes = new Set(
+      ocorrencias
+        .filter((o) =>
+          (o.tipo === "Falha" || o.tipo === "Manutenção corretiva") &&
+          statusAbertos.has(o.status),
+        )
+        .map((o) => `${o.unidade_id}::${o.equipamento}`),
+    ).size;
+
+    // Soma dos counts dos alertas classificados como críticos pelo hook useAlertas (mesma fonte do painel Alertas e Pendências)
+    const alertasCriticos = alertas
+      .filter((a) => a.tipo === "critical")
+      .reduce((s, a) => s + a.count, 0);
+
     return {
-      unidades: f(unidades.length),
-      comarcasDerso: f(comarcasComDerso),
-      servidoresAtivos: f(servidores.filter((s) => s.situacao === "Ativo").length),
-      terceirizadosAtivos: f(terceirizados.filter((t) => t.situacao === "Ativo").length),
-      cameras: f(somaItens(1, 2, 3, 4)),
-      catracas: f(somaItens(22)),
-      portoesAuto: f(portoes.filter((p) => p.automatizacao !== "Manual").length),
-      alarmesSensores: f(somaItens(19, 20)),
+      unidadesMonitoradas:    f(unidades.length),
+      equipamentosInstalados: f(equipamentosInstalados),
+      equipamentosInoperantes:f(equipamentosInoperantes),
+      alertasCriticos:        f(alertasCriticos),
+      contratosVigentes:      f(contratosVigentes),
+      terceirizadosAtivos:    f(terceirizados.filter((t) => t.situacao === "Ativo").length),
+      servidoresAtivos:       f(servidores.filter((s) => s.situacao === "Ativo").length),
+      ocorrenciasAbertas:     f(ocorrenciasAbertas),
     };
-  }, [unidades, servidores, terceirizados, distribuicao, portoes, factor]);
+  }, [unidades, servidores, terceirizados, distribuicao, contratosRaw, ocorrencias, alertas, factor]);
 
   return (
     <div className="space-y-5">
@@ -175,16 +201,16 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* 8 stat cards */}
+      {/* 8 stat cards — ordem fixa conforme especificação */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
-        <StatCard label="Unidades Prediais Monitoradas" value={stats.unidades} icon={Building2} tone="info" href="/unidades" hrefLabel="Ver unidades" />
-        <StatCard label="Comarcas Atendidas com DERSO" value={stats.comarcasDerso} icon={Landmark} tone="success" href="/comarcas" hrefLabel="Ver comarcas" />
-        <StatCard label="Servidores da Segurança" value={stats.servidoresAtivos} icon={Users} tone="accent" href="/servidores" hrefLabel="Ver servidores" />
-        <StatCard label="Terceirizados Ativos" value={stats.terceirizadosAtivos} icon={UserCog} tone="primary" href="/terceirizados" hrefLabel="Ver terceirizados" />
-        <StatCard label="Câmeras Total" value={stats.cameras} icon={Camera} tone="destructive" href="/equipamentos" hrefLabel="Ver equipamentos" />
-        <StatCard label="Catracas Total" value={stats.catracas} icon={Cpu} tone="warning" href="/equipamentos" hrefLabel="Ver equipamentos" />
-        <StatCard label="Portões Automatizados" value={stats.portoesAuto} icon={DoorOpen} tone="info" href="/portoes" hrefLabel="Ver acessos" />
-        <StatCard label="Alarmes e Sensores" value={stats.alarmesSensores} icon={Bell} tone="destructive" href="/equipamentos" hrefLabel="Ver equipamentos" />
+        <StatCard label="Unidades Monitoradas"    value={stats.unidadesMonitoradas}     icon={Building2}      tone="info" />
+        <StatCard label="Equipamentos Instalados" value={stats.equipamentosInstalados}  icon={Cpu}            tone="primary" />
+        <StatCard label="Equipamentos Inoperantes" value={stats.equipamentosInoperantes} icon={PowerOff}      tone="warning" />
+        <StatCard label="Alertas Críticos"        value={stats.alertasCriticos}         icon={Siren}          tone="destructive" />
+        <StatCard label="Contratos Vigentes"      value={stats.contratosVigentes}       icon={FileCheck}      tone="success" />
+        <StatCard label="Terceirizados Ativos"    value={stats.terceirizadosAtivos}     icon={UserCog}        tone="accent" />
+        <StatCard label="Servidores Ativos"       value={stats.servidoresAtivos}        icon={Users}          tone="info" />
+        <StatCard label="Ocorrências Abertas"     value={stats.ocorrenciasAbertas}      icon={ClipboardList}  tone="destructive" />
       </div>
 
       {/* Mapa à esquerda; Alertas à direita */}

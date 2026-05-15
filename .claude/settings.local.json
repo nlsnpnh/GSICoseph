@@ -32,7 +32,12 @@
       "Bash(npm ls *)",
       "Bash(echo \"EXIT: $?\")",
       "Bash(npx vite *)",
-      "Bash(git rev-list *)"
+      "Bash(git rev-list *)",
+      "Bash(findstr /i \"ativ instal inoper alert contrat servid ocorr unidad equip\")",
+      "Bash(dir /b \"c:\\\\Users\\\\204144\\\\Downloads\")",
+      "Bash(findstr /i \".png\")",
+      "PowerShell(Test-Path *)",
+      "Bash(git checkout *)"
     ]
   }
 }
