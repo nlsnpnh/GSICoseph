@@ -37,7 +37,8 @@
       "Bash(dir /b \"c:\\\\Users\\\\204144\\\\Downloads\")",
       "Bash(findstr /i \".png\")",
       "PowerShell(Test-Path *)",
-      "Bash(git checkout *)"
+      "Bash(git checkout *)",
+      "PowerShell(Get-ChildItem 'C:\\\\Users\\\\204144\\\\Downloads' -Force | Select-Object -First 30 | ForEach-Object { $_.Name })"
     ]
   }
 }
