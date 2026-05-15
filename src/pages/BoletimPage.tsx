@@ -27,9 +27,14 @@ const MESES = [
   "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
 ];
 
+// Sistema começou a operar em 2026 — não exibir anos anteriores.
+const ANO_INICIAL = 2026;
 const ANOS = (() => {
   const atual = new Date().getFullYear();
-  return Array.from({ length: 6 }, (_, i) => atual - i);
+  const fim = Math.max(atual + 1, ANO_INICIAL + 4);
+  const arr: number[] = [];
+  for (let a = ANO_INICIAL; a <= fim; a++) arr.push(a);
+  return arr.reverse();
 })();
 
 type LinhaForm = { quantidade: number; observacoes: string };
