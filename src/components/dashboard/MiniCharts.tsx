@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip,
+import { XAxis, YAxis, ResponsiveContainer, Tooltip,
   PieChart, Pie, Cell, LineChart, Line, CartesianGrid } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useServidoresMock } from "@/data/servidoresMock";
@@ -21,11 +21,20 @@ const TOOLTIP_STYLE = {
 const TOOLTIP_ITEM = { color: "hsl(var(--popover-foreground))" } as const;
 const TOOLTIP_LABEL = { color: "hsl(var(--popover-foreground))", fontWeight: 600 } as const;
 
+const CORES_SERVIDORES = [
+  "hsl(217 91% 55%)",
+  "hsl(142 65% 45%)",
+  "hsl(42 95% 55%)",
+  "hsl(270 65% 55%)",
+  "hsl(0 75% 55%)",
+  "hsl(215 15% 60%)",
+];
+
 export function ServidoresPorComarca() {
   const servidores = useServidoresMock();
   const unidades   = useUnidadesMock();
 
-  const data = useMemo(() => {
+  const { data, total } = useMemo(() => {
     const unidadeMap = Object.fromEntries(unidades.map((u) => [u.id, u]));
     const contagem = new Map<string, number>();
     for (const s of servidores) {
@@ -33,30 +42,50 @@ export function ServidoresPorComarca() {
       const comarca = s.unidade_id ? (unidadeMap[s.unidade_id]?.comarca_nome || "Sem comarca") : "Sem comarca";
       contagem.set(comarca, (contagem.get(comarca) ?? 0) + 1);
     }
-    return Array.from(contagem.entries())
+    const ordenado = Array.from(contagem.entries())
       .map(([comarca, total]) => ({ comarca, total }))
-      .sort((a, b) => b.total - a.total)
-      .slice(0, 5);
+      .sort((a, b) => b.total - a.total);
+
+    const top = ordenado.slice(0, 5);
+    const resto = ordenado.slice(5).reduce((s, e) => s + e.total, 0);
+    const pizza = (resto > 0 ? [...top, { comarca: "Outras", total: resto }] : top)
+      .map((e, i) => ({ ...e, color: CORES_SERVIDORES[i % CORES_SERVIDORES.length] }));
+
+    return { data: pizza, total: ordenado.reduce((s, e) => s + e.total, 0) };
   }, [servidores, unidades]);
 
   return (
     <Card className="shadow-sm">
       <CardHeader className="border-b border-border pb-3">
         <CardTitle className="text-sm font-semibold">Servidores por Comarca</CardTitle>
-        <p className="text-[11px] text-muted-foreground">Top 5 — ativos</p>
+        <p className="text-[11px] text-muted-foreground">Top 5 — ativos · Total: {total.toLocaleString("pt-BR")}</p>
       </CardHeader>
-      <CardContent className="p-3">
+      <CardContent className="grid grid-cols-[100px_1fr] items-center gap-3 p-3">
         {data.length === 0 ? (
-          <p className="py-10 text-center text-xs text-muted-foreground">Sem dados cadastrados.</p>
+          <p className="col-span-2 py-8 text-center text-xs text-muted-foreground">Sem dados cadastrados.</p>
         ) : (
-          <ResponsiveContainer width="100%" height={170}>
-            <BarChart data={data} layout="vertical" margin={{ left: 0, right: 30 }}>
-              <XAxis type="number" hide />
-              <YAxis type="category" dataKey="comarca" stroke="hsl(var(--muted-foreground))" fontSize={11} width={75} tickLine={false} axisLine={false} />
-              <Tooltip contentStyle={TOOLTIP_STYLE} itemStyle={TOOLTIP_ITEM} labelStyle={TOOLTIP_LABEL} />
-              <Bar dataKey="total" fill="hsl(217 91% 55%)" radius={[0, 4, 4, 0]} label={{ position: "right", fill: "hsl(var(--foreground))", fontSize: 11, fontWeight: 600 }} />
-            </BarChart>
-          </ResponsiveContainer>
+          <>
+            <div className="h-[140px] w-[100px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={data} dataKey="total" nameKey="comarca" innerRadius={28} outerRadius={48} paddingAngle={2}>
+                    {data.map((e, i) => <Cell key={i} fill={e.color} />)}
+                  </Pie>
+                  <Tooltip contentStyle={TOOLTIP_STYLE} itemStyle={TOOLTIP_ITEM} labelStyle={TOOLTIP_LABEL} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <ul className="space-y-1 text-xs leading-tight">
+              {data.map((e) => (
+                <li key={e.comarca} className="flex items-center gap-2">
+                  <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ background: e.color }} />
+                  <span className="truncate text-foreground" title={e.comarca}>
+                    {e.comarca} <span className="text-muted-foreground">({e.total.toLocaleString("pt-BR")})</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </>
         )}
       </CardContent>
     </Card>
