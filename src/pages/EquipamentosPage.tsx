@@ -150,9 +150,11 @@ export default function EquipamentosPage() {
         title="Equipamentos"
         description="Catálogo do contrato 115/2023 e distribuição por unidade predial."
         actions={
-          <Button onClick={openCreate} disabled={unidades.length === 0 || catalogo.length === 0}>
-            <Plus className="mr-1 h-4 w-4" />Vincular equipamento
-          </Button>
+          isOperador ? null : (
+            <Button onClick={openCreate} disabled={unidades.length === 0 || catalogo.length === 0}>
+              <Plus className="mr-1 h-4 w-4" />Vincular equipamento
+            </Button>
+          )
         }
       />
 
@@ -195,7 +197,7 @@ export default function EquipamentosPage() {
                     <TableHead>Comarca</TableHead>
                     <TableHead className="text-right">Quantidade</TableHead>
                     <TableHead>Unid.</TableHead>
-                    <TableHead className="w-[100px] text-right">Ações</TableHead>
+                    {!isOperador && <TableHead className="w-[100px] text-right">Ações</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -207,10 +209,12 @@ export default function EquipamentosPage() {
                       <TableCell className="text-muted-foreground">{d.comarca_nome}</TableCell>
                       <TableCell className="text-right font-mono">{d.quantidade}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">{d.unidade_medida}</TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" onClick={() => openEdit(d)}><Pencil className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon" onClick={() => setDeleting(d)}><Trash2 className="h-4 w-4" /></Button>
-                      </TableCell>
+                      {!isOperador && (
+                        <TableCell className="text-right">
+                          <Button variant="ghost" size="icon" onClick={() => openEdit(d)}><Pencil className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => setDeleting(d)}><Trash2 className="h-4 w-4" /></Button>
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>
@@ -225,10 +229,12 @@ export default function EquipamentosPage() {
             placeholder="Buscar item do catálogo..."
             count={filteredCatalogo.length}
             filters={
-              <div className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-1.5 text-xs">
-                <span className="text-muted-foreground">Valor total do contrato:</span>
-                <span className="font-semibold">{fmtMoney(totalContrato)}</span>
-              </div>
+              !isOperador ? (
+                <div className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-1.5 text-xs">
+                  <span className="text-muted-foreground">Valor total do contrato:</span>
+                  <span className="font-semibold">{fmtMoney(totalContrato)}</span>
+                </div>
+              ) : null
             }
           >
             {filteredCatalogo.length === 0 ? (
@@ -241,8 +247,8 @@ export default function EquipamentosPage() {
                     <TableHead>Descrição</TableHead>
                     <TableHead>Unidade</TableHead>
                     <TableHead className="text-right">Qtd. contrato</TableHead>
-                    <TableHead className="text-right">Valor unit.</TableHead>
-                    <TableHead className="text-right">Valor total</TableHead>
+                    {!isOperador && <TableHead className="text-right">Valor unit.</TableHead>}
+                    {!isOperador && <TableHead className="text-right">Valor total</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -254,8 +260,12 @@ export default function EquipamentosPage() {
                         <Badge variant="outline" className="text-xs">{c.unidade_medida}</Badge>
                       </TableCell>
                       <TableCell className="text-right font-mono">{c.qtd_contrato}</TableCell>
-                      <TableCell className="text-right font-mono text-muted-foreground">{fmtMoney(c.valor_unitario)}</TableCell>
-                      <TableCell className="text-right font-mono">{fmtMoney(c.valor_total)}</TableCell>
+                      {!isOperador && (
+                        <TableCell className="text-right font-mono text-muted-foreground">{fmtMoney(c.valor_unitario)}</TableCell>
+                      )}
+                      {!isOperador && (
+                        <TableCell className="text-right font-mono">{fmtMoney(c.valor_total)}</TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>
