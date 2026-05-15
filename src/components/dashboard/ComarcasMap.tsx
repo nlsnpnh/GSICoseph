@@ -2,8 +2,7 @@ import { useMemo, useState } from "react";
 import { type Criticidade } from "@/data/mockDashboard";
 import { ComarcaDetailDrawer } from "./ComarcaDetailDrawer";
 import muniData from "@/data/ro-municipios.json";
-import { useComarcaMetrics, type ComarcaMetric } from "@/hooks/useComarcaMetrics";
-import { useUnidadesMock } from "@/data/unidadesMock";
+import { useMapaComarcasResumo, useMapaUnidadesPontos, type MapaComarcaResumo } from "@/data/mapa";
 
 const fillByNivel: Record<Criticidade, string> = {
   adequado:  "hsl(142 65% 55%)",
@@ -30,16 +29,10 @@ function norm(s: string) {
 }
 
 export function ComarcasMap() {
-  const [selected, setSelected] = useState<ComarcaMetric | null>(null);
-  const metrics  = useComarcaMetrics();
-  const unidades = useUnidadesMock();
-  const byName   = useMemo(() => new Map(metrics.map((m) => [norm(m.nome), m])), [metrics]);
-
-  // Unidades com coordenadas cadastradas
-  const unidadesComCoords = useMemo(
-    () => unidades.filter((u) => u.lat != null && u.lng != null),
-    [unidades],
-  );
+  const [selected, setSelected] = useState<MapaComarcaResumo | null>(null);
+  const metrics            = useMapaComarcasResumo();
+  const unidadesComCoords  = useMapaUnidadesPontos();
+  const byName             = useMemo(() => new Map(metrics.map((m) => [norm(m.nome), m])), [metrics]);
 
   const { paths, project, vbW, vbH } = useMemo(() => {
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -115,7 +108,7 @@ export function ComarcasMap() {
 
           {/* Pins menores para unidades prediais com coordenadas */}
           {unidadesComCoords.map((u) => {
-            const [x, y] = project(u.lng!, u.lat!);
+            const [x, y] = project(u.lng, u.lat);
             return (
               <g key={u.id} transform={`translate(${x - 5}, ${y - 5})`}>
                 <rect

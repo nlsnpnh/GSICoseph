@@ -14,7 +14,7 @@ import { useUnidadeEquipamentos } from "@/data/equipamentos";
 import { useServidoresMock } from "@/data/servidoresMock";
 import { useTerceirizadosMock } from "@/data/terceirizadosMock";
 import { usePortoesMock } from "@/data/portoesMock";
-import type { ComarcaMetric } from "@/hooks/useComarcaMetrics";
+import type { MapaComarcaResumo } from "@/data/mapa";
 import type { Criticidade } from "@/data/mockDashboard";
 
 const nivelTone: Record<Criticidade, string> = {
@@ -32,7 +32,7 @@ const nivelLabel: Record<Criticidade, string> = {
 };
 
 interface Props {
-  comarca: ComarcaMetric | null;
+  comarca: MapaComarcaResumo | null;
   onOpenChange: (open: boolean) => void;
 }
 
