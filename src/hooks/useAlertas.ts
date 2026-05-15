@@ -10,6 +10,7 @@ export type Alerta = {
   label: string;
   count: number;
   unidade: string;
+  href: string;
 };
 
 export function useAlertas(): Alerta[] {
@@ -63,42 +64,49 @@ export function useAlertas(): Alerta[] {
         label: "Contratos vencidos",
         count: contratosVencidos,
         unidade: contratosVencidos === 1 ? "contrato" : "contratos",
+        href: "/consultas?q=contratos-vencidos",
       },
       contratosVencendo > 0 && {
         tipo: "warning" as const,
         label: "Contratos vencendo em 90 dias",
         count: contratosVencendo,
         unidade: contratosVencendo === 1 ? "contrato" : "contratos",
+        href: "/consultas?q=contratos-vencendo",
       },
       manutVencidas > 0 && {
         tipo: "warning" as const,
         label: "Manutenções com prazo vencido",
         count: manutVencidas,
         unidade: manutVencidas === 1 ? "registro" : "registros",
+        href: "/consultas?q=ocorrencias-prazo-vencido",
       },
       portoesUrgentes > 0 && {
         tipo: "warning" as const,
         label: "Portões com manutenção urgente/alta",
         count: portoesUrgentes,
         unidade: portoesUrgentes === 1 ? "portão" : "portões",
+        href: "/consultas?q=portoes-urgentes",
       },
       unidadesSemEquip > 0 && {
         tipo: "warning" as const,
         label: "Unidades sem equipamentos cadastrados",
         count: unidadesSemEquip,
         unidade: unidadesSemEquip === 1 ? "unidade" : "unidades",
+        href: "/consultas?q=unidades-sem-equipamentos",
       },
       itensSemDistribuicao > 0 && {
         tipo: "info" as const,
         label: "Itens do catálogo sem distribuição",
         count: itensSemDistribuicao,
         unidade: itensSemDistribuicao === 1 ? "item" : "itens",
+        href: "/consultas?q=itens-nao-distribuidos",
       },
       itensDivergentes > 0 && {
         tipo: "info" as const,
         label: "Itens com divergência contrato × distribuição",
         count: itensDivergentes,
         unidade: itensDivergentes === 1 ? "item" : "itens",
+        href: "/consultas?q=divergencia-contrato",
       },
     ].filter(Boolean) as Alerta[];
   }, [contratos, catalogo, distribuicao, unidades, ocorrencias, portoes]);

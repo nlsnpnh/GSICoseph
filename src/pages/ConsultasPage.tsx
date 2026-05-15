@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   AlertTriangle, ChevronDown, ChevronUp, Clock, Cpu, DoorOpen,
   FileText, Search, Shield, Users, UserCog, Wrench, XCircle,
@@ -56,6 +57,19 @@ export default function ConsultasPage() {
   const [search, setSearch]   = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
   const toggle = (id: string) => setExpanded((p) => (p === id ? null : id));
+
+  // Suporte a deep-link via ?q=<id> (vindo dos cartões de alerta do Painel)
+  const [searchParams] = useSearchParams();
+  const queryId = searchParams.get("q");
+  const rowRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  useEffect(() => {
+    if (!queryId) return;
+    setExpanded(queryId);
+    const t = window.setTimeout(() => {
+      rowRefs.current[queryId]?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
+    return () => window.clearTimeout(t);
+  }, [queryId]);
 
   const hoje = useMemo(() => new Date(), []);
   const em90 = useMemo(() => { const d = new Date(); d.setDate(d.getDate() + 90); return d; }, []);
@@ -458,7 +472,11 @@ export default function ConsultasPage() {
                   const isOpen = expanded === q.id;
                   const tone = CATEGORY_TONE[q.category] ?? "";
                   return (
-                    <div key={q.id} className="overflow-hidden rounded-lg border border-border bg-card">
+                    <div
+                      key={q.id}
+                      ref={(el) => { rowRefs.current[q.id] = el; }}
+                      className={`overflow-hidden rounded-lg border bg-card transition-shadow ${queryId === q.id ? "border-primary/60 shadow-lg ring-1 ring-primary/30" : "border-border"}`}
+                    >
                       <button
                         type="button"
                         className="flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/40"

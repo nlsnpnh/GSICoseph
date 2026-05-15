@@ -1,4 +1,4 @@
-import { AlertTriangle, AlertCircle, Info } from "lucide-react";
+import { AlertTriangle, AlertCircle, ChevronRight, Info } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -10,7 +10,9 @@ const iconByTipo = {
   info:     { Icon: Info,          color: "text-blue-600", count: "text-blue-600" },
 };
 
-function SecaoAlertas({ titulo, items, cor }: { titulo: string; items: Alerta[]; cor: string }) {
+function SecaoAlertas({
+  titulo, items, cor, onNavigate,
+}: { titulo: string; items: Alerta[]; cor: string; onNavigate: (href: string) => void }) {
   return (
     <div>
       <div className={cn("flex items-center gap-2 border-b border-border px-4 py-2", cor)}>
@@ -26,14 +28,24 @@ function SecaoAlertas({ titulo, items, cor }: { titulo: string; items: Alerta[];
           {items.map((a, i) => {
             const cfg = iconByTipo[a.tipo];
             return (
-              <li key={i} className="flex items-center justify-between px-4 py-2.5 text-sm">
-                <div className="flex min-w-0 items-center gap-3">
-                  <cfg.Icon className={cn("h-4 w-4 shrink-0", cfg.color)} />
-                  <span className="truncate text-foreground">{a.label}</span>
-                </div>
-                <span className={cn("shrink-0 text-xs font-semibold", cfg.count)}>
-                  {a.count} {a.unidade}
-                </span>
+              <li key={i}>
+                <button
+                  type="button"
+                  onClick={() => onNavigate(a.href)}
+                  title={`Abrir: ${a.label}`}
+                  className="group flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left text-sm transition-colors hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-none"
+                >
+                  <span className="flex min-w-0 items-center gap-3">
+                    <cfg.Icon className={cn("h-4 w-4 shrink-0", cfg.color)} />
+                    <span className="truncate text-foreground group-hover:text-primary">{a.label}</span>
+                  </span>
+                  <span className="flex shrink-0 items-center gap-1.5">
+                    <span className={cn("text-xs font-semibold", cfg.count)}>
+                      {a.count} {a.unidade}
+                    </span>
+                    <ChevronRight className="h-3.5 w-3.5 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground" />
+                  </span>
+                </button>
               </li>
             );
           })}
@@ -65,9 +77,9 @@ export function AlertsPanel() {
         </button>
       </CardHeader>
       <CardContent className="flex-1 divide-y divide-border p-0">
-        <SecaoAlertas titulo="Críticos"     items={criticos}     cor="text-critical" />
-        <SecaoAlertas titulo="Atenção"      items={atencao}      cor="text-partial"  />
-        <SecaoAlertas titulo="Informativos" items={informativos} cor="text-blue-600" />
+        <SecaoAlertas titulo="Críticos"     items={criticos}     cor="text-critical" onNavigate={navigate} />
+        <SecaoAlertas titulo="Atenção"      items={atencao}      cor="text-partial"  onNavigate={navigate} />
+        <SecaoAlertas titulo="Informativos" items={informativos} cor="text-blue-600" onNavigate={navigate} />
       </CardContent>
     </Card>
   );
