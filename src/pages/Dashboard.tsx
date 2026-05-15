@@ -240,12 +240,12 @@ export default function Dashboard() {
             <button
               key={to}
               onClick={() => navigate(to)}
-              className={`flex items-center gap-3 rounded-lg border border-border p-4 text-left shadow-sm transition-colors hover:bg-muted/50 ${bg}`}
+              className={`group flex items-center gap-3 rounded-lg border border-border p-4 text-left shadow-sm transition-all duration-200 ease-out hover:-translate-y-1 hover:scale-[1.02] hover:border-primary/40 hover:shadow-lg hover:ring-1 hover:ring-primary/30 focus-visible:-translate-y-1 focus-visible:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 active:translate-y-0 active:scale-100 ${bg}`}
             >
-              <span className={`rounded-md p-2 ${bg}`}>
-                <Icon className={`h-5 w-5 ${color}`} />
+              <span className={`rounded-md p-2 transition-transform duration-200 ease-out group-hover:scale-110 group-hover:-rotate-3 ${bg}`}>
+                <Icon className={`h-5 w-5 transition-transform duration-200 group-hover:scale-110 ${color}`} />
               </span>
-              <span className="text-sm font-medium text-foreground">{label}</span>
+              <span className="text-sm font-medium text-foreground transition-colors group-hover:text-primary">{label}</span>
             </button>
           ))}
         </div>
