@@ -295,13 +295,16 @@ export default function ServidoresPage() {
                   {isOperador ? (
                     <Input value={authUnidadeNome ? (unidadeMap[authUnidadeId ?? ""]?.comarca_nome ?? "") : ""} disabled className="bg-muted" />
                   ) : (
-                    <Select value={formComarcaId} onValueChange={(v) => {
-                      setFormComarcaId(v);
-                      form.setValue("unidade_id", "");
-                    }}>
+                    <Select
+                      value={formComarcaId || "all"}
+                      onValueChange={(v) => {
+                        setFormComarcaId(v === "all" ? "" : v);
+                        form.setValue("unidade_id", "");
+                      }}
+                    >
                       <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">— Todas —</SelectItem>
+                        <SelectItem value="all">— Todas —</SelectItem>
                         {comarcas.map((c) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
                       </SelectContent>
                     </Select>
