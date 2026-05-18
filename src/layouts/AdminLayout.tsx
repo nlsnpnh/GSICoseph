@@ -1,7 +1,7 @@
 import { Outlet, useNavigate } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { Bell, LogOut, HelpCircle, Sun, Moon, AlertCircle, AlertTriangle, Info, Building2 } from "lucide-react";
+import { Bell, LogOut, Sun, Moon, AlertCircle, AlertTriangle, Info, Building2 } from "lucide-react";
 
 import { useTheme } from "@/contexts/ThemeContext";
 import { Button } from "@/components/ui/button";
@@ -100,9 +100,6 @@ export default function AdminLayout() {
                 title={theme === "dark" ? "Modo claro" : "Modo escuro"}
               >
                 {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-              </Button>
-              <Button variant="ghost" size="icon" aria-label="Ajuda">
-                <HelpCircle className="h-5 w-5" />
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
