@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
-  AlertTriangle, ChevronDown, ChevronUp, Clock, Cpu, DoorOpen,
+  AlertTriangle, ChevronDown, ChevronRight, ChevronUp, Clock, Cpu, DoorOpen,
   FileText, Search, Shield, Users, UserCog, Wrench, XCircle,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
@@ -18,15 +18,22 @@ import { useTerceirizadosMock } from "@/data/terceirizadosMock";
 import { useContratosMock } from "@/data/contratosMock";
 import { useOcorrenciasMock } from "@/data/ocorrenciasMock";
 
-type Column = { key: string; label: string; className?: string };
+type Row = Record<string, unknown>;
+type Column = {
+  key: string;
+  label: string;
+  className?: string;
+  render?: (row: Row) => React.ReactNode;
+};
 type QueryDef = {
   id: string;
   title: string;
   description: string;
   category: string;
   icon: React.ElementType;
-  rows: Record<string, unknown>[];
+  rows: Row[];
   columns: Column[];
+  expandableRow?: (row: Row) => React.ReactNode;
 };
 
 const CATEGORY_TONE: Record<string, string> = {
@@ -57,6 +64,8 @@ export default function ConsultasPage() {
   const [search, setSearch]   = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
   const toggle = (id: string) => setExpanded((p) => (p === id ? null : id));
+  const [expandedRow, setExpandedRow] = useState<string | null>(null);
+  const toggleRow = (key: string) => setExpandedRow((p) => (p === key ? null : key));
 
   // Suporte a deep-link via ?q=<id> (vindo dos cartões de alerta do Painel)
   const [searchParams] = useSearchParams();
@@ -158,38 +167,85 @@ export default function ConsultasPage() {
     {
       id: "divergencia-contrato",
       title: "Divergências contrato × distribuição",
-      description: "Itens cuja soma das quantidades distribuídas difere do total contratado.",
+      description: "Itens cuja soma das quantidades distribuídas difere do total contratado. Clique numa linha para ver as unidades.",
       category: "Equipamentos",
       icon: AlertTriangle,
       columns: [
-        { key: "item",         label: "Item",             className: "font-mono text-xs" },
+        { key: "item",         label: "Item",        className: "font-mono text-xs" },
         { key: "descricao",    label: "Descrição" },
-        { key: "qtd_contrato", label: "Contratado",       className: "text-right" },
-        { key: "qtd_dist",     label: "Distribuído",      className: "text-right" },
-        { key: "diff",         label: "Diferença",        className: "text-right font-semibold" },
+        { key: "qtd_contrato", label: "Contratado",  className: "text-right" },
+        { key: "qtd_dist",     label: "Distribuído", className: "text-right" },
+        {
+          key: "diff",
+          label: "Diferença",
+          className: "text-right font-semibold",
+          render: (row) => {
+            const diff = row._diff as number;
+            const cor = diff > 0 ? "text-amber-600 dark:text-amber-500" : "text-red-600 dark:text-red-500";
+            const txt = diff > 0 ? `Falta ${diff}` : `Sobra ${Math.abs(diff)}`;
+            return <span className={cor}>{txt}</span>;
+          },
+        },
       ],
       rows: (() => {
-        const distPorItem = new Map<number, number>();
+        const distPorItem = new Map<number, { total: number; unidades: { nome: string; comarca: string; qtd: number }[] }>();
         for (const d of distribuicao) {
-          distPorItem.set(d.item_num, (distPorItem.get(d.item_num) ?? 0) + d.quantidade);
+          const cur = distPorItem.get(d.item_num) ?? { total: 0, unidades: [] };
+          cur.total += d.quantidade;
+          cur.unidades.push({ nome: d.unidade_nome, comarca: d.comarca_nome, qtd: d.quantidade });
+          distPorItem.set(d.item_num, cur);
         }
         return catalogo
           .map((c) => {
-            const qtd_dist = distPorItem.get(c.item_num) ?? 0;
+            const entry = distPorItem.get(c.item_num);
+            const qtd_dist = entry?.total ?? 0;
             const diff = c.qtd_contrato - qtd_dist;
             return {
               item: `#${String(c.item_num).padStart(2, "0")}`,
               descricao: c.descricao,
               qtd_contrato: c.qtd_contrato,
               qtd_dist,
-              diff: diff > 0 ? `+${diff}` : String(diff),
-              _diffAbs: Math.abs(diff),
+              _diff: diff,
+              _unidades: (entry?.unidades ?? []).sort((a, b) => b.qtd - a.qtd),
             };
           })
-          .filter((r) => r._diffAbs > 0)
-          .sort((a, b) => b._diffAbs - a._diffAbs)
-          .map(({ _diffAbs, ...row }) => row);
+          .filter((r) => r._diff !== 0)
+          .sort((a, b) => Math.abs(b._diff) - Math.abs(a._diff));
       })(),
+      expandableRow: (row) => {
+        const unidades = row._unidades as { nome: string; comarca: string; qtd: number }[];
+        const diff = row._diff as number;
+        if (unidades.length === 0) {
+          return (
+            <p className="px-4 py-3 text-sm italic text-muted-foreground">
+              Nenhuma unidade recebeu este item — falta distribuir todas as {row.qtd_contrato as number} unidades contratadas.
+            </p>
+          );
+        }
+        return (
+          <div className="px-4 py-3">
+            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Distribuição atual ({unidades.length} {unidades.length === 1 ? "unidade" : "unidades"})
+            </p>
+            <div className="grid grid-cols-1 gap-x-6 gap-y-1 sm:grid-cols-2 lg:grid-cols-3">
+              {unidades.map((u, i) => (
+                <div key={i} className="flex items-baseline justify-between gap-3 border-b border-border/50 py-1 text-sm">
+                  <span className="min-w-0 truncate">
+                    <span className="font-medium">{u.nome}</span>
+                    <span className="ml-1 text-xs text-muted-foreground">· {u.comarca}</span>
+                  </span>
+                  <span className="shrink-0 font-mono tabular-nums">{u.qtd}</span>
+                </div>
+              ))}
+            </div>
+            <p className="mt-3 text-xs text-muted-foreground">
+              {diff > 0
+                ? <>Soma distribuída <strong>{row.qtd_dist as number}</strong> de <strong>{row.qtd_contrato as number}</strong> contratadas — <span className="text-amber-600 dark:text-amber-500">faltam {diff}</span>.</>
+                : <>Soma distribuída <strong>{row.qtd_dist as number}</strong> excede o contratado em <strong>{row.qtd_contrato as number}</strong> — <span className="text-red-600 dark:text-red-500">sobram {Math.abs(diff)}</span>.</>}
+            </p>
+          </div>
+        );
+      },
     },
 
     {
@@ -506,6 +562,7 @@ export default function ConsultasPage() {
                               <Table>
                                 <TableHeader>
                                   <TableRow>
+                                    {q.expandableRow && <TableHead className="w-8" />}
                                     {q.columns.map((col) => (
                                       <TableHead key={col.key} className={col.className}>
                                         {col.label}
@@ -514,18 +571,42 @@ export default function ConsultasPage() {
                                   </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                  {q.rows.map((row, i) => (
-                                    <TableRow key={i}>
-                                      {q.columns.map((col) => (
-                                        <TableCell
-                                          key={col.key}
-                                          className={`text-sm ${col.className ?? ""}`}
+                                  {q.rows.map((row, i) => {
+                                    const rowKey = `${q.id}:${i}`;
+                                    const isRowOpen = q.expandableRow && expandedRow === rowKey;
+                                    const colSpan = q.columns.length + (q.expandableRow ? 1 : 0);
+                                    return (
+                                      <Fragment key={rowKey}>
+                                        <TableRow
+                                          className={q.expandableRow ? "cursor-pointer hover:bg-muted/40" : undefined}
+                                          onClick={q.expandableRow ? () => toggleRow(rowKey) : undefined}
                                         >
-                                          {String(row[col.key] ?? "—")}
-                                        </TableCell>
-                                      ))}
-                                    </TableRow>
-                                  ))}
+                                          {q.expandableRow && (
+                                            <TableCell className="w-8 align-middle text-muted-foreground">
+                                              {isRowOpen
+                                                ? <ChevronDown className="h-4 w-4" />
+                                                : <ChevronRight className="h-4 w-4" />}
+                                            </TableCell>
+                                          )}
+                                          {q.columns.map((col) => (
+                                            <TableCell
+                                              key={col.key}
+                                              className={`text-sm ${col.className ?? ""}`}
+                                            >
+                                              {col.render ? col.render(row) : String(row[col.key] ?? "—")}
+                                            </TableCell>
+                                          ))}
+                                        </TableRow>
+                                        {isRowOpen && (
+                                          <TableRow className="bg-muted/30 hover:bg-muted/30">
+                                            <TableCell colSpan={colSpan} className="p-0">
+                                              {q.expandableRow!(row)}
+                                            </TableCell>
+                                          </TableRow>
+                                        )}
+                                      </Fragment>
+                                    );
+                                  })}
                                 </TableBody>
                               </Table>
                             </div>
