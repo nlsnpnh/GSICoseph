@@ -16,7 +16,7 @@ import { useServidoresMock, calcIdade, faixaEtaria, tempoServicoAnos } from "@/d
 import { useTerceirizadosMock } from "@/data/terceirizadosMock";
 import { usePortoesMock } from "@/data/portoesMock";
 import { useContratosMock, statusFromVigencia } from "@/data/contratosMock";
-import { useOcorrenciasMock } from "@/data/ocorrenciasMock";
+import { useOcorrenciasMock, calcSla } from "@/data/ocorrenciasMock";
 
 const COLORS = [
   "hsl(217 91% 55%)",
@@ -190,16 +190,13 @@ export default function RelatoriosPage() {
     [contratos],
   );
 
-  // Ocorrências
-  const ocoPorTipo = useMemo(() => groupBy(ocorrencias, (o) => o.tipo), [ocorrencias]);
+  // Manutenções
+  const ocoPorTipo = useMemo(() => groupBy(ocorrencias, (o) => o.categoria || "Sem categoria"), [ocorrencias]);
   const ocoPorStatus = useMemo(() => groupBy(ocorrencias, (o) => o.status), [ocorrencias]);
-  const ocoAtrasadas = useMemo(() => {
-    const today = new Date();
-    return ocorrencias.filter((o) =>
-      o.prazo && o.status !== "Concluído" && o.status !== "Cancelado" &&
-      new Date(o.prazo + "T00:00:00") < today,
-    );
-  }, [ocorrencias]);
+  const ocoAtrasadas = useMemo(
+    () => ocorrencias.filter((o) => calcSla(o).indicador === "Atrasado"),
+    [ocorrencias],
+  );
 
   const portoesManutencao = portoes.filter((p) => p.necessidade_manutencao !== "Nenhuma");
 
@@ -239,7 +236,7 @@ export default function RelatoriosPage() {
             <Button variant="outline" size="sm" onClick={() => exportCsv(terceirizados, "terceirizados")}><Download className="mr-1 h-4 w-4" />Terceirizados</Button>
             <Button variant="outline" size="sm" onClick={() => exportCsv(portoesExport, "portoes")}><Download className="mr-1 h-4 w-4" />Portões</Button>
             <Button variant="outline" size="sm" onClick={() => exportCsv(contratos, "contratos")}><Download className="mr-1 h-4 w-4" />Contratos</Button>
-            <Button variant="outline" size="sm" onClick={() => exportCsv(ocoExport, "ocorrencias")}><Download className="mr-1 h-4 w-4" />Ocorrências</Button>
+            <Button variant="outline" size="sm" onClick={() => exportCsv(ocoExport, "manutencoes")}><Download className="mr-1 h-4 w-4" />Manutenções</Button>
           </div>
         }
       />
@@ -252,7 +249,7 @@ export default function RelatoriosPage() {
         <Kpi icon={UserCog}       label="Terceirizados" value={totals.terceirizados} />
         <Kpi icon={DoorOpen}      label="Portões"       value={totals.portoes} />
         <Kpi icon={FileText}      label="Contratos"     value={totals.contratos} />
-        <Kpi icon={AlertTriangle} label="Ocorrências"   value={totals.ocorrencias} />
+        <Kpi icon={AlertTriangle} label="Manutenções"   value={totals.ocorrencias} />
       </div>
 
       {/* Cobertura de segurança */}
@@ -287,10 +284,10 @@ export default function RelatoriosPage() {
           <Donut data={contratosPorStatus} />
         </ChartCard>
 
-        <ChartCard title="Ocorrências por tipo">
+        <ChartCard title="Manutenções por categoria">
           <BarHorizontal data={ocoPorTipo} />
         </ChartCard>
-        <ChartCard title="Ocorrências por status">
+        <ChartCard title="Manutenções por status">
           <Donut data={ocoPorStatus} />
         </ChartCard>
       </div>
@@ -336,7 +333,7 @@ export default function RelatoriosPage() {
           <PendRow
             tone="critical"
             count={ocoAtrasadas.length}
-            label="Ocorrências com prazo vencido"
+            label="Manutenções com SLA atrasado"
           />
           <PendRow
             tone="partial"

@@ -31,7 +31,7 @@ const ROLE_LABEL: Record<string, string> = {
 
 const ACOES_RAPIDAS = [
   { label: "Registrar Unidade",    icon: Building2,      to: "/unidades",   color: "text-blue-600",   bg: "bg-blue-50 dark:bg-blue-950/40"   },
-  { label: "Registrar Ocorrência", icon: AlertOctagon,   to: "/ocorrencias", color: "text-red-600",    bg: "bg-red-50 dark:bg-red-950/40"     },
+  { label: "Registrar Manutenção", icon: AlertOctagon,   to: "/ocorrencias", color: "text-red-600",    bg: "bg-red-50 dark:bg-red-950/40"     },
   { label: "Consultar Contrato",   icon: FileSearch,     to: "/contratos",  color: "text-amber-600",  bg: "bg-amber-50 dark:bg-amber-950/40" },
   { label: "Gerar Relatório",      icon: FileBarChart2,  to: "/relatorios", color: "text-green-600",  bg: "bg-green-50 dark:bg-green-950/40" },
 ];
@@ -210,7 +210,7 @@ export default function Dashboard() {
         <StatCard label="Contratos Vigentes"      value={stats.contratosVigentes}       icon={FileCheck}      tone="success" />
         <StatCard label="Terceirizados Ativos"    value={stats.terceirizadosAtivos}     icon={UserCog}        tone="accent" />
         <StatCard label="Servidores Ativos"       value={stats.servidoresAtivos}        icon={Users}          tone="info" />
-        <StatCard label="Ocorrências Abertas"     value={stats.ocorrenciasAbertas}      icon={ClipboardList}  tone="destructive" />
+        <StatCard label="Manutenções Abertas"     value={stats.ocorrenciasAbertas}      icon={ClipboardList}  tone="destructive" />
       </div>
 
       {/* Mapa à esquerda; Alertas à direita */}

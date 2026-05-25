@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useContratosMock } from "@/data/contratosMock";
 import { useEquipamentosCatalogo, useUnidadeEquipamentos } from "@/data/equipamentos";
 import { useUnidadesMock } from "@/data/unidadesMock";
-import { useOcorrenciasMock } from "@/data/ocorrenciasMock";
+import { useOcorrenciasMock, calcSla } from "@/data/ocorrenciasMock";
 import { usePortoesMock } from "@/data/portoesMock";
 
 export type Alerta = {
@@ -32,10 +32,7 @@ export function useAlertas(): Alerta[] {
       return fim >= hoje && fim <= em90dias;
     }).length;
 
-    const manutVencidas = ocorrencias.filter((o) => {
-      if (!o.prazo || o.status === "Concluído" || o.status === "Cancelado") return false;
-      return new Date(o.prazo) < hoje;
-    }).length;
+    const manutVencidas = ocorrencias.filter((o) => calcSla(o).indicador === "Atrasado").length;
 
     const portoesUrgentes = portoes.filter((p) =>
       p.necessidade_manutencao === "Alta" || p.necessidade_manutencao === "Urgente"
