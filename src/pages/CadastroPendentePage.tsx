@@ -1,14 +1,20 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { ArrowLeft, BadgeCheck, Building2, ShieldCheck, UserCog } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 export default function CadastroPendentePage() {
   const navigate = useNavigate();
+  const { loading, user, isAdmin, isGestor, isOperador, unidadeId } = useAuth();
 
   useEffect(() => { document.title = "Cadastro realizado | SIG-COSEPH"; }, []);
+
+  // Usuário já liberado (admin/gestor, ou operador com unidade) não vê esta tela.
+  const liberado = isAdmin || isGestor || (isOperador && !!unidadeId);
+  if (!loading && user && liberado) return <Navigate to="/" replace />;
 
   const voltarLogin = async () => {
     // Garante que nenhuma sessão pendente permaneça ativa.
