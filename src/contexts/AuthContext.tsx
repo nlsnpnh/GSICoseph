@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -32,6 +32,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [loading, setLoading] = useState(true);
+  // True enquanto papéis/perfil do usuário recém-autenticado ainda estão carregando.
+  const [resolving, setResolving] = useState(false);
+  const resolvedFor = useRef<string | null>(null);
   const [unidadeId, setUnidadeId] = useState<string | null>(null);
   const [unidadeNome, setUnidadeNome] = useState<string | null>(null);
   const [comarcaNome, setComarcaNome] = useState<string | null>(null);
@@ -58,28 +61,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    const loadUserData = async (uid: string) => {
+      setResolving(true);
+      try {
+        await Promise.all([fetchRoles(uid), fetchProfile(uid)]);
+        resolvedFor.current = uid;
+      } finally {
+        setResolving(false);
+      }
+    };
+
     const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
-      setUser(newSession?.user ?? null);
-      if (newSession?.user) {
-        setTimeout(() => {
-          fetchRoles(newSession.user.id);
-          fetchProfile(newSession.user.id);
-        }, 0);
+      const u = newSession?.user ?? null;
+      setUser(u);
+      if (u) {
+        // Só recarrega ao trocar de usuário; evita "flash" da tela de aprovação
+        // no login (user setado antes dos papéis) e flicker em refresh de token.
+        if (resolvedFor.current !== u.id) {
+          setResolving(true);
+          setTimeout(() => { loadUserData(u.id); }, 0);
+        }
       } else {
+        resolvedFor.current = null;
         setRoles([]);
         setUnidadeId(null);
         setUnidadeNome(null);
         setComarcaNome(null);
         setNomeCompleto(null);
+        setResolving(false);
       }
     });
 
     supabase.auth.getSession().then(({ data: { session: s } }) => {
       setSession(s);
-      setUser(s?.user ?? null);
-      if (s?.user) {
-        Promise.all([fetchRoles(s.user.id), fetchProfile(s.user.id)]).finally(() => setLoading(false));
+      const u = s?.user ?? null;
+      setUser(u);
+      if (u) {
+        loadUserData(u.id).finally(() => setLoading(false));
       } else {
         setLoading(false);
       }
@@ -93,7 +112,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isOperador = roles.includes("operador") && !isAdmin && !isGestor;
 
   const value: AuthContextValue = {
-    session, user, roles, loading,
+    session, user, roles,
+    loading: loading || resolving,
     isAdmin, isGestor, isOperador,
     canEdit: true,
     canDelete: isAdmin,
