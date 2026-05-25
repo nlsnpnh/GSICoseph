@@ -26,6 +26,7 @@ import ContratosPage from "./pages/ContratosPage";
 import ConsultasPage from "./pages/ConsultasPage";
 import AjudaPage from "./pages/AjudaPage";
 import AuthPage from "./pages/Auth";
+import CadastroPendentePage from "./pages/CadastroPendentePage";
 import BootstrapAdminPage from "./pages/BootstrapAdminPage";
 import ResetPasswordPage from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
@@ -41,6 +42,7 @@ const App = () => (
           <PeriodProvider>
           <Routes>
             <Route path="/auth" element={<AuthPage />} />
+            <Route path="/aguardando-aprovacao" element={<CadastroPendentePage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
 
             <Route element={<ProtectedRoute />}>
