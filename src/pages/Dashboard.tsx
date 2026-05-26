@@ -39,7 +39,7 @@ const ACOES_RAPIDAS = [
 export default function Dashboard() {
   useEffect(() => { document.title = "Painel Executivo | COSEPH TJRO"; }, []);
   const navigate = useNavigate();
-  const { user, roles, nomeCompleto } = useAuth();
+  const { user, roles, nomeCompleto, isOperador } = useAuth();
   const [updated, setUpdated] = useState(() => format(new Date(), "dd/MM/yyyy HH:mm"));
 
   const emailUser    = (user?.email ?? "").split("@")[0];
@@ -230,26 +230,28 @@ export default function Dashboard() {
         <ServidoresPorComarca />
       </div>
 
-      {/* Ações Rápidas */}
-      <div>
-        <h3 className="mb-3 text-center text-sm font-bold uppercase tracking-wider text-foreground">
-          Ações Rápidas
-        </h3>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {ACOES_RAPIDAS.map(({ label, icon: Icon, to, color, bg }) => (
-            <button
-              key={to}
-              onClick={() => navigate(to)}
-              className={`group flex items-center gap-3 rounded-lg border border-border p-4 text-left shadow-sm transition-all duration-200 ease-out hover:-translate-y-1 hover:scale-[1.02] hover:border-primary/40 hover:shadow-lg hover:ring-1 hover:ring-primary/30 focus-visible:-translate-y-1 focus-visible:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 active:translate-y-0 active:scale-100 ${bg}`}
-            >
-              <span className={`rounded-md p-2 transition-transform duration-200 ease-out group-hover:scale-110 group-hover:-rotate-3 ${bg}`}>
-                <Icon className={`h-5 w-5 transition-transform duration-200 group-hover:scale-110 ${color}`} />
-              </span>
-              <span className="text-sm font-medium text-foreground transition-colors group-hover:text-primary">{label}</span>
-            </button>
-          ))}
+      {/* Ações Rápidas — escondidas para operador (rotas restritas) */}
+      {!isOperador && (
+        <div>
+          <h3 className="mb-3 text-center text-sm font-bold uppercase tracking-wider text-foreground">
+            Ações Rápidas
+          </h3>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {ACOES_RAPIDAS.map(({ label, icon: Icon, to, color, bg }) => (
+              <button
+                key={to}
+                onClick={() => navigate(to)}
+                className={`group flex items-center gap-3 rounded-lg border border-border p-4 text-left shadow-sm transition-all duration-200 ease-out hover:-translate-y-1 hover:scale-[1.02] hover:border-primary/40 hover:shadow-lg hover:ring-1 hover:ring-primary/30 focus-visible:-translate-y-1 focus-visible:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 active:translate-y-0 active:scale-100 ${bg}`}
+              >
+                <span className={`rounded-md p-2 transition-transform duration-200 ease-out group-hover:scale-110 group-hover:-rotate-3 ${bg}`}>
+                  <Icon className={`h-5 w-5 transition-transform duration-200 group-hover:scale-110 ${color}`} />
+                </span>
+                <span className="text-sm font-medium text-foreground transition-colors group-hover:text-primary">{label}</span>
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
     </div>
   );
