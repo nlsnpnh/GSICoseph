@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { queryClient } from "@/lib/queryClient";
 
 export const EMPRESAS = [
-  "AFS Empreendimentos", "SegService", "Grupo Protege", "TechSeg", "Portões RO", "Vigilância Total",
+  "AFS Empreendimentos",
 ] as const;
 
 export const FUNCOES = [

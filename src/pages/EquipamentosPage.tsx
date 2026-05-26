@@ -66,6 +66,7 @@ export default function EquipamentosPage() {
     const qNumeric = /^\d+$/.test(q) ? parseInt(q, 10) : null;
 
     const result = distribuicao.filter((d) => {
+      if (isOperador && unidadeId && d.unidade_id !== unidadeId) return false;
       if (unidadeFilter !== "all" && d.unidade_id !== unidadeFilter) return false;
       if (!q) return true;
       if (qNumeric !== null) return d.item_num === qNumeric;
@@ -81,7 +82,7 @@ export default function EquipamentosPage() {
         a.unidade_nome.localeCompare(b.unidade_nome, "pt-BR") ||
         a.item_num - b.item_num,
     );
-  }, [distribuicao, search, unidadeFilter]);
+  }, [distribuicao, search, unidadeFilter, isOperador, unidadeId]);
 
   const filteredCatalogo = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -176,13 +177,15 @@ export default function EquipamentosPage() {
             placeholder="Buscar por item, unidade ou comarca..."
             count={filtered.length}
             filters={
-              <Select value={unidadeFilter} onValueChange={setUnidadeFilter}>
-                <SelectTrigger className="h-9 w-[260px]"><SelectValue placeholder="Unidade" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas as unidades</SelectItem>
-                  {unidades.map((u) => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              isOperador ? null : (
+                <Select value={unidadeFilter} onValueChange={setUnidadeFilter}>
+                  <SelectTrigger className="h-9 w-[260px]"><SelectValue placeholder="Unidade" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas as unidades</SelectItem>
+                    {unidades.map((u) => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              )
             }
           >
             {filtered.length === 0 ? (

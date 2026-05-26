@@ -95,12 +95,18 @@ const defaults: FormData = {
 // Página principal
 // =====================================================================
 export default function OcorrenciasPage() {
-  const { isAdmin, isGestor, unidadeId, unidadeNome: authUnidadeNome } = useAuth();
+  const { isAdmin, isGestor, isOperador, unidadeId, unidadeNome: authUnidadeNome } = useAuth();
   const podeGerenciar = isAdmin || isGestor;
 
-  const items = useOcorrenciasMock();
-  const unidades = useUnidadesMock();
-  const unidadeNome = (id: string) => unidades.find((u) => u.id === id)?.nome ?? "—";
+  const itemsAll = useOcorrenciasMock();
+  const unidadesAll = useUnidadesMock();
+  const items = isOperador && unidadeId
+    ? itemsAll.filter((o) => o.unidade_id === unidadeId)
+    : itemsAll;
+  const unidades = isOperador && unidadeId
+    ? unidadesAll.filter((u) => u.id === unidadeId)
+    : unidadesAll;
+  const unidadeNome = (id: string) => unidadesAll.find((u) => u.id === id)?.nome ?? "—";
 
   useEffect(() => { document.title = "Manutenção | COSEPH TJRO"; }, []);
 
@@ -311,13 +317,15 @@ function ChamadosTab({
                 {STATUS_MANUT.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
               </SelectContent>
             </Select>
-            <Select value={unidadeFilter} onValueChange={(v) => { setUnidadeFilter(v); setPage(1); }}>
-              <SelectTrigger className="h-9 w-[200px]"><SelectValue placeholder="Cliente" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os clientes</SelectItem>
-                {unidades.map((u) => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            {unidades.length > 1 && (
+              <Select value={unidadeFilter} onValueChange={(v) => { setUnidadeFilter(v); setPage(1); }}>
+                <SelectTrigger className="h-9 w-[200px]"><SelectValue placeholder="Cliente" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os clientes</SelectItem>
+                  {unidades.map((u) => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            )}
           </div>
         }
       >
@@ -607,15 +615,17 @@ function RelatoriosTab({
       {/* Filtros */}
       <Card>
         <CardContent className="flex flex-wrap items-end gap-3 p-4">
-          <FilterField label="Cliente (unidade)">
-            <Select value={unidadeFilter} onValueChange={setUnidadeFilter}>
-              <SelectTrigger className="h-9 w-[200px]"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                {unidades.map((u) => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </FilterField>
+          {unidades.length > 1 && (
+            <FilterField label="Cliente (unidade)">
+              <Select value={unidadeFilter} onValueChange={setUnidadeFilter}>
+                <SelectTrigger className="h-9 w-[200px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  {unidades.map((u) => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </FilterField>
+          )}
           <FilterField label="Categoria">
             <Select value={categoriaFilter} onValueChange={setCategoriaFilter}>
               <SelectTrigger className="h-9 w-[190px]"><SelectValue /></SelectTrigger>
