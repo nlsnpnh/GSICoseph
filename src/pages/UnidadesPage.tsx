@@ -168,7 +168,7 @@ export default function UnidadesPage() {
                 <TableHead className="text-center">DERSO</TableHead>
                 <TableHead className="text-center">Acesso</TableHead>
                 <TableHead className="text-center">Vigilância</TableHead>
-                {!isOperador && <TableHead className="w-[100px] text-right">Ações</TableHead>}
+                <TableHead className="w-[100px] text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -181,12 +181,14 @@ export default function UnidadesPage() {
                   <TableCell className="text-center"><BoolIcon v={u.possui_derso} /></TableCell>
                   <TableCell className="text-center"><BoolIcon v={u.controle_acesso} /></TableCell>
                   <TableCell className="text-center"><BoolIcon v={u.vigilancia_eletronica} /></TableCell>
-                  {!isOperador && (
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={() => openEdit(u)}><Pencil className="h-4 w-4" /></Button>
-                      <Button variant="ghost" size="icon" onClick={() => setDeleting(u)}><Trash2 className="h-4 w-4" /></Button>
-                    </TableCell>
-                  )}
+                  <TableCell className="text-right">
+                    {!isOperador && (
+                      <>
+                        <Button variant="ghost" size="icon" onClick={() => openEdit(u)}><Pencil className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => setDeleting(u)}><Trash2 className="h-4 w-4" /></Button>
+                      </>
+                    )}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
