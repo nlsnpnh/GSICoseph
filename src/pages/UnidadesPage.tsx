@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Building2, Plus, Trash2 } from "lucide-react";
+import { Building2, Pencil, Plus, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -166,20 +166,24 @@ export default function UnidadesPage() {
                 <TableHead>Responsável</TableHead>
                 <TableHead>Substituto</TableHead>
                 <TableHead>Telefone</TableHead>
+                {!isOperador && <TableHead className="w-[60px] text-right" />}
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.map((u) => (
-                <TableRow
-                  key={u.id}
-                  className={!isOperador ? "cursor-pointer hover:bg-muted/40" : undefined}
-                  onClick={!isOperador ? () => openEdit(u) : undefined}
-                >
+                <TableRow key={u.id}>
                   <TableCell className="font-medium">{u.nome}</TableCell>
                   <TableCell className="text-muted-foreground">{u.comarca_nome || "—"}</TableCell>
                   <TableCell className="text-muted-foreground">{u.responsavel_local}</TableCell>
                   <TableCell className="text-muted-foreground">{u.responsavel_substituto || "—"}</TableCell>
                   <TableCell className="text-muted-foreground tabular-nums">{u.telefone || "—"}</TableCell>
+                  {!isOperador && (
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="icon" onClick={() => openEdit(u)}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
