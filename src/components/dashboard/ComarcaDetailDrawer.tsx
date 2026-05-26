@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import {
   Building2, Cpu, Users, UserCog, AlertTriangle, ShieldCheck,
-  DoorOpen, MapPin, ScanLine, RadioTower,
+  KeyRound, MapPin, ScanLine, RadioTower,
 } from "lucide-react";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
@@ -14,7 +14,6 @@ import { useUnidadesMock, type UnidadePredial } from "@/data/unidadesMock";
 import { useUnidadeEquipamentos, type UnidadeEquipamento } from "@/data/equipamentos";
 import { useServidoresMock, type ServidorSeg } from "@/data/servidoresMock";
 import { useTerceirizadosMock, type Terceirizado } from "@/data/terceirizadosMock";
-import { usePortoesMock } from "@/data/portoesMock";
 import type { MapaComarcaResumo } from "@/data/mapa";
 import type { Criticidade } from "@/data/mockDashboard";
 import { useAuth } from "@/contexts/AuthContext";
@@ -62,7 +61,6 @@ export function ComarcaDetailDrawer({ comarca, onOpenChange }: Props) {
   const distribuicao  = useUnidadeEquipamentos();
   const servidores    = useServidoresMock();
   const terceirizados = useTerceirizadosMock();
-  const portoes       = usePortoesMock();
 
   const dados = useMemo(() => {
     if (!comarca) return null;
@@ -71,30 +69,32 @@ export function ComarcaDetailDrawer({ comarca, onOpenChange }: Props) {
     const unidadeIds = new Set(unidadesComarca.map((u) => u.id));
 
     const distComarca         = distribuicao.filter((d) => unidadeIds.has(d.unidade_id));
-    const portoesComarca      = portoes.filter((p) => unidadeIds.has(p.unidade_id));
+    const kitRfidComarca      = distComarca.filter((d) => d.item_num === 27 && d.quantidade > 0);
     const servAtivos          = servidores.filter((s) => s.situacao === "Ativo" && s.unidade_id != null && unidadeIds.has(s.unidade_id));
     const tercAtivos          = terceirizados.filter((t) => t.situacao === "Ativo" && t.unidade_id != null && unidadeIds.has(t.unidade_id));
 
     const totalEquip    = distComarca.reduce((s, d) => s + d.quantidade, 0);
     const valorEstimado = distComarca.reduce((s, d) => s + d.quantidade * d.valor_unitario, 0);
 
-    const semDerso        = unidadesComarca.filter((u) => !u.possui_derso);
-    const portoesUrgentes = portoesComarca.filter((p) => p.necessidade_manutencao === "Alta" || p.necessidade_manutencao === "Urgente");
+    const semDerso     = unidadesComarca.filter((u) => !u.possui_derso);
+    const unidadesComKit = new Set(kitRfidComarca.map((d) => d.unidade_id));
+    const semKitRfid   = unidadesComarca.filter((u) => !unidadesComKit.has(u.id));
+    const totalKitRfid = kitRfidComarca.reduce((s, d) => s + d.quantidade, 0);
 
     // Pré-agrupa por unidade para ficar O(1) na render do accordion
     const porUnidade = new Map<string, {
       equip: UnidadeEquipamento[];
       serv: ServidorSeg[];
       terc: Terceirizado[];
-      portoes: number;
+      kitRfid: number;
     }>();
-    for (const u of unidadesComarca) porUnidade.set(u.id, { equip: [], serv: [], terc: [], portoes: 0 });
+    for (const u of unidadesComarca) porUnidade.set(u.id, { equip: [], serv: [], terc: [], kitRfid: 0 });
     for (const d of distComarca)    porUnidade.get(d.unidade_id)?.equip.push(d);
     for (const s of servAtivos)     porUnidade.get(s.unidade_id!)?.serv.push(s);
     for (const t of tercAtivos)     porUnidade.get(t.unidade_id!)?.terc.push(t);
-    for (const p of portoesComarca) {
-      const cur = porUnidade.get(p.unidade_id);
-      if (cur) cur.portoes++;
+    for (const d of kitRfidComarca) {
+      const cur = porUnidade.get(d.unidade_id);
+      if (cur) cur.kitRfid += d.quantidade;
     }
 
     return {
@@ -104,18 +104,19 @@ export function ComarcaDetailDrawer({ comarca, onOpenChange }: Props) {
       itensVinculados: distComarca.length,
       servidoresTotal:    servAtivos.length,
       terceirizadosTotal: tercAtivos.length,
-      portoesTotal:       portoesComarca.length,
+      kitRfidUnidades:    unidadesComKit.size,
+      kitRfidTotal:       totalKitRfid,
       semDerso,
-      portoesUrgentes,
+      semKitRfid,
       porUnidade,
     };
-  }, [comarca, unidades, distribuicao, servidores, terceirizados, portoes]);
+  }, [comarca, unidades, distribuicao, servidores, terceirizados]);
 
   if (!comarca || !dados) {
     return <Sheet open={false} onOpenChange={onOpenChange}><SheetContent /></Sheet>;
   }
 
-  const totalPendencias = dados.semDerso.length + dados.portoesUrgentes.length;
+  const totalPendencias = dados.semDerso.length + dados.semKitRfid.length;
 
   return (
     <Sheet open={!!comarca} onOpenChange={onOpenChange}>
@@ -146,7 +147,7 @@ export function ComarcaDetailDrawer({ comarca, onOpenChange }: Props) {
               <Kpi icon={Building2} label="Unidades"      value={dados.unidadesComarca.length} />
               <Kpi icon={Users}     label="Servidores"    value={dados.servidoresTotal} />
               <Kpi icon={UserCog}   label="Terceirizados" value={dados.terceirizadosTotal} />
-              <Kpi icon={DoorOpen}  label="Portões"       value={dados.portoesTotal} />
+              <Kpi icon={KeyRound}  label="Kit RFID"      value={dados.kitRfidUnidades} />
             </div>
 
             <div className="flex flex-wrap gap-2">
@@ -173,8 +174,8 @@ export function ComarcaDetailDrawer({ comarca, onOpenChange }: Props) {
                   {dados.semDerso.length > 0 && (
                     <PendItem label={`${dados.semDerso.length} unidade(s) sem DERSO`} />
                   )}
-                  {dados.portoesUrgentes.length > 0 && (
-                    <PendItem label={`${dados.portoesUrgentes.length} portão(ões) com manutenção urgente`} />
+                  {dados.semKitRfid.length > 0 && (
+                    <PendItem label={`${dados.semKitRfid.length} unidade(s) sem Kit Abertura de Portão por RFID`} />
                   )}
                 </ul>
               </Section>
@@ -197,7 +198,7 @@ export function ComarcaDetailDrawer({ comarca, onOpenChange }: Props) {
                         equipamentos={det?.equip ?? []}
                         servidores={det?.serv ?? []}
                         terceirizados={det?.terc ?? []}
-                        portoes={det?.portoes ?? 0}
+                        kitRfid={det?.kitRfid ?? 0}
                       />
                     );
                   })}
@@ -213,13 +214,13 @@ export function ComarcaDetailDrawer({ comarca, onOpenChange }: Props) {
 }
 
 function UnidadeAccordionItem({
-  unidade, equipamentos, servidores, terceirizados, portoes,
+  unidade, equipamentos, servidores, terceirizados, kitRfid,
 }: {
   unidade: UnidadePredial;
   equipamentos: UnidadeEquipamento[];
   servidores: ServidorSeg[];
   terceirizados: Terceirizado[];
-  portoes: number;
+  kitRfid: number;
 }) {
   const totalEquip = equipamentos.reduce((s, d) => s + d.quantidade, 0);
   const semDados = totalEquip === 0 && servidores.length === 0 && terceirizados.length === 0;
@@ -269,7 +270,7 @@ function UnidadeAccordionItem({
               <KpiMini icon={Cpu}      label="Equip."   value={totalEquip} />
               <KpiMini icon={Users}    label="Serv."    value={servidores.length} />
               <KpiMini icon={UserCog}  label="Terc."    value={terceirizados.length} />
-              <KpiMini icon={DoorOpen} label="Portões"  value={portoes} />
+              <KpiMini icon={KeyRound} label="Kit RFID" value={kitRfid} />
             </div>
 
             {/* Equipamentos por categoria, com itens individuais e quantidades */}
