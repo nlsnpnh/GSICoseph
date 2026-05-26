@@ -56,7 +56,7 @@ interface Props {
 }
 
 export function ComarcaDetailDrawer({ comarca, onOpenChange }: Props) {
-  const { isOperador } = useAuth();
+  const { isOperador, unidadeId } = useAuth();
   const unidades      = useUnidadesMock();
   const distribuicao  = useUnidadeEquipamentos();
   const servidores    = useServidoresMock();
@@ -65,7 +65,10 @@ export function ComarcaDetailDrawer({ comarca, onOpenChange }: Props) {
   const dados = useMemo(() => {
     if (!comarca) return null;
 
-    const unidadesComarca = unidades.filter((u) => u.comarca_id === comarca.comarcaId);
+    const unidadesComarcaTodas = unidades.filter((u) => u.comarca_id === comarca.comarcaId);
+    const unidadesComarca = isOperador && unidadeId
+      ? unidadesComarcaTodas.filter((u) => u.id === unidadeId)
+      : unidadesComarcaTodas;
     const unidadeIds = new Set(unidadesComarca.map((u) => u.id));
 
     const distComarca         = distribuicao.filter((d) => unidadeIds.has(d.unidade_id));
@@ -110,7 +113,7 @@ export function ComarcaDetailDrawer({ comarca, onOpenChange }: Props) {
       semKitRfid,
       porUnidade,
     };
-  }, [comarca, unidades, distribuicao, servidores, terceirizados]);
+  }, [comarca, unidades, distribuicao, servidores, terceirizados, isOperador, unidadeId]);
 
   if (!comarca || !dados) {
     return <Sheet open={false} onOpenChange={onOpenChange}><SheetContent /></Sheet>;
@@ -128,7 +131,9 @@ export function ComarcaDetailDrawer({ comarca, onOpenChange }: Props) {
               <SheetDescription className="mt-1">
                 <span className="flex items-center gap-1 text-xs">
                   <MapPin className="h-3 w-3 shrink-0" />
-                  {dados.unidadesComarca.length} unidade(s) cadastrada(s)
+                  {isOperador && unidadeId
+                    ? "Exibindo somente sua unidade predial"
+                    : `${dados.unidadesComarca.length} unidade(s) cadastrada(s)`}
                 </span>
               </SheetDescription>
             </div>
