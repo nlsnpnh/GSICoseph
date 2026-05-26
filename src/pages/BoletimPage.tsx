@@ -230,7 +230,12 @@ export default function BoletimPage() {
         </TabsContent>
 
         <TabsContent value="historico">
-          <HistoricoTab unidades={unidades} comarcas={comarcas} />
+          <HistoricoTab
+            unidades={unidades}
+            comarcas={comarcas}
+            isOperador={isOperador}
+            operadorUnidadeId={unidadeId}
+          />
         </TabsContent>
       </Tabs>
     </div>
@@ -239,15 +244,19 @@ export default function BoletimPage() {
 
 // ─────────────────────────────────────────────────────────────────
 function HistoricoTab({
-  unidades, comarcas,
+  unidades, comarcas, isOperador, operadorUnidadeId,
 }: {
   unidades: { id: string; nome: string; comarca_id: string | null }[];
   comarcas: { id: string; nome: string }[];
+  isOperador: boolean;
+  operadorUnidadeId: string | null;
 }) {
   const itens = ITENS;
   const [fAno, setFAno] = useState<string>("all");
   const [fMes, setFMes] = useState<string>("all");
-  const [fUnidade, setFUnidade] = useState<string>("all");
+  const [fUnidade, setFUnidade] = useState<string>(
+    isOperador && operadorUnidadeId ? operadorUnidadeId : "all",
+  );
   const [fComarca, setFComarca] = useState<string>("all");
   const [fItem, setFItem] = useState<string>("all");
 
@@ -318,22 +327,26 @@ function HistoricoTab({
               {MESES.map((m, i) => <SelectItem key={i + 1} value={String(i + 1)}>{m}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Select value={fComarca} onValueChange={(v) => { setFComarca(v); setFUnidade("all"); }}>
-            <SelectTrigger className="h-8 w-[160px] text-xs"><SelectValue placeholder="Comarca" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas as comarcas</SelectItem>
-              {comarcas.map((c) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={fUnidade} onValueChange={setFUnidade}>
-            <SelectTrigger className="h-8 w-[200px] text-xs"><SelectValue placeholder="Unidade" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas as unidades</SelectItem>
-              {unidades
-                .filter((u) => fComarca === "all" || u.comarca_id === fComarca)
-                .map((u) => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          {!isOperador && (
+            <>
+              <Select value={fComarca} onValueChange={(v) => { setFComarca(v); setFUnidade("all"); }}>
+                <SelectTrigger className="h-8 w-[160px] text-xs"><SelectValue placeholder="Comarca" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as comarcas</SelectItem>
+                  {comarcas.map((c) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select value={fUnidade} onValueChange={setFUnidade}>
+                <SelectTrigger className="h-8 w-[200px] text-xs"><SelectValue placeholder="Unidade" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as unidades</SelectItem>
+                  {unidades
+                    .filter((u) => fComarca === "all" || u.comarca_id === fComarca)
+                    .map((u) => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </>
+          )}
           <Select value={fItem} onValueChange={setFItem}>
             <SelectTrigger className="h-8 w-[220px] text-xs"><SelectValue placeholder="Item" /></SelectTrigger>
             <SelectContent>
