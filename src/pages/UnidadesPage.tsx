@@ -67,7 +67,7 @@ const defaults: FormData = {
 };
 
 export default function UnidadesPage() {
-  const { isOperador, unidadeId } = useAuth();
+  const { isOperador } = useAuth();
   const items = useUnidadesMock();
   const { data: comarcas = [] } = useComarcas();
   const [search, setSearch] = useState("");
@@ -147,7 +147,7 @@ export default function UnidadesPage() {
       <PageHeader
         title="Unidades Prediais"
         description="Gestão das edificações sob responsabilidade do TJRO."
-        actions={<Button onClick={openCreate}><Plus className="mr-1 h-4 w-4" />Nova unidade</Button>}
+        actions={!isOperador ? <Button onClick={openCreate}><Plus className="mr-1 h-4 w-4" />Nova unidade</Button> : undefined}
       />
 
       <CrudTableLayout
@@ -168,7 +168,7 @@ export default function UnidadesPage() {
                 <TableHead className="text-center">DERSO</TableHead>
                 <TableHead className="text-center">Acesso</TableHead>
                 <TableHead className="text-center">Vigilância</TableHead>
-                <TableHead className="w-[100px] text-right">Ações</TableHead>
+                {!isOperador && <TableHead className="w-[100px] text-right">Ações</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -181,14 +181,12 @@ export default function UnidadesPage() {
                   <TableCell className="text-center"><BoolIcon v={u.possui_derso} /></TableCell>
                   <TableCell className="text-center"><BoolIcon v={u.controle_acesso} /></TableCell>
                   <TableCell className="text-center"><BoolIcon v={u.vigilancia_eletronica} /></TableCell>
-                  <TableCell className="text-right">
-                    {(!isOperador || u.id === unidadeId) && (
+                  {!isOperador && (
+                    <TableCell className="text-right">
                       <Button variant="ghost" size="icon" onClick={() => openEdit(u)}><Pencil className="h-4 w-4" /></Button>
-                    )}
-                    {!isOperador && (
                       <Button variant="ghost" size="icon" onClick={() => setDeleting(u)}><Trash2 className="h-4 w-4" /></Button>
-                    )}
-                  </TableCell>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
