@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from "react";
 import {
-  Download, Building2, Cpu, Users, UserCog, DoorOpen, FileText, AlertTriangle, ShieldCheck,
+  Download, Building2, Cpu, Users, UserCog, KeyRound, FileText, AlertTriangle, ShieldCheck,
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -14,7 +14,6 @@ import { useUnidadesMock } from "@/data/unidadesMock";
 import { useEquipamentosCatalogo, useUnidadeEquipamentos } from "@/data/equipamentos";
 import { useServidoresMock, calcIdade, faixaEtaria, tempoServicoAnos } from "@/data/servidoresMock";
 import { useTerceirizadosMock } from "@/data/terceirizadosMock";
-import { usePortoesMock } from "@/data/portoesMock";
 import { useContratosMock, statusFromVigencia } from "@/data/contratosMock";
 import { useOcorrenciasMock, calcSla } from "@/data/ocorrenciasMock";
 
@@ -73,7 +72,6 @@ export default function RelatoriosPage() {
   const distribuicao = useUnidadeEquipamentos();
   const servidores = useServidoresMock();
   const terceirizados = useTerceirizadosMock();
-  const portoes = usePortoesMock();
   const contratos = useContratosMock();
   const ocorrencias = useOcorrenciasMock();
 
@@ -98,13 +96,20 @@ export default function RelatoriosPage() {
     [distribuicao],
   );
 
+  // Unidades com Kit Abertura de Portão por RFID (item #27)
+  const kitRfidStats = useMemo(() => {
+    const filtrados = distribuicao.filter((d) => d.item_num === 27 && d.quantidade > 0);
+    const totalKits = filtrados.reduce((s, d) => s + d.quantidade, 0);
+    return { unidades: filtrados.length, kits: totalKits, distribuicao: filtrados };
+  }, [distribuicao]);
+
   // KPIs gerais
   const totals = {
     unidades: unidades.length,
     equipamentos: equipamentosQtd,
     servidores: servidores.length,
     terceirizados: terceirizados.length,
-    portoes: portoes.length,
+    kitRfid: kitRfidStats.unidades,
     contratos: contratos.length,
     ocorrencias: ocorrencias.length,
   };
@@ -198,8 +203,6 @@ export default function RelatoriosPage() {
     [ocorrencias],
   );
 
-  const portoesManutencao = portoes.filter((p) => p.necessidade_manutencao !== "Nenhuma");
-
   // Datasets exportáveis (com nomes de unidade resolvidos)
   const equipExport = useMemo(
     () => distribuicao.map((d) => ({
@@ -214,9 +217,14 @@ export default function RelatoriosPage() {
     })),
     [distribuicao],
   );
-  const portoesExport = useMemo(
-    () => portoes.map((p) => ({ ...p, unidade: unidadeNome[p.unidade_id] ?? "" })),
-    [portoes, unidadeNome],
+  const kitRfidExport = useMemo(
+    () => kitRfidStats.distribuicao.map((d) => ({
+      unidade: d.unidade_nome,
+      comarca: d.comarca_nome,
+      quantidade: d.quantidade,
+      observacoes: d.observacoes,
+    })),
+    [kitRfidStats],
   );
   const ocoExport = useMemo(
     () => ocorrencias.map((o) => ({ ...o, unidade: unidadeNome[o.unidade_id] ?? "" })),
@@ -234,7 +242,7 @@ export default function RelatoriosPage() {
             <Button variant="outline" size="sm" onClick={() => exportCsv(equipExport, "equipamentos")}><Download className="mr-1 h-4 w-4" />Equipamentos</Button>
             <Button variant="outline" size="sm" onClick={() => exportCsv(servidores, "servidores")}><Download className="mr-1 h-4 w-4" />Servidores</Button>
             <Button variant="outline" size="sm" onClick={() => exportCsv(terceirizados, "terceirizados")}><Download className="mr-1 h-4 w-4" />Terceirizados</Button>
-            <Button variant="outline" size="sm" onClick={() => exportCsv(portoesExport, "portoes")}><Download className="mr-1 h-4 w-4" />Portões</Button>
+            <Button variant="outline" size="sm" onClick={() => exportCsv(kitRfidExport, "kit-rfid")}><Download className="mr-1 h-4 w-4" />Kit RFID</Button>
             <Button variant="outline" size="sm" onClick={() => exportCsv(contratos, "contratos")}><Download className="mr-1 h-4 w-4" />Contratos</Button>
             <Button variant="outline" size="sm" onClick={() => exportCsv(ocoExport, "manutencoes")}><Download className="mr-1 h-4 w-4" />Manutenções</Button>
           </div>
@@ -247,7 +255,7 @@ export default function RelatoriosPage() {
         <Kpi icon={Cpu}           label="Equipamentos"  value={totals.equipamentos} />
         <Kpi icon={Users}         label="Servidores"    value={totals.servidores} />
         <Kpi icon={UserCog}       label="Terceirizados" value={totals.terceirizados} />
-        <Kpi icon={DoorOpen}      label="Portões"       value={totals.portoes} />
+        <Kpi icon={KeyRound}      label="Kit RFID"      value={totals.kitRfid} />
         <Kpi icon={FileText}      label="Contratos"     value={totals.contratos} />
         <Kpi icon={AlertTriangle} label="Manutenções"   value={totals.ocorrencias} />
       </div>
@@ -337,8 +345,8 @@ export default function RelatoriosPage() {
           />
           <PendRow
             tone="partial"
-            count={portoesManutencao.length}
-            label="Portões com manutenção pendente"
+            count={unidades.length - kitRfidStats.unidades}
+            label="Unidades sem Kit Abertura de Portão por RFID"
           />
           <PendRow
             tone="partial"

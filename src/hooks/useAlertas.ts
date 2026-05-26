@@ -3,7 +3,6 @@ import { useContratosMock } from "@/data/contratosMock";
 import { useEquipamentosCatalogo, useUnidadeEquipamentos } from "@/data/equipamentos";
 import { useUnidadesMock } from "@/data/unidadesMock";
 import { useOcorrenciasMock, calcSla } from "@/data/ocorrenciasMock";
-import { usePortoesMock } from "@/data/portoesMock";
 
 export type Alerta = {
   tipo: "critical" | "warning" | "info";
@@ -19,7 +18,6 @@ export function useAlertas(): Alerta[] {
   const distribuicao = useUnidadeEquipamentos();
   const unidades     = useUnidadesMock();
   const ocorrencias  = useOcorrenciasMock();
-  const portoes      = usePortoesMock();
 
   return useMemo(() => {
     const hoje = new Date();
@@ -33,10 +31,6 @@ export function useAlertas(): Alerta[] {
     }).length;
 
     const manutVencidas = ocorrencias.filter((o) => calcSla(o).indicador === "Atrasado").length;
-
-    const portoesUrgentes = portoes.filter((p) =>
-      p.necessidade_manutencao === "Alta" || p.necessidade_manutencao === "Urgente"
-    ).length;
 
     // Unidades sem nenhum equipamento do contrato vinculado
     const comVinculo = new Set(distribuicao.map((d) => d.unidade_id));
@@ -77,13 +71,6 @@ export function useAlertas(): Alerta[] {
         unidade: manutVencidas === 1 ? "registro" : "registros",
         href: "/consultas?q=ocorrencias-prazo-vencido",
       },
-      portoesUrgentes > 0 && {
-        tipo: "warning" as const,
-        label: "Portões com manutenção urgente/alta",
-        count: portoesUrgentes,
-        unidade: portoesUrgentes === 1 ? "portão" : "portões",
-        href: "/consultas?q=portoes-urgentes",
-      },
       unidadesSemEquip > 0 && {
         tipo: "warning" as const,
         label: "Unidades sem equipamentos cadastrados",
@@ -106,5 +93,5 @@ export function useAlertas(): Alerta[] {
         href: "/consultas?q=divergencia-contrato",
       },
     ].filter(Boolean) as Alerta[];
-  }, [contratos, catalogo, distribuicao, unidades, ocorrencias, portoes]);
+  }, [contratos, catalogo, distribuicao, unidades, ocorrencias]);
 }

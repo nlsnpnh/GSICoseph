@@ -2,7 +2,7 @@ import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   AlertTriangle, ChevronDown, ChevronRight, ChevronUp, Clock, Cpu, DoorOpen,
-  FileText, Search, Shield, Users, UserCog, Wrench, XCircle,
+  FileText, KeyRound, Search, Shield, Users, UserCog, Wrench, XCircle,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/table";
 import { useUnidadesMock } from "@/data/unidadesMock";
 import { useEquipamentosCatalogo, useUnidadeEquipamentos } from "@/data/equipamentos";
-import { usePortoesMock } from "@/data/portoesMock";
 import { useServidoresMock } from "@/data/servidoresMock";
 import { useTerceirizadosMock } from "@/data/terceirizadosMock";
 import { useContratosMock } from "@/data/contratosMock";
@@ -55,7 +54,6 @@ export default function ConsultasPage() {
   const unidades    = useUnidadesMock();
   const catalogo    = useEquipamentosCatalogo();
   const distribuicao = useUnidadeEquipamentos();
-  const portoes     = usePortoesMock();
   const servidores  = useServidoresMock();
   const terceirizados = useTerceirizadosMock();
   const contratos   = useContratosMock();
@@ -279,45 +277,30 @@ export default function ConsultasPage() {
 
     // ── Portões ───────────────────────────────────────────────────
     {
-      id: "portoes-urgentes",
-      title: "Portões com manutenção urgente/alta",
-      description: "Portões que requerem atenção imediata ou prioritária.",
+      id: "kit-rfid-instalado",
+      title: "Kit RFID instalado",
+      description: "Unidades prediais que possuem o Kit Abertura de Portão por RFID (item #27).",
       category: "Portões",
-      icon: DoorOpen,
+      icon: KeyRound,
       columns: [
-        { key: "identificacao", label: "Identificação" },
-        { key: "unidade",       label: "Unidade" },
-        { key: "comarca",       label: "Comarca" },
-        { key: "necessidade",   label: "Necessidade" },
-        { key: "descricao",     label: "Descrição" },
+        { key: "unidade",    label: "Unidade" },
+        { key: "comarca",    label: "Comarca" },
+        { key: "quantidade", label: "Quantidade", className: "text-right" },
+        { key: "observacoes", label: "Observações" },
       ],
-      rows: portoes
-        .filter((p) => p.necessidade_manutencao === "Alta" || p.necessidade_manutencao === "Urgente")
-        .map((p) => {
-          const u = uMap.get(p.unidade_id);
-          return { identificacao: p.identificacao, unidade: u?.nome ?? "—", comarca: u?.comarca_nome ?? "—", necessidade: p.necessidade_manutencao, descricao: p.descricao_manutencao || "—" };
-        }),
-    },
-
-    {
-      id: "portoes-inoperantes",
-      title: "Portões inoperantes",
-      description: "Portões com situação Inoperante ou Em manutenção.",
-      category: "Portões",
-      icon: DoorOpen,
-      columns: [
-        { key: "identificacao", label: "Identificação" },
-        { key: "tipo",          label: "Tipo" },
-        { key: "situacao",      label: "Situação" },
-        { key: "unidade",       label: "Unidade" },
-        { key: "comarca",       label: "Comarca" },
-      ],
-      rows: portoes
-        .filter((p) => p.situacao === "Inoperante" || p.situacao === "Em manutenção")
-        .map((p) => {
-          const u = uMap.get(p.unidade_id);
-          return { identificacao: p.identificacao, tipo: p.tipo, situacao: p.situacao, unidade: u?.nome ?? "—", comarca: u?.comarca_nome ?? "—" };
-        }),
+      rows: distribuicao
+        .filter((d) => d.item_num === 27 && d.quantidade > 0)
+        .map((d) => ({
+          unidade: d.unidade_nome,
+          comarca: d.comarca_nome || "—",
+          quantidade: d.quantidade,
+          observacoes: d.observacoes || "—",
+        }))
+        .sort(
+          (a, b) =>
+            String(a.comarca).localeCompare(String(b.comarca), "pt-BR") ||
+            String(a.unidade).localeCompare(String(b.unidade), "pt-BR"),
+        ),
     },
 
     // ── Pessoal ───────────────────────────────────────────────────
@@ -461,7 +444,7 @@ export default function ConsultasPage() {
       })(),
     },
 
-  ], [unidades, catalogo, distribuicao, portoes, servidores, terceirizados, contratos, ocorrencias, hoje, em90, uMap]);
+  ], [unidades, catalogo, distribuicao, servidores, terceirizados, contratos, ocorrencias, hoje, em90, uMap]);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return queries;
@@ -482,7 +465,7 @@ export default function ConsultasPage() {
   }, [filtered]);
 
   const totalAlertas = useMemo(() =>
-    queries.filter((q) => ["unidades-sem-equipamentos", "itens-nao-distribuidos", "divergencia-contrato", "portoes-urgentes", "portoes-inoperantes", "contratos-vencidos", "ocorrencias-prazo-vencido"].includes(q.id) && q.rows.length > 0).reduce((s, q) => s + q.rows.length, 0),
+    queries.filter((q) => ["unidades-sem-equipamentos", "itens-nao-distribuidos", "divergencia-contrato", "contratos-vencidos", "ocorrencias-prazo-vencido"].includes(q.id) && q.rows.length > 0).reduce((s, q) => s + q.rows.length, 0),
     [queries],
   );
 
