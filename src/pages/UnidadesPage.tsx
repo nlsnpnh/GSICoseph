@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Building2, Pencil, Plus, Trash2, Check, X } from "lucide-react";
+import { Building2, Plus, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -165,30 +165,21 @@ export default function UnidadesPage() {
                 <TableHead>Comarca</TableHead>
                 <TableHead>Responsável</TableHead>
                 <TableHead>Substituto</TableHead>
-                <TableHead className="text-center">DERSO</TableHead>
-                <TableHead className="text-center">Acesso</TableHead>
-                <TableHead className="text-center">Vigilância</TableHead>
-                <TableHead className="w-[100px] text-right">Ações</TableHead>
+                <TableHead>Telefone</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.map((u) => (
-                <TableRow key={u.id}>
+                <TableRow
+                  key={u.id}
+                  className={!isOperador ? "cursor-pointer hover:bg-muted/40" : undefined}
+                  onClick={!isOperador ? () => openEdit(u) : undefined}
+                >
                   <TableCell className="font-medium">{u.nome}</TableCell>
                   <TableCell className="text-muted-foreground">{u.comarca_nome || "—"}</TableCell>
                   <TableCell className="text-muted-foreground">{u.responsavel_local}</TableCell>
                   <TableCell className="text-muted-foreground">{u.responsavel_substituto || "—"}</TableCell>
-                  <TableCell className="text-center"><BoolIcon v={u.possui_derso} /></TableCell>
-                  <TableCell className="text-center"><BoolIcon v={u.controle_acesso} /></TableCell>
-                  <TableCell className="text-center"><BoolIcon v={u.vigilancia_eletronica} /></TableCell>
-                  <TableCell className="text-right">
-                    {!isOperador && (
-                      <>
-                        <Button variant="ghost" size="icon" onClick={() => openEdit(u)}><Pencil className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon" onClick={() => setDeleting(u)}><Trash2 className="h-4 w-4" /></Button>
-                      </>
-                    )}
-                  </TableCell>
+                  <TableCell className="text-muted-foreground tabular-nums">{u.telefone || "—"}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -263,9 +254,26 @@ export default function UnidadesPage() {
               <Textarea rows={3} {...form.register("observacoes")} placeholder="Informações complementares..." />
             </Field>
 
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-              <Button type="submit">{editing ? "Salvar alterações" : "Cadastrar"}</Button>
+            <DialogFooter className="gap-2 sm:justify-between">
+              <div>
+                {editing && !isOperador && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    onClick={() => {
+                      setOpen(false);
+                      setDeleting(editing);
+                    }}
+                  >
+                    <Trash2 className="mr-1 h-4 w-4" />Excluir
+                  </Button>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+                <Button type="submit">{editing ? "Salvar alterações" : "Cadastrar"}</Button>
+              </div>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -318,8 +326,3 @@ function ToggleField({ label, value, onChange }: { label: string; value: boolean
   );
 }
 
-function BoolIcon({ v }: { v: boolean }) {
-  return v
-    ? <Check className="mx-auto h-4 w-4 text-adequate" />
-    : <X className="mx-auto h-4 w-4 text-muted-foreground/50" />;
-}
