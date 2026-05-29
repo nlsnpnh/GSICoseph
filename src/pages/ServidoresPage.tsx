@@ -83,6 +83,7 @@ export default function ServidoresPage() {
   const [search, setSearch] = useState("");
   const [comarcaFilter, setComarcaFilter] = useState<string>("all");
   const [situacaoFilter, setSituacaoFilter] = useState<string>("all");
+  const [abonoFilter, setAbonoFilter] = useState<"all" | "sim" | "nao">("all");
   const [formComarcaId, setFormComarcaId] = useState<string>("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<ServidorSeg | null>(null);
@@ -108,6 +109,8 @@ export default function ServidoresPage() {
     const q = search.toLowerCase();
     return items.filter((s) => {
       if (situacaoFilter !== "all" && s.situacao !== situacaoFilter) return false;
+      if (abonoFilter === "sim" && !s.abono_permanencia) return false;
+      if (abonoFilter === "nao" && s.abono_permanencia) return false;
       if (comarcaFilter !== "all") {
         const unid = s.unidade_id ? unidadeMap[s.unidade_id] : null;
         if (!unid || unid.comarca_id !== comarcaFilter) return false;
@@ -120,7 +123,7 @@ export default function ServidoresPage() {
         (s.unidade_id ? (unidadeMap[s.unidade_id]?.nome ?? "").toLowerCase().includes(q) : false)
       );
     });
-  }, [items, search, comarcaFilter, situacaoFilter, unidadeMap]);
+  }, [items, search, comarcaFilter, situacaoFilter, abonoFilter, unidadeMap]);
 
   const openCreate = () => {
     setEditing(null);
@@ -217,6 +220,14 @@ export default function ServidoresPage() {
               <SelectContent>
                 <SelectItem value="all">Todas situações</SelectItem>
                 {SITUACOES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={abonoFilter} onValueChange={(v) => setAbonoFilter(v as "all" | "sim" | "nao")}>
+              <SelectTrigger className="h-9 w-[200px]"><SelectValue placeholder="Abono de permanência" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos (abono ou não)</SelectItem>
+                <SelectItem value="sim">Apenas com abono</SelectItem>
+                <SelectItem value="nao">Apenas sem abono</SelectItem>
               </SelectContent>
             </Select>
           </div>
