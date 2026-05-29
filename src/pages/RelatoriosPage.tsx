@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Download, Building2, Cpu, Users, UserCog, KeyRound, FileText, AlertTriangle, ShieldCheck,
 } from "lucide-react";
@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useUnidadesMock } from "@/data/unidadesMock";
 import { useEquipamentosCatalogo, useUnidadeEquipamentos } from "@/data/equipamentos";
 import { useServidoresMock, calcIdade, faixaEtaria, tempoServicoAnos } from "@/data/servidoresMock";
@@ -233,8 +234,14 @@ export default function RelatoriosPage() {
   );
 
   // Relatório cadastral de servidores (Número, Cadastro, Nome, Localidade, Unidade Predial, Região, Grupo Unidade, Status Cadastro)
+  const [cadastralAbonoFilter, setCadastralAbonoFilter] = useState<"all" | "sim" | "nao">("all");
   const servidoresCadastral = useMemo(
     () => [...servidores]
+      .filter((s) => {
+        if (cadastralAbonoFilter === "sim") return s.abono_permanencia;
+        if (cadastralAbonoFilter === "nao") return !s.abono_permanencia;
+        return true;
+      })
       .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"))
       .map((s, i) => {
         const unid = s.unidade_id ? unidadeMap[s.unidade_id] : null;
@@ -248,10 +255,11 @@ export default function RelatoriosPage() {
           unidade_predial: unidadePredial,
           regiao: localidade,
           grupo_unidade: unidadePredial,
+          abono_permanencia: s.abono_permanencia ? "Sim" : "Não",
           status_cadastro: s.status_cadastro,
         };
       }),
-    [servidores, unidadeMap],
+    [servidores, unidadeMap, cadastralAbonoFilter],
   );
 
   return (
@@ -359,13 +367,23 @@ export default function RelatoriosPage() {
           <CardTitle className="flex items-center gap-2 text-base">
             <Users className="h-4 w-4 text-primary" />Relatório cadastral de servidores
           </CardTitle>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => exportCsv(servidoresCadastral, "servidores-cadastral")}
-          >
-            <Download className="mr-1 h-4 w-4" />Exportar CSV
-          </Button>
+          <div className="flex items-center gap-2">
+            <Select value={cadastralAbonoFilter} onValueChange={(v) => setCadastralAbonoFilter(v as "all" | "sim" | "nao")}>
+              <SelectTrigger className="h-9 w-[220px]"><SelectValue placeholder="Abono de permanência" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos (abono ou não)</SelectItem>
+                <SelectItem value="sim">Apenas com abono</SelectItem>
+                <SelectItem value="nao">Apenas sem abono</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => exportCsv(servidoresCadastral, "servidores-cadastral")}
+            >
+              <Download className="mr-1 h-4 w-4" />Exportar CSV
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {servidoresCadastral.length === 0 ? (
@@ -382,6 +400,7 @@ export default function RelatoriosPage() {
                     <TableHead>Unidade Predial</TableHead>
                     <TableHead>Região</TableHead>
                     <TableHead>Grupo Unidade</TableHead>
+                    <TableHead>Abono Perm.</TableHead>
                     <TableHead>Status Cadastro</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -395,6 +414,15 @@ export default function RelatoriosPage() {
                       <TableCell className="text-muted-foreground">{r.unidade_predial || "—"}</TableCell>
                       <TableCell className="text-muted-foreground">{r.regiao || "—"}</TableCell>
                       <TableCell className="text-muted-foreground">{r.grupo_unidade || "—"}</TableCell>
+                      <TableCell>
+                        {r.abono_permanencia === "Sim" ? (
+                          <Badge variant="outline" className="bg-amber-500/10 text-amber-700 border-amber-500/30 dark:text-amber-400 text-xs">
+                            Sim
+                          </Badge>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">Não</span>
+                        )}
+                      </TableCell>
                       <TableCell>
                         <Badge variant="outline" className="text-xs">{r.status_cadastro}</Badge>
                       </TableCell>
