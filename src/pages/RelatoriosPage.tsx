@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useUnidadesMock } from "@/data/unidadesMock";
 import { useEquipamentosCatalogo, useUnidadeEquipamentos } from "@/data/equipamentos";
 import { useServidoresMock, calcIdade, faixaEtaria, tempoServicoAnos } from "@/data/servidoresMock";
@@ -231,6 +232,28 @@ export default function RelatoriosPage() {
     [ocorrencias, unidadeNome],
   );
 
+  // Relatório cadastral de servidores (Número, Cadastro, Nome, Localidade, Unidade Predial, Região, Grupo Unidade, Status Cadastro)
+  const servidoresCadastral = useMemo(
+    () => [...servidores]
+      .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"))
+      .map((s, i) => {
+        const unid = s.unidade_id ? unidadeMap[s.unidade_id] : null;
+        const localidade = unid?.comarca_nome ?? "";
+        const unidadePredial = unid?.nome ?? "";
+        return {
+          numero: i + 1,
+          cadastro: s.matricula,
+          nome: s.nome,
+          localidade,
+          unidade_predial: unidadePredial,
+          regiao: localidade,
+          grupo_unidade: unidadePredial,
+          status_cadastro: s.status_cadastro,
+        };
+      }),
+    [servidores, unidadeMap],
+  );
+
   return (
     <div>
       <PageHeader
@@ -327,6 +350,60 @@ export default function RelatoriosPage() {
               <Donut data={servidoresCapInterior} />
             </ChartCard>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Relatório cadastral de servidores */}
+      <Card className="mt-4">
+        <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Users className="h-4 w-4 text-primary" />Relatório cadastral de servidores
+          </CardTitle>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => exportCsv(servidoresCadastral, "servidores-cadastral")}
+          >
+            <Download className="mr-1 h-4 w-4" />Exportar CSV
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {servidoresCadastral.length === 0 ? (
+            <p className="py-8 text-center text-xs text-muted-foreground">Sem servidores cadastrados</p>
+          ) : (
+            <div className="max-h-[480px] overflow-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[60px]">Número</TableHead>
+                    <TableHead>Cadastro</TableHead>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Localidade</TableHead>
+                    <TableHead>Unidade Predial</TableHead>
+                    <TableHead>Região</TableHead>
+                    <TableHead>Grupo Unidade</TableHead>
+                    <TableHead>Status Cadastro</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {servidoresCadastral.map((r) => (
+                    <TableRow key={`${r.cadastro}-${r.numero}`}>
+                      <TableCell className="text-muted-foreground">{r.numero}</TableCell>
+                      <TableCell className="font-mono text-xs">{r.cadastro}</TableCell>
+                      <TableCell className="font-medium">{r.nome}</TableCell>
+                      <TableCell className="text-muted-foreground">{r.localidade || "—"}</TableCell>
+                      <TableCell className="text-muted-foreground">{r.unidade_predial || "—"}</TableCell>
+                      <TableCell className="text-muted-foreground">{r.regiao || "—"}</TableCell>
+                      <TableCell className="text-muted-foreground">{r.grupo_unidade || "—"}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="text-xs">{r.status_cadastro}</Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
 

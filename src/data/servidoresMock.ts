@@ -20,6 +20,9 @@ export const ESCALAS = [
 export const SITUACOES = ["Ativo", "Férias", "Licença", "Afastado", "Cedido", "Aposentado"] as const;
 export type SituacaoFuncional = (typeof SITUACOES)[number];
 
+export const STATUS_CADASTRO = ["Ativo", "Pendente", "Inativo"] as const;
+export type StatusCadastro = (typeof STATUS_CADASTRO)[number];
+
 export type ServidorSeg = {
   id: string;
   nome: string;
@@ -30,6 +33,8 @@ export type ServidorSeg = {
   regime: (typeof REGIMES)[number];
   escala: (typeof ESCALAS)[number];
   situacao: SituacaoFuncional;
+  abono_permanencia: boolean;
+  status_cadastro: StatusCadastro;
   email: string;
   telefone: string;
   data_ingresso: string;
@@ -49,6 +54,8 @@ const mapRow = (r: any): ServidorSeg => ({
   regime: r.regime,
   escala: r.escala,
   situacao: r.situacao,
+  abono_permanencia: !!r.abono_permanencia,
+  status_cadastro: (r.status_cadastro ?? "Ativo") as StatusCadastro,
   email: r.email ?? "",
   telefone: r.telefone ?? "",
   data_ingresso: r.data_ingresso ?? "",

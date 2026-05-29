@@ -17,7 +17,7 @@ import { useServidoresMock } from "@/data/servidoresMock";
 import { useTerceirizadosMock } from "@/data/terceirizadosMock";
 import { useComarcas } from "@/data/api";
 import { useUnidadeEquipamentos } from "@/data/equipamentos";
-import { useContratosMock } from "@/data/contratosMock";
+import { useContratosMock, statusFromVigencia } from "@/data/contratosMock";
 import { useOcorrenciasMock } from "@/data/ocorrenciasMock";
 import { useAlertas } from "@/hooks/useAlertas";
 import { usePeriod, applyPeriod, type Period } from "@/contexts/PeriodContext";
@@ -105,7 +105,7 @@ export default function Dashboard() {
     const equipamentosInstalados = distribuicao.reduce((s, d) => s + d.quantidade, 0);
     const statusAbertos = new Set(["Aberto", "Em andamento", "Aguardando peça"]);
     const ocorrenciasAbertas = ocorrencias.filter((o) => statusAbertos.has(o.status)).length;
-    const contratosVigentes = contratosRaw.filter((c) => c.status === "Vigente").length;
+    const contratosVigentes = contratosRaw.filter((c) => statusFromVigencia(c.data_fim) === "Vigente").length;
 
     // Equipamentos únicos (unidade + equipamento) com ocorrência em aberto do tipo Falha ou Manutenção corretiva
     const equipamentosInoperantes = new Set(

@@ -24,11 +24,13 @@ import { useUnidadesMock } from "@/data/unidadesMock";
 import { useComarcas } from "@/data/api";
 import { useAuth } from "@/contexts/AuthContext";
 import {
-  CARGOS, REGIMES, ESCALAS, SITUACOES, type ServidorSeg, type SituacaoFuncional,
+  CARGOS, REGIMES, ESCALAS, SITUACOES, STATUS_CADASTRO,
+  type ServidorSeg, type SituacaoFuncional, type StatusCadastro,
   useServidoresMock, addServidorMock, updateServidorMock, removeServidorMock,
   calcIdade, tempoServicoAnos,
 } from "@/data/servidoresMock";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/hooks/use-toast";
 
 const schema = z.object({
@@ -40,6 +42,8 @@ const schema = z.object({
   regime: z.enum(REGIMES),
   escala: z.enum(ESCALAS),
   situacao: z.enum(SITUACOES),
+  abono_permanencia: z.boolean().default(false),
+  status_cadastro: z.enum(STATUS_CADASTRO),
   email: z.string().trim().email("E-mail inválido").max(120),
   telefone: z.string().trim().max(30).optional().or(z.literal("")),
   data_ingresso: z.string().optional().or(z.literal("")),
@@ -59,8 +63,16 @@ const situacaoTone: Record<SituacaoFuncional, string> = {
 
 const defaults: FormData = {
   nome: "", matricula: "", cargo: "Agente de Segurança", funcao_atual: "", unidade_id: "",
-  regime: "Estatutário", escala: "Expediente (7h)", situacao: "Ativo", email: "", telefone: "",
+  regime: "Estatutário", escala: "Expediente (7h)", situacao: "Ativo",
+  abono_permanencia: false, status_cadastro: "Ativo",
+  email: "", telefone: "",
   data_ingresso: "", data_nascimento: "", observacoes: "",
+};
+
+const statusCadastroTone: Record<StatusCadastro, string> = {
+  Ativo:    "bg-adequate/10 text-adequate border-adequate/30",
+  Pendente: "bg-partial/15 text-partial border-partial/30",
+  Inativo:  "bg-muted text-muted-foreground border-border",
 };
 
 export default function ServidoresPage() {
@@ -134,6 +146,8 @@ export default function ServidoresPage() {
       regime: s.regime,
       escala: s.escala,
       situacao: s.situacao,
+      abono_permanencia: s.abono_permanencia,
+      status_cadastro: s.status_cadastro,
       email: s.email,
       telefone: s.telefone,
       data_ingresso: s.data_ingresso,
@@ -153,6 +167,8 @@ export default function ServidoresPage() {
       regime: data.regime,
       escala: data.escala,
       situacao: data.situacao,
+      abono_permanencia: data.abono_permanencia,
+      status_cadastro: data.status_cadastro,
       email: data.email,
       telefone: data.telefone ?? "",
       data_ingresso: data.data_ingresso ?? "",
@@ -220,6 +236,7 @@ export default function ServidoresPage() {
                 <TableHead>Tempo</TableHead>
                 <TableHead>Idade</TableHead>
                 <TableHead>Situação</TableHead>
+                <TableHead>Status cadastro</TableHead>
                 <TableHead className="w-[100px] text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -246,7 +263,19 @@ export default function ServidoresPage() {
                     <TableCell className="text-muted-foreground">{s.regime}</TableCell>
                     <TableCell className="text-muted-foreground text-xs">{tempo != null ? `${tempo} anos` : "—"}</TableCell>
                     <TableCell className="text-muted-foreground text-xs">{idade != null ? `${idade}` : "—"}</TableCell>
-                    <TableCell><Badge variant="outline" className={situacaoTone[s.situacao]}>{s.situacao}</Badge></TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-1">
+                        <Badge variant="outline" className={situacaoTone[s.situacao]}>{s.situacao}</Badge>
+                        {s.abono_permanencia && (
+                          <Badge variant="outline" className="bg-amber-500/10 text-amber-700 border-amber-500/30 dark:text-amber-400">
+                            Abono permanência
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className={statusCadastroTone[s.status_cadastro]}>{s.status_cadastro}</Badge>
+                    </TableCell>
                     <TableCell className="text-right">
                       <Button variant="ghost" size="icon" onClick={() => openEdit(s)}><Pencil className="h-4 w-4" /></Button>
                       <Button variant="ghost" size="icon" onClick={() => setDeleting(s)}><Trash2 className="h-4 w-4" /></Button>
@@ -351,6 +380,25 @@ export default function ServidoresPage() {
                       {SITUACOES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                     </SelectContent>
                   </Select>
+                </Field>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="Status do cadastro">
+                  <Select value={form.watch("status_cadastro")} onValueChange={(v) => form.setValue("status_cadastro", v as StatusCadastro)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {STATUS_CADASTRO.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </Field>
+                <Field label="Abono de permanência">
+                  <label className="flex h-10 items-center gap-2 rounded-md border border-input bg-background px-3 text-sm">
+                    <Checkbox
+                      checked={form.watch("abono_permanencia")}
+                      onCheckedChange={(v) => form.setValue("abono_permanencia", v === true)}
+                    />
+                    <span className="text-muted-foreground">Servidor com abono de permanência</span>
+                  </label>
                 </Field>
               </div>
             </Section>
