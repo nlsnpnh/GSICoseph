@@ -253,8 +253,6 @@ export default function RelatoriosPage() {
           nome: s.nome,
           localidade,
           unidade_predial: unidadePredial,
-          regiao: localidade,
-          grupo_unidade: unidadePredial,
           abono_permanencia: s.abono_permanencia ? "Sim" : "Não",
           status_cadastro: s.situacao,
         };
@@ -398,8 +396,6 @@ export default function RelatoriosPage() {
                     <TableHead>Nome</TableHead>
                     <TableHead>Localidade</TableHead>
                     <TableHead>Unidade Predial</TableHead>
-                    <TableHead>Região</TableHead>
-                    <TableHead>Grupo Unidade</TableHead>
                     <TableHead>Abono Perm.</TableHead>
                     <TableHead>Status Cadastro</TableHead>
                   </TableRow>
@@ -412,8 +408,6 @@ export default function RelatoriosPage() {
                       <TableCell className="font-medium">{r.nome}</TableCell>
                       <TableCell className="text-muted-foreground">{r.localidade || "—"}</TableCell>
                       <TableCell className="text-muted-foreground">{r.unidade_predial || "—"}</TableCell>
-                      <TableCell className="text-muted-foreground">{r.regiao || "—"}</TableCell>
-                      <TableCell className="text-muted-foreground">{r.grupo_unidade || "—"}</TableCell>
                       <TableCell>
                         {r.abono_permanencia === "Sim" ? (
                           <Badge variant="outline" className="bg-amber-500/10 text-amber-700 border-amber-500/30 dark:text-amber-400 text-xs">
