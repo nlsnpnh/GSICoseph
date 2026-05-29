@@ -256,7 +256,7 @@ export default function RelatoriosPage() {
           regiao: localidade,
           grupo_unidade: unidadePredial,
           abono_permanencia: s.abono_permanencia ? "Sim" : "Não",
-          status_cadastro: s.status_cadastro,
+          status_cadastro: s.situacao,
         };
       }),
     [servidores, unidadeMap, cadastralAbonoFilter],
