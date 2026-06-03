@@ -158,6 +158,73 @@ export function useUpsertBoletim() {
   });
 }
 
+// ─────────────────────────────────────────────────────────────────
+// Consolidação anual dos 15 indicadores (aba "Relatório Geral").
+// ─────────────────────────────────────────────────────────────────
+export type BoletimConsolidadoFiltros = {
+  ano: number;
+  mes?: number | null;        // null/undefined = todos os meses
+  unidadeId?: string | null;
+  comarcaId?: string | null;
+};
+
+export type BoletimConsolidadoLinha = {
+  item_number: number;
+  descricao: string;
+  categoria: string | null;
+  meses: number[];            // 12 posições (índice 0 = Janeiro)
+  total: number;
+};
+
+/** Matriz item × mês com somatórios e Total Ano, respeitando os filtros. */
+export function useBoletimConsolidado(f: BoletimConsolidadoFiltros) {
+  return useQuery({
+    queryKey: [...KEY_LANC, "consolidado", f],
+    enabled: !!f.ano,
+    queryFn: async (): Promise<BoletimConsolidadoLinha[]> => {
+      let q = sb
+        .from("boletim_mensal")
+        .select("item_number, quantidade, mes, unidade_id, unidades(comarca_id)")
+        .eq("ano", f.ano);
+      if (f.mes)       q = q.eq("mes", f.mes);
+      if (f.unidadeId) q = q.eq("unidade_id", f.unidadeId);
+      const { data, error } = await q;
+      if (error) throw error;
+
+      const filtered = (data ?? []).filter((r: any) =>
+        !f.comarcaId || r.unidades?.comarca_id === f.comarcaId,
+      );
+
+      const matrix = new Map<number, number[]>();
+      for (const it of BOLETIM_ITENS_FIXOS) matrix.set(it.item_number, Array(12).fill(0));
+      for (const r of filtered) {
+        const arr = matrix.get(r.item_number);
+        if (arr && r.mes >= 1 && r.mes <= 12) arr[r.mes - 1] += r.quantidade ?? 0;
+      }
+
+      return BOLETIM_ITENS_FIXOS.map((it) => {
+        const meses = matrix.get(it.item_number)!;
+        return {
+          item_number: it.item_number,
+          descricao: it.descricao,
+          categoria: it.categoria,
+          meses,
+          total: meses.reduce((s, n) => s + n, 0),
+        };
+      });
+    },
+  });
+}
+
+/** Indicadores destacados nos cards de resumo do Relatório Geral. */
+export const RELATORIO_RESUMO_CARDS: { item: number; label: string }[] = [
+  { item: 1,  label: "Armas de Fogo" },
+  { item: 2,  label: "Armas Brancas" },
+  { item: 4,  label: "Incidentes de Segurança" },
+  { item: 14, label: "Acionamentos Fora do Expediente" },
+  { item: 15, label: "Reuniões de Alinhamento" },
+];
+
 /** Agregação para o card "Resultados Operacionais" (itens 1, 2, 3, 4, 6). */
 export const RESULTADOS_OPERACIONAIS_ITEMS: { item: number; label: string; color: string }[] = [
   { item: 1, label: "Armas de Fogo",   color: "hsl(0 75% 55%)"   },
