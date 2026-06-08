@@ -3,8 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { queryClient } from "@/lib/queryClient";
 
 export const EMPRESAS = [
-  "AFS Empreendimentos",
+  "AFS SERVIÇOS DE LOCAÇÃO E GESTÃO DE MÃO DE OBRA LTDA",
 ] as const;
+
+// Empresa padrão (vinda do contrato) usada como valor fixo no cadastro
+export const EMPRESA_PADRAO = EMPRESAS[0];
 
 export const FUNCOES = [
   "Agente de Portaria",

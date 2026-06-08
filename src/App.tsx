@@ -21,6 +21,7 @@ import BoletimPage from "./pages/BoletimPage";
 import RelatoriosPage from "./pages/RelatoriosPage";
 import EquipamentosPage from "./pages/EquipamentosPage";
 import TerceirizadosPage from "./pages/TerceirizadosPage";
+import AfsPorUnidadePage from "./pages/AfsPorUnidadePage";
 import PortoesPage from "./pages/PortoesPage";
 import ContratosPage from "./pages/ContratosPage";
 import ConsultasPage from "./pages/ConsultasPage";
@@ -52,6 +53,7 @@ const App = () => (
                 <Route path="/comarcas" element={<ComarcasPage />} />
                 <Route path="/servidores" element={<ServidoresPage />} />
                 <Route path="/terceirizados" element={<TerceirizadosPage />} />
+                <Route path="/terceirizados/afs-por-unidade" element={<AfsPorUnidadePage />} />
                 <Route path="/equipamentos" element={<EquipamentosPage />} />
                 <Route path="/portoes" element={<PortoesPage />} />
                 <Route path="/contratos" element={<ContratosPage />} />

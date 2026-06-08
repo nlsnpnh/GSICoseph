@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Pencil, Plus, Trash2, UserCog, AlertTriangle } from "lucide-react";
+import { Pencil, Plus, Trash2, UserCog, AlertTriangle, Building2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -26,7 +27,7 @@ import { useUnidadesMock } from "@/data/unidadesMock";
 import { useComarcas } from "@/data/api";
 import { useAuth } from "@/contexts/AuthContext";
 import {
-  EMPRESAS, FUNCOES, ESCALAS_TERC, TURNOS, SITUACOES_TERC,
+  EMPRESAS, EMPRESA_PADRAO, FUNCOES, ESCALAS_TERC, TURNOS, SITUACOES_TERC,
   type Terceirizado, type SituacaoTerc,
   useTerceirizadosMock, addTerceirizado, updateTerceirizado, removeTerceirizado,
 } from "@/data/terceirizadosMock";
@@ -58,7 +59,7 @@ const situacaoTone: Record<SituacaoTerc, string> = {
 };
 
 const defaults: FormData = {
-  nome: "", cpf: "", empresa: "", contrato: "Contrato nº 23/2024", funcao: "Agente de Portaria",
+  nome: "", cpf: "", empresa: EMPRESA_PADRAO, contrato: "Contrato nº 23/2024", funcao: "Agente de Portaria",
   posto_trabalho: "", unidade_id: "",
   escala: "12x36 horas", turno: "Diurno", situacao: "Ativo",
   certificacoes: "", validade_certificacao: "", curso_libras: false, observacoes: "",
@@ -78,6 +79,7 @@ function certStatus(d: string): { label: string; tone: string } | null {
 
 export default function TerceirizadosPage() {
   const { isOperador, unidadeId: authUnidadeId, unidadeNome: authUnidadeNome } = useAuth();
+  const navigate = useNavigate();
   const items = useTerceirizadosMock();
   const unidades = useUnidadesMock();
   const { data: comarcas = [] } = useComarcas();
@@ -137,7 +139,7 @@ export default function TerceirizadosPage() {
     form.reset({
       nome: t.nome,
       cpf: t.cpf,
-      empresa: t.empresa,
+      empresa: EMPRESA_PADRAO,
       contrato: t.contrato,
       funcao: t.funcao,
       posto_trabalho: t.posto_trabalho,
@@ -212,6 +214,11 @@ export default function TerceirizadosPage() {
                 {SITUACOES_TERC.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
               </SelectContent>
             </Select>
+            {!isOperador && (
+              <Button variant="outline" className="h-9" onClick={() => navigate("/terceirizados/afs-por-unidade")}>
+                <Building2 className="mr-1 h-4 w-4" />AFS por unidade
+              </Button>
+            )}
           </div>
         }
       >
@@ -302,7 +309,7 @@ export default function TerceirizadosPage() {
             <Section title="Empresa e contrato">
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="Empresa" error={form.formState.errors.empresa?.message}>
-                  <Input {...form.register("empresa")} placeholder="Ex.: SegService" />
+                  <Input {...form.register("empresa")} readOnly className="bg-muted" title={EMPRESA_PADRAO} />
                 </Field>
                 <Field label="Contrato" error={form.formState.errors.contrato?.message}>
                   <Input {...form.register("contrato")} placeholder="Ex.: 058/2023" />
