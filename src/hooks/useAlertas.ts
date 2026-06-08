@@ -3,6 +3,7 @@ import { useContratosMock } from "@/data/contratosMock";
 import { useEquipamentosCatalogo, useUnidadeEquipamentos } from "@/data/equipamentos";
 import { useUnidadesMock } from "@/data/unidadesMock";
 import { useOcorrenciasMock, calcSla } from "@/data/ocorrenciasMock";
+import { useAuth } from "@/contexts/AuthContext";
 
 export type Alerta = {
   tipo: "critical" | "warning" | "info";
@@ -13,6 +14,7 @@ export type Alerta = {
 };
 
 export function useAlertas(): Alerta[] {
+  const { isOperador } = useAuth();
   const contratos    = useContratosMock();
   const catalogo     = useEquipamentosCatalogo();
   const distribuicao = useUnidadeEquipamentos();
@@ -71,21 +73,24 @@ export function useAlertas(): Alerta[] {
         unidade: manutVencidas === 1 ? "registro" : "registros",
         href: "/consultas?q=ocorrencias-prazo-vencido",
       },
-      unidadesSemEquip > 0 && {
+      // Alertas de escopo global (catálogo/contrato/todas as unidades):
+      // só fazem sentido para admin/gestor. O operador só enxerga a própria
+      // unidade (RLS), o que distorceria estes números.
+      !isOperador && unidadesSemEquip > 0 && {
         tipo: "warning" as const,
         label: "Unidades sem equipamentos cadastrados",
         count: unidadesSemEquip,
         unidade: unidadesSemEquip === 1 ? "unidade" : "unidades",
         href: "/consultas?q=unidades-sem-equipamentos",
       },
-      itensSemDistribuicao > 0 && {
+      !isOperador && itensSemDistribuicao > 0 && {
         tipo: "info" as const,
         label: "Itens do catálogo sem distribuição",
         count: itensSemDistribuicao,
         unidade: itensSemDistribuicao === 1 ? "item" : "itens",
         href: "/consultas?q=itens-nao-distribuidos",
       },
-      itensDivergentes > 0 && {
+      !isOperador && itensDivergentes > 0 && {
         tipo: "info" as const,
         label: "Itens com divergência contrato × distribuição",
         count: itensDivergentes,
@@ -93,5 +98,5 @@ export function useAlertas(): Alerta[] {
         href: "/consultas?q=divergencia-contrato",
       },
     ].filter(Boolean) as Alerta[];
-  }, [contratos, catalogo, distribuicao, unidades, ocorrencias]);
+  }, [contratos, catalogo, distribuicao, unidades, ocorrencias, isOperador]);
 }
