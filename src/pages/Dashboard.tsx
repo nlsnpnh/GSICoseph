@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  Building2, Cpu, PowerOff, Siren, FileCheck, UserCog, Users, ClipboardList,
+  Building2, Cpu, Camera, Siren, FileCheck, UserCog, Users, ClipboardList,
   AlertOctagon, FileSearch, FileBarChart2, RefreshCw,
 } from "lucide-react";
 import { format } from "date-fns";
@@ -107,15 +107,11 @@ export default function Dashboard() {
     const ocorrenciasAbertas = ocorrencias.filter((o) => statusAbertos.has(o.status)).length;
     const contratosVigentes = contratosRaw.filter((c) => statusFromVigencia(c.data_fim) === "Vigente").length;
 
-    // Equipamentos únicos (unidade + equipamento) com ocorrência em aberto do tipo Falha ou Manutenção corretiva
-    const equipamentosInoperantes = new Set(
-      ocorrencias
-        .filter((o) =>
-          (o.tipo === "Falha" || o.tipo === "Manutenção corretiva") &&
-          statusAbertos.has(o.status),
-        )
-        .map((o) => `${o.unidade_id}::${o.equipamento}`),
-    ).size;
+    // Total de câmeras instaladas (Dome, Bullet, Fisheye, PTZ) — mesma classificação do gráfico "Principais Equipamentos"
+    const CAMERA_RE = /c[âa]mera|dome|bullet|fisheye|fish.?eye|\bptz\b/i;
+    const cameras = distribuicao
+      .filter((d) => CAMERA_RE.test(d.descricao))
+      .reduce((s, d) => s + d.quantidade, 0);
 
     // Soma dos counts dos alertas classificados como críticos pelo hook useAlertas (mesma fonte do painel Alertas e Pendências)
     const alertasCriticos = alertas
@@ -125,7 +121,7 @@ export default function Dashboard() {
     return {
       unidadesMonitoradas:    f(unidades.length),
       equipamentosInstalados: f(equipamentosInstalados),
-      equipamentosInoperantes:f(equipamentosInoperantes),
+      cameras:                f(cameras),
       alertasCriticos:        f(alertasCriticos),
       contratosVigentes:      f(contratosVigentes),
       terceirizadosAtivos:    f(terceirizados.filter((t) => t.situacao === "Ativo").length),
@@ -205,9 +201,9 @@ export default function Dashboard() {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
         <StatCard label="Unidades Monitoradas"    value={stats.unidadesMonitoradas}     icon={Building2}      tone="info" />
         <StatCard label="Equipamentos Instalados" value={stats.equipamentosInstalados}  icon={Cpu}            tone="primary" />
-        <StatCard label="Equipamentos Inoperantes" value={stats.equipamentosInoperantes} icon={PowerOff}      tone="warning" />
+        <StatCard label="Câmeras"                 value={stats.cameras}                 icon={Camera}         tone="warning" />
         <StatCard label="Alertas Críticos"        value={stats.alertasCriticos}         icon={Siren}          tone="destructive" />
-        <StatCard label="Contratos Vigentes"      value={stats.contratosVigentes}       icon={FileCheck}      tone="success" />
+        <StatCard label="Contratos Continuados"   value={stats.contratosVigentes}       icon={FileCheck}      tone="success" />
         <StatCard label="Terceirizados Ativos"    value={stats.terceirizadosAtivos}     icon={UserCog}        tone="accent" />
         <StatCard label="Servidores Ativos"       value={stats.servidoresAtivos}        icon={Users}          tone="info" />
         <StatCard label="Manutenções Abertas"     value={stats.ocorrenciasAbertas}      icon={ClipboardList}  tone="destructive" />
