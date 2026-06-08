@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Pencil, Plus, Trash2, Users } from "lucide-react";
+import { Pencil, Plus, Trash2, Users, Building2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -70,6 +71,7 @@ const defaults: FormData = {
 
 export default function ServidoresPage() {
   const { isOperador, unidadeId: authUnidadeId, unidadeNome: authUnidadeNome } = useAuth();
+  const navigate = useNavigate();
   const items = useServidoresMock();
   const unidades = useUnidadesMock();
   const { data: comarcas = [] } = useComarcas();
@@ -221,6 +223,11 @@ export default function ServidoresPage() {
                 <SelectItem value="nao">Apenas sem abono</SelectItem>
               </SelectContent>
             </Select>
+            {!isOperador && (
+              <Button variant="outline" className="h-9" onClick={() => navigate("/servidores/por-unidade")}>
+                <Building2 className="mr-1 h-4 w-4" />Servidores por unidade
+              </Button>
+            )}
           </div>
         }
       >

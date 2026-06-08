@@ -15,6 +15,7 @@ import Dashboard from "./pages/Dashboard";
 import UnidadesPage from "./pages/UnidadesPage";
 import ComarcasPage from "./pages/ComarcasPage";
 import ServidoresPage from "./pages/ServidoresPage";
+import ServidoresPorUnidadePage from "./pages/ServidoresPorUnidadePage";
 import ConfiguracoesPage from "./pages/ConfiguracoesPage";
 import OcorrenciasPage from "./pages/OcorrenciasPage";
 import BoletimPage from "./pages/BoletimPage";
@@ -52,6 +53,7 @@ const App = () => (
                 <Route path="/unidades" element={<UnidadesPage />} />
                 <Route path="/comarcas" element={<ComarcasPage />} />
                 <Route path="/servidores" element={<ServidoresPage />} />
+                <Route path="/servidores/por-unidade" element={<ServidoresPorUnidadePage />} />
                 <Route path="/terceirizados" element={<TerceirizadosPage />} />
                 <Route path="/terceirizados/afs-por-unidade" element={<AfsPorUnidadePage />} />
                 <Route path="/equipamentos" element={<EquipamentosPage />} />
