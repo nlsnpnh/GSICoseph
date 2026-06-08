@@ -3,6 +3,22 @@ import { supabase } from "@/integrations/supabase/client";
 
 const sb = supabase as unknown as { from: (t: string) => any };
 
+// Busca todas as linhas paginando de 1000 em 1000 — contorna o teto "Max Rows"
+// do PostgREST/Supabase (default 1000), que ignora .limit() acima desse valor.
+// buildQuery deve recriar a query a cada chamada (ela não é reutilizável após await).
+async function fetchAllRows(buildQuery: () => any): Promise<any[]> {
+  const pageSize = 1000;
+  const all: any[] = [];
+  for (let from = 0; ; from += pageSize) {
+    const { data, error } = await buildQuery().range(from, from + pageSize - 1);
+    if (error) throw error;
+    const chunk = data ?? [];
+    all.push(...chunk);
+    if (chunk.length < pageSize) break;
+  }
+  return all;
+}
+
 export type BoletimItem = {
   item_number: number;
   descricao: string;
@@ -86,19 +102,19 @@ export function useBoletimList(f: BoletimFiltros = {}) {
   return useQuery({
     queryKey: [...KEY_LANC, "list", f],
     queryFn: async () => {
-      let q = sb
-        .from("boletim_mensal")
-        .select("*, unidades(nome, comarca_id, comarcas(nome))")
-        .order("ano", { ascending: false })
-        .order("mes", { ascending: false })
-        .order("item_number");
-      if (f.ano)        q = q.eq("ano", f.ano);
-      if (f.mes)        q = q.eq("mes", f.mes);
-      if (f.unidadeId)  q = q.eq("unidade_id", f.unidadeId);
-      if (f.itemNumber) q = q.eq("item_number", f.itemNumber);
-      q = q.limit(100000); // evita o corte default de 1000 linhas do PostgREST
-      const { data, error } = await q;
-      if (error) throw error;
+      const data = await fetchAllRows(() => {
+        let q = sb
+          .from("boletim_mensal")
+          .select("*, unidades(nome, comarca_id, comarcas(nome))")
+          .order("ano", { ascending: false })
+          .order("mes", { ascending: false })
+          .order("item_number");
+        if (f.ano)        q = q.eq("ano", f.ano);
+        if (f.mes)        q = q.eq("mes", f.mes);
+        if (f.unidadeId)  q = q.eq("unidade_id", f.unidadeId);
+        if (f.itemNumber) q = q.eq("item_number", f.itemNumber);
+        return q;
+      });
       let rows = (data ?? []).map((r: any): BoletimLancamentoComUnidade => ({
         id: r.id,
         unidade_id: r.unidade_id,
@@ -183,15 +199,15 @@ export function useBoletimConsolidado(f: BoletimConsolidadoFiltros) {
     queryKey: [...KEY_LANC, "consolidado", f],
     enabled: !!f.ano,
     queryFn: async (): Promise<BoletimConsolidadoLinha[]> => {
-      let q = sb
-        .from("boletim_mensal")
-        .select("item_number, quantidade, mes, unidade_id, unidades(comarca_id)")
-        .eq("ano", f.ano);
-      if (f.mes)       q = q.eq("mes", f.mes);
-      if (f.unidadeId) q = q.eq("unidade_id", f.unidadeId);
-      q = q.limit(100000); // evita o corte default de 1000 linhas do PostgREST
-      const { data, error } = await q;
-      if (error) throw error;
+      const data = await fetchAllRows(() => {
+        let q = sb
+          .from("boletim_mensal")
+          .select("item_number, quantidade, mes, unidade_id, unidades(comarca_id)")
+          .eq("ano", f.ano);
+        if (f.mes)       q = q.eq("mes", f.mes);
+        if (f.unidadeId) q = q.eq("unidade_id", f.unidadeId);
+        return q;
+      });
 
       const filtered = (data ?? []).filter((r: any) =>
         !f.comarcaId || r.unidades?.comarca_id === f.comarcaId,
@@ -248,16 +264,16 @@ export function useResultadosOperacionais(f: ResultadosOperacionaisFiltros) {
     queryKey: [...KEY_LANC, "resultados", f],
     queryFn: async () => {
       const itens = RESULTADOS_OPERACIONAIS_ITEMS.map((x) => x.item);
-      let q = sb
-        .from("boletim_mensal")
-        .select("item_number, quantidade, unidade_id, ano, mes, unidades(comarca_id)")
-        .in("item_number", itens);
-      if (f.ano)       q = q.eq("ano", f.ano);
-      if (f.mes)       q = q.eq("mes", f.mes);
-      if (f.unidadeId) q = q.eq("unidade_id", f.unidadeId);
-      q = q.limit(100000); // evita o corte default de 1000 linhas do PostgREST
-      const { data, error } = await q;
-      if (error) throw error;
+      const data = await fetchAllRows(() => {
+        let q = sb
+          .from("boletim_mensal")
+          .select("item_number, quantidade, unidade_id, ano, mes, unidades(comarca_id)")
+          .in("item_number", itens);
+        if (f.ano)       q = q.eq("ano", f.ano);
+        if (f.mes)       q = q.eq("mes", f.mes);
+        if (f.unidadeId) q = q.eq("unidade_id", f.unidadeId);
+        return q;
+      });
       const filtered = (data ?? []).filter((r: any) =>
         !f.comarcaId || r.unidades?.comarca_id === f.comarcaId,
       );
