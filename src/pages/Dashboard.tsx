@@ -107,10 +107,12 @@ export default function Dashboard() {
     const ocorrenciasAbertas = ocorrencias.filter((o) => statusAbertos.has(o.status)).length;
     const contratosVigentes = contratosRaw.filter((c) => statusFromVigencia(c.data_fim) === "Vigente").length;
 
-    // Total de câmeras instaladas (Dome, Bullet, Fisheye, PTZ) — mesma classificação do gráfico "Principais Equipamentos"
-    const CAMERA_RE = /c[âa]mera|dome|bullet|fisheye|fish.?eye|\bptz\b/i;
+    // Total de câmeras instaladas (item 1=Dome, 2=Bullet, 3=Fisheye, 4=PTZ) —
+    // mesma definição por item_num usada no relatório "Câmeras por comarca" e no
+    // gráfico "Principais Equipamentos". Evita contar itens cuja descrição apenas
+    // menciona "câmera" (acessórios, software, storage etc.).
     const cameras = distribuicao
-      .filter((d) => CAMERA_RE.test(d.descricao))
+      .filter((d) => [1, 2, 3, 4].includes(d.item_num))
       .reduce((s, d) => s + d.quantidade, 0);
 
     // Soma dos counts dos alertas classificados como críticos pelo hook useAlertas (mesma fonte do painel Alertas e Pendências)
