@@ -94,15 +94,15 @@ export function ServidoresPorComarca() {
 
 // Itens em destaque do contrato 115/2023 — exibidos no card "Principais Equipamentos"
 const ITENS_DESTAQUE: { label: string; pattern: RegExp; cor: string }[] = [
-  { label: "Câmera Tipo 1 – Câmera Fixa Modelo Dome",   pattern: /dome/i,                                  cor: "hsl(217 91% 55%)" },
-  { label: "Câmera Tipo 2 – Câmera Fixa Modelo Bullet", pattern: /bullet/i,                                cor: "hsl(200 80% 50%)" },
-  { label: "Câmera Tipo 3 – Câmera Fisheye",   pattern: /fisheye|fish.?eye/i,                     cor: "hsl(190 70% 50%)" },
-  { label: "Câmera Tipo 4 – Câmera PTZ",       pattern: /\bptz\b/i,                               cor: "hsl(170 65% 45%)" },
+  { label: "Câmera Tipo 1 – Dome",             pattern: /dome/i,                                  cor: "hsl(217 91% 55%)" },
+  { label: "Câmera Tipo 2 – Bullet",           pattern: /bullet/i,                                cor: "hsl(200 80% 50%)" },
+  { label: "Câmera Tipo 3 – Fisheye",          pattern: /fisheye|fish.?eye/i,                     cor: "hsl(190 70% 50%)" },
+  { label: "Câmera Tipo 4 – PTZ",              pattern: /\bptz\b/i,                               cor: "hsl(170 65% 45%)" },
   { label: "Estação de Monitoramento - Local", pattern: /esta(ç|c)[aã]o.*monitora/i,              cor: "hsl(270 65% 55%)" },
   { label: "Estação de Cadastramento",         pattern: /esta(ç|c)[aã]o.*cadastra/i,              cor: "hsl(280 60% 60%)" },
   { label: "Catraca Bidirecional",             pattern: /catraca.*bidire|bidire.*catraca/i,       cor: "hsl(142 65% 45%)" },
   { label: "Kit Automatizador de Portão",      pattern: /(kit.*automati|automatizad.*port[aã]o)/i, cor: "hsl(30 80% 55%)" },
-  { label: "Kit Controle de Acesso para 1 (uma) Porta", pattern: /(controladora|controle de acesso).*port/i, cor: "hsl(340 65% 55%)" },
+  { label: "Kit Controladora de Acesso",       pattern: /(controladora|controle de acesso).*port/i, cor: "hsl(340 65% 55%)" },
 ];
 
 export function EquipamentosDonut() {
