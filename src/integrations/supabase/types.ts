@@ -133,6 +133,45 @@ export type Database = {
           },
         ]
       }
+      equipamentos_catalogo: {
+        Row: {
+          contrato_numero: string | null
+          created_at: string
+          descricao: string
+          id: string
+          item_num: number
+          qtd_contrato: number
+          unidade_medida: string | null
+          updated_at: string
+          valor_total: number
+          valor_unitario: number
+        }
+        Insert: {
+          contrato_numero?: string | null
+          created_at?: string
+          descricao: string
+          id?: string
+          item_num: number
+          qtd_contrato?: number
+          unidade_medida?: string | null
+          updated_at?: string
+          valor_total?: number
+          valor_unitario?: number
+        }
+        Update: {
+          contrato_numero?: string | null
+          created_at?: string
+          descricao?: string
+          id?: string
+          item_num?: number
+          qtd_contrato?: number
+          unidade_medida?: string | null
+          updated_at?: string
+          valor_total?: number
+          valor_unitario?: number
+        }
+        Relationships: []
+      }
       ocorrencias: {
         Row: {
           created_at: string
@@ -272,6 +311,8 @@ export type Database = {
           lotacao: string | null
           matricula: string | null
           nome_completo: string | null
+          super_admin: boolean
+          unidade_id: string | null
           updated_at: string
           user_id: string
         }
@@ -283,6 +324,8 @@ export type Database = {
           lotacao?: string | null
           matricula?: string | null
           nome_completo?: string | null
+          super_admin?: boolean
+          unidade_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -294,10 +337,20 @@ export type Database = {
           lotacao?: string | null
           matricula?: string | null
           nome_completo?: string | null
+          super_admin?: boolean
+          unidade_id?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       servidores: {
         Row: {
@@ -418,6 +471,51 @@ export type Database = {
           validade_certificacao?: string | null
         }
         Relationships: []
+      }
+      unidade_equipamentos: {
+        Row: {
+          created_at: string
+          equipamento_id: string
+          id: string
+          observacoes: string | null
+          quantidade: number
+          unidade_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          equipamento_id: string
+          id?: string
+          observacoes?: string | null
+          quantidade?: number
+          unidade_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          equipamento_id?: string
+          id?: string
+          observacoes?: string | null
+          quantidade?: number
+          unidade_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "unidade_equipamentos_equipamento_id_fkey"
+            columns: ["equipamento_id"]
+            isOneToOne: false
+            referencedRelation: "equipamentos_catalogo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "unidade_equipamentos_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       unidades: {
         Row: {
