@@ -52,14 +52,15 @@ export function useAlertas(): Alerta[] {
     ).length;
 
     return [
-      contratosVencidos > 0 && {
+      // Contratos: gestão (menu adminOnly) — não exibir para operador.
+      !isOperador && contratosVencidos > 0 && {
         tipo: "critical" as const,
         label: "Contratos vencidos",
         count: contratosVencidos,
         unidade: contratosVencidos === 1 ? "contrato" : "contratos",
         href: "/consultas?q=contratos-vencidos",
       },
-      contratosVencendo > 0 && {
+      !isOperador && contratosVencendo > 0 && {
         tipo: "warning" as const,
         label: "Contratos vencendo em 90 dias",
         count: contratosVencendo,
@@ -71,7 +72,8 @@ export function useAlertas(): Alerta[] {
         label: "Manutenções com prazo vencido",
         count: manutVencidas,
         unidade: manutVencidas === 1 ? "registro" : "registros",
-        href: "/consultas?q=ocorrencias-prazo-vencido",
+        // Operador não acessa Consultas — direciona para a tela de Manutenção.
+        href: isOperador ? "/ocorrencias" : "/consultas?q=ocorrencias-prazo-vencido",
       },
       // Alertas de escopo global (catálogo/contrato/todas as unidades):
       // só fazem sentido para admin/gestor. O operador só enxerga a própria

@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Navigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   AlertTriangle, ChevronDown, ChevronRight, ChevronUp, Clock, Cpu, DoorOpen,
   FileText, KeyRound, Search, Shield, Users, UserCog, Wrench, XCircle,
@@ -50,6 +51,7 @@ const diffDays = (d: string, ref: Date) =>
 
 export default function ConsultasPage() {
   useEffect(() => { document.title = "Consultas | COSEPH TJRO"; }, []);
+  const { isOperador } = useAuth();
 
   const unidades    = useUnidadesMock();
   const catalogo    = useEquipamentosCatalogo();
@@ -468,6 +470,9 @@ export default function ConsultasPage() {
     queries.filter((q) => ["unidades-sem-equipamentos", "itens-nao-distribuidos", "divergencia-contrato", "contratos-vencidos", "ocorrencias-prazo-vencido"].includes(q.id) && q.rows.length > 0).reduce((s, q) => s + q.rows.length, 0),
     [queries],
   );
+
+  // Consultas é restrito a admin/gestor — operador é redirecionado.
+  if (isOperador) return <Navigate to="/" replace />;
 
   return (
     <div>
