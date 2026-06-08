@@ -96,6 +96,7 @@ export function useBoletimList(f: BoletimFiltros = {}) {
       if (f.mes)        q = q.eq("mes", f.mes);
       if (f.unidadeId)  q = q.eq("unidade_id", f.unidadeId);
       if (f.itemNumber) q = q.eq("item_number", f.itemNumber);
+      q = q.limit(100000); // evita o corte default de 1000 linhas do PostgREST
       const { data, error } = await q;
       if (error) throw error;
       let rows = (data ?? []).map((r: any): BoletimLancamentoComUnidade => ({
@@ -188,6 +189,7 @@ export function useBoletimConsolidado(f: BoletimConsolidadoFiltros) {
         .eq("ano", f.ano);
       if (f.mes)       q = q.eq("mes", f.mes);
       if (f.unidadeId) q = q.eq("unidade_id", f.unidadeId);
+      q = q.limit(100000); // evita o corte default de 1000 linhas do PostgREST
       const { data, error } = await q;
       if (error) throw error;
 
@@ -253,6 +255,7 @@ export function useResultadosOperacionais(f: ResultadosOperacionaisFiltros) {
       if (f.ano)       q = q.eq("ano", f.ano);
       if (f.mes)       q = q.eq("mes", f.mes);
       if (f.unidadeId) q = q.eq("unidade_id", f.unidadeId);
+      q = q.limit(100000); // evita o corte default de 1000 linhas do PostgREST
       const { data, error } = await q;
       if (error) throw error;
       const filtered = (data ?? []).filter((r: any) =>
