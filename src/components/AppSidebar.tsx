@@ -2,6 +2,7 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Building2, Map, Users, UserCog, Cpu, DoorOpen,
   FileText, AlertTriangle, BarChart3, Settings, Search, HelpCircle, ClipboardList,
+  type LucideIcon,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent,
@@ -9,7 +10,9 @@ import {
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
 
-const items = [
+type NavItem = { title: string; url: string; icon: LucideIcon; adminOnly?: boolean };
+
+const items: NavItem[] = [
   { title: "Painel Executivo",          url: "/",              icon: LayoutDashboard },
   { title: "Unidades Prediais",         url: "/unidades",      icon: Building2 },
   { title: "Mapa das Comarcas",         url: "/comarcas",      icon: Map,           adminOnly: true },
@@ -33,7 +36,7 @@ export function AppSidebar() {
   const { isOperador } = useAuth();
   const isActive = (path: string) => (path === "/" ? pathname === "/" : pathname.startsWith(path));
 
-  const visibleItems = isOperador ? items.filter((i) => !(i as any).adminOnly) : items;
+  const visibleItems = isOperador ? items.filter((i) => !i.adminOnly) : items;
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar">

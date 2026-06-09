@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { getErrorMessage } from "@/lib/utils";
 import {
   ArrowUpDown, ChevronLeft, ChevronRight, Clock, Download, FileSpreadsheet,
   FileText, Lock, Paperclip, Pencil, Plus, Trash2, Upload, Wrench,
@@ -222,6 +223,8 @@ function ChamadosTab({
       const cmp = va < vb ? -1 : va > vb ? 1 : 0;
       return sortDir === "asc" ? cmp : -cmp;
     });
+    // unidadeNome deriva de `unidades` (já listado); incluí-la recalcularia a cada render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items, search, categoriaFilter, statusFilter, unidadeFilter, sortKey, sortDir, unidades]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
@@ -274,8 +277,8 @@ function ChamadosTab({
         toast({ title: "Manutenção registrada" });
       }
       setOpen(false);
-    } catch (e: any) {
-      toast({ title: "Erro ao salvar", description: e.message, variant: "destructive" });
+    } catch (e) {
+      toast({ title: "Erro ao salvar", description: getErrorMessage(e), variant: "destructive" });
     }
   };
 
@@ -480,8 +483,8 @@ function ChamadosTab({
           try {
             await removeOcorrenciaMock(deleting.id);
             toast({ title: "Manutenção excluída" });
-          } catch (e: any) {
-            toast({ title: "Erro ao excluir", description: e.message, variant: "destructive" });
+          } catch (e) {
+            toast({ title: "Erro ao excluir", description: getErrorMessage(e), variant: "destructive" });
           }
           setDeleting(null);
         }}
@@ -528,6 +531,8 @@ function RelatoriosTab({
   const tempoMedio = tempos.length ? Math.round((tempos.reduce((a, b) => a + b, 0) / tempos.length) * 10) / 10 : 0;
 
   // Agregações para gráficos
+  // unidadeNome deriva de `unidades` (já listado); incluí-la recalcularia a cada render.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const porUnidade = useMemo(() => count(filtered, (o) => unidadeNome(o.unidade_id)), [filtered, unidades]);
   const porCategoria = useMemo(() => count(filtered, (o) => o.categoria || "Sem categoria"), [filtered]);
   const porStatus = useMemo(() => count(filtered, (o) => o.status), [filtered]);
@@ -566,6 +571,8 @@ function RelatoriosTab({
       map.set(nome, r);
     }
     return Array.from(map.values()).sort((a, b) => b.total - a.total);
+    // unidadeNome deriva de `unidades` (já listado); incluí-la recalcularia a cada render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filtered, unidades]);
 
   // Exportações
@@ -893,8 +900,8 @@ function AnexosSection({ ocorrenciaId }: { ocorrenciaId: string }) {
       try {
         await upload.mutateAsync({ ocorrenciaId, file });
         toast({ title: `Arquivo "${file.name}" anexado` });
-      } catch (e: any) {
-        toast({ title: "Erro ao anexar", description: e.message, variant: "destructive" });
+      } catch (e) {
+        toast({ title: "Erro ao anexar", description: getErrorMessage(e), variant: "destructive" });
       }
     }
     if (inputRef.current) inputRef.current.value = "";
@@ -904,8 +911,8 @@ function AnexosSection({ ocorrenciaId }: { ocorrenciaId: string }) {
     try {
       const url = await getAnexoSignedUrl(anexo.storage_path);
       window.open(url, "_blank", "noopener,noreferrer");
-    } catch (e: any) {
-      toast({ title: "Erro ao baixar", description: e.message, variant: "destructive" });
+    } catch (e) {
+      toast({ title: "Erro ao baixar", description: getErrorMessage(e), variant: "destructive" });
     }
   };
 
@@ -913,8 +920,8 @@ function AnexosSection({ ocorrenciaId }: { ocorrenciaId: string }) {
     try {
       await remove.mutateAsync(anexo);
       toast({ title: `Arquivo "${anexo.nome_arquivo}" removido` });
-    } catch (e: any) {
-      toast({ title: "Erro ao remover", description: e.message, variant: "destructive" });
+    } catch (e) {
+      toast({ title: "Erro ao remover", description: getErrorMessage(e), variant: "destructive" });
     }
   };
 

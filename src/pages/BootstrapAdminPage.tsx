@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { getErrorMessage } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,13 +12,13 @@ export default function BootstrapAdminPage() {
   const promote = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("bootstrap-admin");
+      const { data, error } = await supabase.functions.invoke<{ error?: string; message?: string }>("bootstrap-admin");
       if (error) throw error;
-      if ((data as any)?.error) throw new Error((data as any).error);
-      toast.success((data as any)?.message ?? "Você agora é admin.");
+      if (data?.error) throw new Error(data.error);
+      toast.success(data?.message ?? "Você agora é admin.");
       setTimeout(() => window.location.reload(), 1200);
-    } catch (e: any) {
-      toast.error(e.message ?? "Falha ao promover");
+    } catch (e) {
+      toast.error(getErrorMessage(e));
     } finally {
       setLoading(false);
     }

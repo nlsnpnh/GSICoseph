@@ -25,6 +25,8 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+// Acesso ao Supabase sem tipagem estrita para colunas/joins fora do types.ts gerado.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const sb = supabase as unknown as { from: (t: string) => any };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -42,6 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchRoles = async (uid: string) => {
     const { data } = await sb.from("user_roles").select("role").eq("user_id", uid);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setRoles((data?.map((r: any) => r.role as AppRole)) ?? []);
   };
 
@@ -52,6 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUnidadeId(p.unidade_id);
       const { data: u } = await sb.from("unidades").select("nome, comarcas(nome)").eq("id", p.unidade_id).single();
       setUnidadeNome(u?.nome ?? null);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       setComarcaNome((u?.comarcas as any)?.nome ?? null);
     } else {
       setUnidadeId(null);

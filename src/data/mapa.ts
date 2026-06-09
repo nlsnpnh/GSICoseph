@@ -1,3 +1,7 @@
+// Camada de acesso a dados: tipos gerados do Supabase (types.ts) incompletos para
+// varias tabelas/joins, entao o uso de `any` aqui e intencional. Fix definitivo:
+// regenerar types.ts via `supabase gen types`.
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Criticidade } from "@/data/mockDashboard";

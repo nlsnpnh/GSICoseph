@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { getErrorMessage } from "@/lib/utils";
 import { Cpu, Pencil, Plus, Trash2, Package, FileText } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useForm } from "react-hook-form";
@@ -140,8 +141,8 @@ export default function EquipamentosPage() {
         toast({ title: "Equipamento vinculado à unidade" });
       }
       setOpen(false);
-    } catch (e: any) {
-      toast({ title: "Erro ao salvar", description: e.message, variant: "destructive" });
+    } catch (e) {
+      toast({ title: "Erro ao salvar", description: getErrorMessage(e), variant: "destructive" });
     }
   };
 
@@ -338,8 +339,8 @@ export default function EquipamentosPage() {
           try {
             await removeUnidadeEquipamento(deleting.id);
             toast({ title: "Vínculo removido" });
-          } catch (e: any) {
-            toast({ title: "Erro ao remover", description: e.message, variant: "destructive" });
+          } catch (e) {
+            toast({ title: "Erro ao remover", description: getErrorMessage(e), variant: "destructive" });
           }
           setDeleting(null);
         }}

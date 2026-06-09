@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { getErrorMessage } from "@/lib/utils";
 import { Pencil, Plus, Trash2, Users, Building2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -180,8 +181,8 @@ export default function ServidoresPage() {
         toast({ title: "Servidor cadastrado" });
       }
       setOpen(false);
-    } catch (e: any) {
-      toast({ title: "Erro ao salvar", description: e.message, variant: "destructive" });
+    } catch (e) {
+      toast({ title: "Erro ao salvar", description: getErrorMessage(e), variant: "destructive" });
     }
   };
 
@@ -440,8 +441,8 @@ export default function ServidoresPage() {
           try {
             await removeServidorMock(deleting.id);
             toast({ title: "Servidor excluído" });
-          } catch (e: any) {
-            toast({ title: "Erro ao excluir", description: e.message, variant: "destructive" });
+          } catch (e) {
+            toast({ title: "Erro ao excluir", description: getErrorMessage(e), variant: "destructive" });
           }
           setDeleting(null);
         }}

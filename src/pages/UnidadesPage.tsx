@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { getErrorMessage } from "@/lib/utils";
 import { Building2, Pencil, Plus, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -137,8 +138,8 @@ export default function UnidadesPage() {
         toast({ title: "Unidade cadastrada" });
       }
       setOpen(false);
-    } catch (e: any) {
-      toast({ title: "Erro ao salvar", description: e.message, variant: "destructive" });
+    } catch (e) {
+      toast({ title: "Erro ao salvar", description: getErrorMessage(e), variant: "destructive" });
     }
   };
 
@@ -291,8 +292,8 @@ export default function UnidadesPage() {
           try {
             await removeUnidade(deleting.id);
             toast({ title: "Unidade excluída" });
-          } catch (e: any) {
-            toast({ title: "Erro ao excluir", description: e.message, variant: "destructive" });
+          } catch (e) {
+            toast({ title: "Erro ao excluir", description: getErrorMessage(e), variant: "destructive" });
           }
           setDeleting(null);
         }}

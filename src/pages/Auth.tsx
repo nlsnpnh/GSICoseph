@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 
 // Acesso ao Supabase sem tipagem estrita para colunas fora do types.ts gerado.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const sb = supabase as unknown as { from: (t: string) => any };
 
 const MSG_BLOQUEIO =
@@ -43,6 +44,7 @@ export default function AuthPage() {
   /** Verifica se o usuário possui perfil e (quando operador) unidade vinculada. */
   const usuarioLiberado = async (uid: string) => {
     const { data: roleRows } = await sb.from("user_roles").select("role").eq("user_id", uid);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const roles: string[] = (roleRows ?? []).map((r: any) => r.role);
     const isAdmin = roles.includes("admin");
     const isGestor = roles.includes("gestor");

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { getErrorMessage } from "@/lib/utils";
 import { Pencil, Plus, Trash2, UserCog, AlertTriangle, Building2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -181,8 +182,8 @@ export default function TerceirizadosPage() {
         toast({ title: "Terceirizado cadastrado" });
       }
       setOpen(false);
-    } catch (e: any) {
-      toast({ title: "Erro ao salvar", description: e.message, variant: "destructive" });
+    } catch (e) {
+      toast({ title: "Erro ao salvar", description: getErrorMessage(e), variant: "destructive" });
     }
   };
 
@@ -432,8 +433,8 @@ export default function TerceirizadosPage() {
           try {
             await removeTerceirizado(deleting.id);
             toast({ title: "Terceirizado excluído" });
-          } catch (e: any) {
-            toast({ title: "Erro ao excluir", description: e.message, variant: "destructive" });
+          } catch (e) {
+            toast({ title: "Erro ao excluir", description: getErrorMessage(e), variant: "destructive" });
           }
           setDeleting(null);
         }}

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { getErrorMessage } from "@/lib/utils";
 import { FileText, Pencil, Plus, Trash2, AlertTriangle, X } from "lucide-react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -133,8 +134,8 @@ export default function ContratosPage() {
         toast({ title: "Contrato cadastrado" });
       }
       setOpen(false);
-    } catch (e: any) {
-      toast({ title: "Erro ao salvar", description: e.message, variant: "destructive" });
+    } catch (e) {
+      toast({ title: "Erro ao salvar", description: getErrorMessage(e), variant: "destructive" });
     }
   };
 
@@ -373,8 +374,8 @@ export default function ContratosPage() {
           try {
             await removeContrato(deleting.id);
             toast({ title: "Contrato excluído" });
-          } catch (e: any) {
-            toast({ title: "Erro ao excluir", description: e.message, variant: "destructive" });
+          } catch (e) {
+            toast({ title: "Erro ao excluir", description: getErrorMessage(e), variant: "destructive" });
           }
           setDeleting(null);
         }}

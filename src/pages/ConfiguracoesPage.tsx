@@ -54,8 +54,8 @@ export default function ConfiguracoesPage() {
       });
       return (profiles ?? []).map((p) => ({
         ...p,
-        unidade_id: (p as any).unidade_id ?? null,
-        super_admin: (p as any).super_admin ?? false,
+        unidade_id: p.unidade_id ?? null,
+        super_admin: p.super_admin ?? false,
         roles: byUser.get(p.user_id) ?? [],
       }));
     },
@@ -83,7 +83,7 @@ export default function ConfiguracoesPage() {
     mutationFn: async ({ userId, unidadeId }: { userId: string; unidadeId: string | null }) => {
       const { error } = await supabase
         .from("profiles")
-        .update({ unidade_id: unidadeId || null } as any)
+        .update({ unidade_id: unidadeId || null })
         .eq("user_id", userId);
       if (error) throw error;
     },

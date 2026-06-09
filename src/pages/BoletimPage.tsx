@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { getErrorMessage } from "@/lib/utils";
 import { BarChart3, ClipboardList, Download, Filter, Save, ListChecks, CheckCircle2, AlertCircle } from "lucide-react";
 import {
   Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart,
@@ -118,8 +119,8 @@ export default function BoletimPage() {
         })),
       });
       toast({ title: "Boletim salvo", description: `${MESES[mes - 1]}/${ano}` });
-    } catch (e: any) {
-      toast({ title: "Erro ao salvar", description: e.message, variant: "destructive" });
+    } catch (e) {
+      toast({ title: "Erro ao salvar", description: getErrorMessage(e), variant: "destructive" });
     }
   };
 
