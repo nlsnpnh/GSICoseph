@@ -25,6 +25,7 @@ import TerceirizadosPage from "./pages/TerceirizadosPage";
 import AfsPorUnidadePage from "./pages/AfsPorUnidadePage";
 import PortoesPage from "./pages/PortoesPage";
 import ContratosPage from "./pages/ContratosPage";
+import PlanejamentoPage from "./pages/PlanejamentoPage";
 import ConsultasPage from "./pages/ConsultasPage";
 import AjudaPage from "./pages/AjudaPage";
 import AuthPage from "./pages/Auth";
@@ -59,6 +60,9 @@ const App = () => (
                 <Route path="/equipamentos" element={<EquipamentosPage />} />
                 <Route path="/portoes" element={<PortoesPage />} />
                 <Route path="/contratos" element={<ContratosPage />} />
+                <Route element={<ProtectedRoute requireRole="admin" />}>
+                  <Route path="/planejamento" element={<PlanejamentoPage />} />
+                </Route>
                 <Route path="/ocorrencias" element={<OcorrenciasPage />} />
                 <Route path="/boletim" element={<BoletimPage />} />
                 <Route path="/consultas" element={<ConsultasPage />} />
