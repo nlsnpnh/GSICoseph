@@ -264,10 +264,19 @@ export function PlanejamentoSetor({ ano, setor, acoes }: Props) {
                             type="number"
                             min={0}
                             max={100}
+                            placeholder="—"
                             className="h-8 w-20 text-xs"
-                            value={String(val(a, "percentual") ?? 0)}
+                            value={(() => {
+                              const p = val(a, "percentual") as number | null;
+                              return p == null ? "" : String(p);
+                            })()}
                             onChange={(e) => {
-                              const n = Math.max(0, Math.min(100, Number(e.target.value) || 0));
+                              const raw = e.target.value;
+                              if (raw === "") {
+                                setField(a.id, { percentual: null });
+                                return;
+                              }
+                              const n = Math.max(0, Math.min(100, Number(raw) || 0));
                               setField(a.id, { percentual: n });
                             }}
                           />

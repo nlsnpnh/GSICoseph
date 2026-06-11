@@ -82,7 +82,7 @@ export type PlanejamentoAcao = {
   frequencia: string | null;
   prioridade: PrioridadePlanejamento | null;
   status: StatusPlanejamento;
-  percentual: number;
+  percentual: number | null; // null = % não informado (não entra na média)
   data_inicio: string | null;
   data_conclusao: string | null;
   indicador: string | null;
@@ -290,10 +290,12 @@ export function resumoPorSetor(acoes: PlanejamentoAcao[]): ResumoSetor[] {
   return SETORES.map((s) => {
     const doSetor = acoes.filter((a) => a.setor === s.key);
     const count = (st: StatusPlanejamento) => doSetor.filter((a) => a.status === st).length;
+    // Média do setor: só ações com % informado (percentual != null), como na planilha.
+    const comPct = doSetor.filter((a) => a.percentual != null);
     const media =
-      doSetor.length === 0
+      comPct.length === 0
         ? 0
-        : Math.round(doSetor.reduce((sum, a) => sum + (a.percentual ?? 0), 0) / doSetor.length);
+        : Math.round(comPct.reduce((sum, a) => sum + (a.percentual ?? 0), 0) / comPct.length);
     return {
       setor: s.key,
       label: s.label,
@@ -306,4 +308,11 @@ export function resumoPorSetor(acoes: PlanejamentoAcao[]): ResumoSetor[] {
       mediaExecucao: media,
     };
   });
+}
+
+/** % médio geral = média das médias dos setores que têm ações (igual à planilha). */
+export function mediaGeralExecucao(resumo: ResumoSetor[]): number {
+  const comAcoes = resumo.filter((r) => r.total > 0);
+  if (comAcoes.length === 0) return 0;
+  return Math.round(comAcoes.reduce((s, r) => s + r.mediaExecucao, 0) / comAcoes.length);
 }
