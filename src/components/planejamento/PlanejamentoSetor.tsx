@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Plus, Save, RotateCcw, Trash2, ExternalLink, Loader2, ClipboardList } from "lucide-react";
+import { Plus, Save, RotateCcw, Trash2, Loader2, ClipboardList } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -156,7 +156,7 @@ export function PlanejamentoSetor({ ano, setor, acoes }: Props) {
               description="Ajuste os filtros ou crie uma nova ação para este setor."
             />
           ) : (
-            <div className="max-h-[600px] overflow-auto">
+            <div className="max-h-[600px] overflow-auto scrollbar-hide">
               <Table>
                 <TableHeader className="sticky top-0 z-10 bg-card">
                   <TableRow>
@@ -173,7 +173,6 @@ export function PlanejamentoSetor({ ano, setor, acoes }: Props) {
                     <TableHead className="min-w-[140px]">Conclusão</TableHead>
                     <TableHead className="min-w-[160px]">Indicador / Entrega</TableHead>
                     <TableHead className="min-w-[140px]">Evidência / SEI</TableHead>
-                    <TableHead className="min-w-[160px]">Link / Documento</TableHead>
                     <TableHead className="min-w-[200px]">Observações</TableHead>
                     <TableHead className="w-[48px]" />
                   </TableRow>
@@ -181,7 +180,6 @@ export function PlanejamentoSetor({ ano, setor, acoes }: Props) {
                 <TableBody>
                   {filtradas.map((a) => {
                     const isDirty = !!form[a.id];
-                    const link = (val(a, "link_documento") as string | null) ?? "";
                     return (
                       <TableRow key={a.id} className={isDirty ? "bg-partial/5" : undefined}>
                         <TableCell className="align-top text-xs">
@@ -311,22 +309,6 @@ export function PlanejamentoSetor({ ano, setor, acoes }: Props) {
                             value={(val(a, "evidencia_sei") as string | null) ?? ""}
                             onChange={(e) => setField(a.id, { evidencia_sei: e.target.value })}
                           />
-                        </TableCell>
-                        <TableCell className="align-top">
-                          <div className="flex items-center gap-1">
-                            <Input
-                              type="url"
-                              placeholder="https://..."
-                              className="h-8 text-xs"
-                              value={link}
-                              onChange={(e) => setField(a.id, { link_documento: e.target.value || null })}
-                            />
-                            {link && (
-                              <a href={link} target="_blank" rel="noreferrer" className="text-primary shrink-0" title="Abrir documento">
-                                <ExternalLink className="h-4 w-4" />
-                              </a>
-                            )}
-                          </div>
                         </TableCell>
                         <TableCell className="align-top">
                           <Textarea

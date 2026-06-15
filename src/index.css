@@ -100,3 +100,14 @@
     font-feature-settings: "cv11", "ss01";
   }
 }
+
+@layer utilities {
+  /* Mantém o scroll funcional, mas esconde a barra de rolagem */
+  .scrollbar-hide {
+    -ms-overflow-style: none; /* IE/Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* Chrome/Safari/Edge */
+  }
+}

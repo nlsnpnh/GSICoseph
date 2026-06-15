@@ -81,7 +81,7 @@ export function PlanejamentoPainel({ acoes }: Props) {
             <CardTitle className="text-base">Consolidado por Setor</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="overflow-auto">
+            <div className="overflow-auto scrollbar-hide">
               <Table>
                 <TableHeader>
                   <TableRow>
