@@ -2,7 +2,7 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Building2, Map, Users, UserCog, Cpu, DoorOpen,
   FileText, AlertTriangle, BarChart3, Settings, Search, HelpCircle, ClipboardList,
-  CalendarCheck,
+  CalendarCheck, Wallet,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -23,6 +23,7 @@ const items: NavItem[] = [
   { title: "Portões e Acessos",         url: "/portoes",       icon: DoorOpen },
   { title: "Contratos",                 url: "/contratos",     icon: FileText,      adminOnly: true },
   { title: "Planejamento",              url: "/planejamento",  icon: CalendarCheck, adminOnly: true },
+  { title: "Orçamento",                 url: "/orcamento",     icon: Wallet,        adminOnly: true },
   { title: "Boletim Operacional",       url: "/boletim",       icon: ClipboardList },
   { title: "Manutenção",                url: "/ocorrencias",   icon: AlertTriangle },
   { title: "Consultas",                 url: "/consultas",     icon: Search,        adminOnly: true },

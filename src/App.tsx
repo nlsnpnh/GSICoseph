@@ -26,6 +26,7 @@ import AfsPorUnidadePage from "./pages/AfsPorUnidadePage";
 import PortoesPage from "./pages/PortoesPage";
 import ContratosPage from "./pages/ContratosPage";
 import PlanejamentoPage from "./pages/PlanejamentoPage";
+import OrcamentoPage from "./pages/OrcamentoPage";
 import ConsultasPage from "./pages/ConsultasPage";
 import AjudaPage from "./pages/AjudaPage";
 import AuthPage from "./pages/Auth";
@@ -62,6 +63,7 @@ const App = () => (
                 <Route path="/contratos" element={<ContratosPage />} />
                 <Route element={<ProtectedRoute requireRole="admin" />}>
                   <Route path="/planejamento" element={<PlanejamentoPage />} />
+                  <Route path="/orcamento" element={<OrcamentoPage />} />
                 </Route>
                 <Route path="/ocorrencias" element={<OcorrenciasPage />} />
                 <Route path="/boletim" element={<BoletimPage />} />
