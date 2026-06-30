@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { getErrorMessage } from "@/lib/utils";
-import { BarChart3, ClipboardList, Download, Filter, Save, ListChecks, CheckCircle2, AlertCircle } from "lucide-react";
+import { BarChart3, ClipboardList, Download, Save, ListChecks, CheckCircle2, AlertCircle } from "lucide-react";
 import {
   Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart,
   ResponsiveContainer, Tooltip, XAxis, YAxis,
@@ -48,6 +48,12 @@ const ANOS = (() => {
   const arr: number[] = [];
   for (let a = ANO_INICIAL; a <= fim; a++) arr.push(a);
   return arr.reverse();
+})();
+
+// Ano padrão para abrir as abas: o vigente (se estiver na lista), senão o mais recente.
+const ANO_VIGENTE = (() => {
+  const atual = new Date().getFullYear();
+  return ANOS.includes(atual) ? atual : ANOS[0];
 })();
 
 type LinhaForm = { quantidade: number; observacoes: string };
@@ -141,9 +147,6 @@ export default function BoletimPage() {
               <ListChecks className="mr-2 h-4 w-4" />Acompanhamento
             </TabsTrigger>
           )}
-          <TabsTrigger value="historico">
-            <Filter className="mr-2 h-4 w-4" />Histórico
-          </TabsTrigger>
           <TabsTrigger value="relatorio">
             <BarChart3 className="mr-2 h-4 w-4" />Relatório Geral
           </TabsTrigger>
@@ -256,15 +259,6 @@ export default function BoletimPage() {
           </TabsContent>
         )}
 
-        <TabsContent value="historico">
-          <HistoricoTab
-            unidades={unidades}
-            comarcas={comarcas}
-            isOperador={isOperador}
-            operadorUnidadeId={unidadeId}
-          />
-        </TabsContent>
-
         <TabsContent value="relatorio">
           <RelatorioGeralTab
             unidades={unidades}
@@ -286,9 +280,7 @@ function AcompanhamentoTab({
   comarcas: { id: string; nome: string }[];
 }) {
   const hoje = new Date();
-  const [fAno, setFAno] = useState<number>(
-    ANOS.includes(hoje.getFullYear()) ? hoje.getFullYear() : ANOS[0],
-  );
+  const [fAno, setFAno] = useState<number>(ANO_VIGENTE);
   const [fMes, setFMes] = useState<number>(hoje.getMonth() + 1);
   const [fComarca, setFComarca] = useState<string>("all");
 
@@ -438,175 +430,6 @@ function AcompanhamentoTab({
 }
 
 // ─────────────────────────────────────────────────────────────────
-function HistoricoTab({
-  unidades, comarcas, isOperador, operadorUnidadeId,
-}: {
-  unidades: { id: string; nome: string; comarca_id: string | null }[];
-  comarcas: { id: string; nome: string }[];
-  isOperador: boolean;
-  operadorUnidadeId: string | null;
-}) {
-  const itens = ITENS;
-  const [fAno, setFAno] = useState<string>("all");
-  const [fMes, setFMes] = useState<string>("all");
-  const [fUnidade, setFUnidade] = useState<string>(
-    isOperador && operadorUnidadeId ? operadorUnidadeId : "all",
-  );
-  const [fComarca, setFComarca] = useState<string>("all");
-  const [fItem, setFItem] = useState<string>("all");
-
-  const filtros = useMemo(() => ({
-    ano: fAno === "all" ? null : Number(fAno),
-    mes: fMes === "all" ? null : Number(fMes),
-    unidadeId: fUnidade === "all" ? null : fUnidade,
-    comarcaId: fComarca === "all" ? null : fComarca,
-    itemNumber: fItem === "all" ? null : Number(fItem),
-  }), [fAno, fMes, fUnidade, fComarca, fItem]);
-
-  const { data: rows = [], isLoading } = useBoletimList(filtros);
-
-  const itemMap = useMemo(
-    () => Object.fromEntries(itens.map((i) => [i.item_number, i.descricao])),
-    [itens],
-  );
-
-  const exportarCSV = () => {
-    if (rows.length === 0) {
-      toast({ title: "Sem dados para exportar" });
-      return;
-    }
-    const header = ["Ano", "Mês", "Comarca", "Unidade", "Item", "Descrição", "Quantidade", "Observações"];
-    const csv = [
-      header.join(";"),
-      ...rows.map((r) => [
-        r.ano,
-        String(r.mes).padStart(2, "0"),
-        r.comarca_nome,
-        r.unidade_nome,
-        r.item_number,
-        `"${(itemMap[r.item_number] ?? "").replace(/"/g, '""')}"`,
-        r.quantidade,
-        `"${(r.observacoes ?? "").replace(/"/g, '""')}"`,
-      ].join(";")),
-    ].join("\n");
-    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `boletim_${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  return (
-    <Card>
-      <CardHeader className="border-b border-border">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <CardTitle className="text-sm font-semibold">Lançamentos registrados</CardTitle>
-          <Button variant="outline" size="sm" onClick={exportarCSV}>
-            <Download className="mr-1.5 h-4 w-4" />Exportar CSV
-          </Button>
-        </div>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <Select value={fAno} onValueChange={setFAno}>
-            <SelectTrigger className="h-8 w-[110px] text-xs"><SelectValue placeholder="Ano" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os anos</SelectItem>
-              {ANOS.map((a) => <SelectItem key={a} value={String(a)}>{a}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={fMes} onValueChange={setFMes}>
-            <SelectTrigger className="h-8 w-[140px] text-xs"><SelectValue placeholder="Mês" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os meses</SelectItem>
-              {MESES.map((m, i) => <SelectItem key={i + 1} value={String(i + 1)}>{m}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          {!isOperador && (
-            <>
-              <Select value={fComarca} onValueChange={(v) => { setFComarca(v); setFUnidade("all"); }}>
-                <SelectTrigger className="h-8 w-[160px] text-xs"><SelectValue placeholder="Comarca" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas as comarcas</SelectItem>
-                  {comarcas.map((c) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <Select value={fUnidade} onValueChange={setFUnidade}>
-                <SelectTrigger className="h-8 w-[200px] text-xs"><SelectValue placeholder="Unidade" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas as unidades</SelectItem>
-                  {unidades
-                    .filter((u) => fComarca === "all" || u.comarca_id === fComarca)
-                    .map((u) => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </>
-          )}
-          <Select value={fItem} onValueChange={setFItem}>
-            <SelectTrigger className="h-8 w-[220px] text-xs"><SelectValue placeholder="Item" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os itens</SelectItem>
-              {itens.map((i) => (
-                <SelectItem key={i.item_number} value={String(i.item_number)}>
-                  {String(i.item_number).padStart(2, "0")} — {i.descricao.slice(0, 50)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </CardHeader>
-      <CardContent className="p-0">
-        {isLoading ? (
-          <p className="px-4 py-8 text-center text-xs text-muted-foreground">Carregando...</p>
-        ) : rows.length === 0 ? (
-          <EmptyState
-            icon={ClipboardList}
-            title="Nenhum lançamento encontrado"
-            description="Ajuste os filtros ou registre um novo boletim mensal."
-          />
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-20">Período</TableHead>
-                <TableHead>Unidade / Comarca</TableHead>
-                <TableHead className="w-12">Item</TableHead>
-                <TableHead>Descrição</TableHead>
-                <TableHead className="w-24 text-right">Qtd.</TableHead>
-                <TableHead>Observações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rows.map((r) => (
-                <TableRow key={r.id}>
-                  <TableCell className="font-mono text-xs">
-                    {String(r.mes).padStart(2, "0")}/{r.ano}
-                  </TableCell>
-                  <TableCell className="text-xs">
-                    <div className="font-medium">{r.unidade_nome}</div>
-                    <div className="text-muted-foreground">{r.comarca_nome}</div>
-                  </TableCell>
-                  <TableCell className="text-center font-mono text-xs">
-                    {String(r.item_number).padStart(2, "0")}
-                  </TableCell>
-                  <TableCell className="text-xs leading-snug">
-                    {itemMap[r.item_number] ?? "—"}
-                  </TableCell>
-                  <TableCell className="text-right font-semibold">{r.quantidade}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {r.observacoes || "—"}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────
 const CHART_TOOLTIP = {
   background: "hsl(var(--popover))",
   color: "hsl(var(--popover-foreground))",
@@ -632,7 +455,7 @@ function RelatorioGeralTab({
   isOperador: boolean;
   operadorUnidadeId: string | null;
 }) {
-  const [fAno, setFAno] = useState<number>(ANOS[0]);
+  const [fAno, setFAno] = useState<number>(ANO_VIGENTE);
   const [fMes, setFMes] = useState<string>("all");
   const [fComarca, setFComarca] = useState<string>("all");
   const [fUnidade, setFUnidade] = useState<string>("all");

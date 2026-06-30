@@ -119,7 +119,12 @@ export function useBoletimList(f: BoletimFiltros = {}) {
         if (f.itemNumber) q = q.eq("item_number", f.itemNumber);
         return q;
       });
-      let rows = (data ?? []).map((r: any): BoletimLancamentoComUnidade => ({
+      // Filtra a comarca no cru (a coluna vem do join unidades.comarca_id),
+      // antes de mapear — evita depender de índice paralelo com `data`.
+      const filtered = f.comarcaId
+        ? (data ?? []).filter((r: any) => r.unidades?.comarca_id === f.comarcaId)
+        : (data ?? []);
+      return filtered.map((r: any): BoletimLancamentoComUnidade => ({
         id: r.id,
         unidade_id: r.unidade_id,
         ano: r.ano,
@@ -133,12 +138,6 @@ export function useBoletimList(f: BoletimFiltros = {}) {
         unidade_nome: r.unidades?.nome ?? "",
         comarca_nome: r.unidades?.comarcas?.nome ?? "",
       }));
-      if (f.comarcaId) {
-        rows = rows.filter((r: any, i: number) =>
-          (data?.[i] as any)?.unidades?.comarca_id === f.comarcaId,
-        );
-      }
-      return rows;
     },
   });
 }
