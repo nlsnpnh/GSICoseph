@@ -37,7 +37,7 @@ const ACOES_RAPIDAS = [
 ];
 
 export default function Dashboard() {
-  useEffect(() => { document.title = "Painel Executivo | COSEPH TJRO"; }, []);
+  useEffect(() => { document.title = "Painel Executivo"; }, []);
   const navigate = useNavigate();
   const { user, roles, nomeCompleto, isOperador } = useAuth();
   const [updated, setUpdated] = useState(() => format(new Date(), "dd/MM/yyyy HH:mm"));
