@@ -201,6 +201,19 @@
   footer{background:var(--navy-900);color:rgba(255,255,255,.6);padding:36px 0;font-size:13px}
   footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:14px;align-items:center}
   footer b{color:#fff;font-weight:600}
+
+  /* ---------- Print / PDF ---------- */
+  @media print{
+    *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    @page{size:A4;margin:0}
+    header.topbar{position:static}
+    section.block{padding:40px 0;break-inside:avoid}
+    .hero .wrap{padding:52px 24px 56px}
+    .stat,.mod,.benefit,.panel,.tl,.band{break-inside:avoid}
+    .grid{gap:12px}
+    .mod:hover{transform:none;box-shadow:var(--shadow)}
+    a[href]::after{content:none !important}
+  }
 </style>
 </head>
 <body>
