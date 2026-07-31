@@ -32,3 +32,9 @@ dist-ssr
 supabase/.temp/
 
 .vercel
+
+# Obsidian vault settings (local)
+.obsidian/
+
+# Pacotes gerados (a apresentacao vive em apresentacao/)
+*.zip
