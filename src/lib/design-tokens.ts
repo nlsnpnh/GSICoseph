@@ -39,14 +39,16 @@ export const DENSITY = {
 // Paleta dos gráficos: azul institucional + dourado + os status já definidos
 // no index.css. Máximo 3 cores por gráfico.
 export const CHART = {
-  primary: "hsl(215 65% 32%)",
+  primary: "hsl(217 91% 55%)",
   primarySoft: "hsl(215 45% 55%)",
   accent: "hsl(42 75% 50%)",
   adequate: "hsl(142 65% 45%)",
   partial: "hsl(42 95% 55%)",
   critical: "hsl(0 75% 55%)",
-  axis: "hsl(215 15% 55%)",
-  grid: "hsl(215 20% 88%)",
+  // Eixo e grade seguem o tema: com cor fixa clara, a grade tracejada virava
+  // um pontilhado quase branco no modo escuro.
+  axis: "hsl(var(--muted-foreground))",
+  grid: "hsl(var(--border))",
   tooltip: {
     contentStyle: {
       background: "hsl(var(--popover))",
@@ -61,7 +63,7 @@ export const CHART = {
     labelStyle: { color: "hsl(var(--muted-foreground))", marginBottom: "4px" },
   },
   axisStyle: {
-    stroke: "hsl(215 15% 55%)",
+    stroke: "hsl(var(--muted-foreground))",
     fontSize: 11,
     tickLine: false as const,
     axisLine: false as const,
