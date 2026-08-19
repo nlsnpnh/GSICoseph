@@ -12,7 +12,7 @@ export function FioAcento({ className }: { className?: string }) {
     <div
       aria-hidden="true"
       className={cn(
-        "h-px w-full shrink-0 bg-gradient-to-r from-transparent via-accent/70 to-transparent",
+        "h-px w-full shrink-0 bg-gradient-to-r from-accent/25 via-accent to-accent/25",
         className,
       )}
     />
