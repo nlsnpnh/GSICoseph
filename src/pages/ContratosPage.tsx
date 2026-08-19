@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { getErrorMessage } from "@/lib/utils";
-import { FileText, Pencil, Plus, Trash2, AlertTriangle, X } from "lucide-react";
+import { FileText, Plus, AlertTriangle, X } from "lucide-react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -9,6 +9,7 @@ import { CrudTableLayout } from "@/components/CrudTableLayout";
 import { ConfirmDelete } from "@/components/ConfirmDelete";
 import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
+import { AcoesLinha } from "@/components/admin/AcoesLinha";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
@@ -157,6 +158,7 @@ export default function ContratosPage() {
   return (
     <div>
       <PageHeader
+        eyebrow="Gestão contratual"
         title="Contratos"
         description="Gestão dos contratos de segurança, fiscais, SLA e aditivos."
         actions={podeGravar ? <Button onClick={openCreate}><Plus className="mr-1 h-4 w-4" />Novo contrato</Button> : undefined}
@@ -235,8 +237,11 @@ export default function ContratosPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      {podeGravar && <Button variant="ghost" size="icon" onClick={() => openEdit(c)}><Pencil className="h-4 w-4" /></Button>}
-                      {podeApagar && <Button variant="ghost" size="icon" onClick={() => setDeleting(c)}><Trash2 className="h-4 w-4" /></Button>}
+                      <AcoesLinha
+                        rotulo={c.numero}
+                        onEditar={podeGravar ? () => openEdit(c) : undefined}
+                        onExcluir={podeApagar ? () => setDeleting(c) : undefined}
+                      />
                     </TableCell>
                   </TableRow>
                 );

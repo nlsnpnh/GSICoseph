@@ -52,6 +52,7 @@ export default function ServidoresPorUnidadePage() {
   return (
     <div>
       <PageHeader
+        eyebrow="Pessoal · Distribuição"
         title="Servidores por unidade predial"
         description="Unidades com servidores ativos lotados e a respectiva quantidade."
         actions={

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { getErrorMessage } from "@/lib/utils";
-import { Cpu, Pencil, Plus, Trash2, Package, FileText } from "lucide-react";
+import { Cpu, Plus, Package, FileText } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,6 +10,7 @@ import { CrudTableLayout } from "@/components/CrudTableLayout";
 import { ConfirmDelete } from "@/components/ConfirmDelete";
 import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
+import { AcoesLinha } from "@/components/admin/AcoesLinha";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
@@ -151,6 +152,7 @@ export default function EquipamentosPage() {
   return (
     <div>
       <PageHeader
+        eyebrow="Patrimônio"
         title="Equipamentos"
         description="Catálogo do contrato 115/2023 e distribuição por unidade predial."
         actions={
@@ -217,8 +219,11 @@ export default function EquipamentosPage() {
                       <TableCell className="text-xs text-muted-foreground">{d.unidade_medida}</TableCell>
                       {(podeGravar || podeApagar) && (
                         <TableCell className="text-right">
-                          {podeGravar && <Button variant="ghost" size="icon" onClick={() => openEdit(d)}><Pencil className="h-4 w-4" /></Button>}
-                          {podeApagar && <Button variant="ghost" size="icon" onClick={() => setDeleting(d)}><Trash2 className="h-4 w-4" /></Button>}
+                          <AcoesLinha
+                        rotulo={d.descricao}
+                        onEditar={podeGravar ? () => openEdit(d) : undefined}
+                        onExcluir={podeApagar ? () => setDeleting(d) : undefined}
+                      />
                         </TableCell>
                       )}
                     </TableRow>

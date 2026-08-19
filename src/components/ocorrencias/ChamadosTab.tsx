@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { getErrorMessage } from "@/lib/utils";
 import {
   ArrowUpDown, ChevronLeft, ChevronRight, Clock, Lock, Paperclip,
-  Pencil, Plus, Trash2, Wrench,
+  Plus, Wrench,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,6 +11,7 @@ import { CrudTableLayout } from "@/components/CrudTableLayout";
 import { ConfirmDelete } from "@/components/ConfirmDelete";
 import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
+import { AcoesLinha } from "@/components/admin/AcoesLinha";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
@@ -282,8 +283,11 @@ export function ChamadosTab({
                       <TableCell className="text-xs">{o.responsavel_nome || "—"}</TableCell>
                       {podeGerenciar && (
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="icon" onClick={() => openEdit(o)}><Pencil className="h-4 w-4" /></Button>
-                          <Button variant="ghost" size="icon" onClick={() => setDeleting(o)}><Trash2 className="h-4 w-4" /></Button>
+                          <AcoesLinha
+                            rotulo={o.protocolo}
+                            onEditar={() => openEdit(o)}
+                            onExcluir={() => setDeleting(o)}
+                          />
                         </TableCell>
                       )}
                     </TableRow>

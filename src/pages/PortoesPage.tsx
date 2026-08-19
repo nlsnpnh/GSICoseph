@@ -102,6 +102,7 @@ export default function PortoesPage() {
   return (
     <div>
       <PageHeader
+        eyebrow="Patrimônio"
         title="Portões e Acessos"
         description="Unidades prediais com Kit Automatizador de Portão e/ou Kit Abertura de Portão por RFID (item #27 do contrato)."
       />

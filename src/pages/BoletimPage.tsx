@@ -18,6 +18,7 @@ export default function BoletimPage() {
   return (
     <div>
       <PageHeader
+        eyebrow="Operação"
         title="Boletim Operacional"
         description="Indicadores mensais por unidade — preenchimento e histórico."
       />

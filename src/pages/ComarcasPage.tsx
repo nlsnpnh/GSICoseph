@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Landmark, Pencil, Plus, Trash2 } from "lucide-react";
+import { Landmark, Plus } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -8,6 +8,7 @@ import { CrudTableLayout } from "@/components/CrudTableLayout";
 import { ConfirmDelete } from "@/components/ConfirmDelete";
 import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
+import { AcoesLinha } from "@/components/admin/AcoesLinha";
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
@@ -83,6 +84,7 @@ export default function ComarcasPage() {
   return (
     <div>
       <PageHeader
+        eyebrow="Cadastro"
         title="Comarcas"
         description="Cadastro e organização das comarcas do estado."
         actions={podeCriar ? <Button onClick={openCreate}><Plus className="mr-1 h-4 w-4" />Nova comarca</Button> : null}
@@ -106,8 +108,11 @@ export default function ComarcasPage() {
                 <TableRow key={c.id}>
                   <TableCell className="font-medium">{c.nome}</TableCell>
                   <TableCell className="text-right">
-                    {podeCriar && <Button variant="ghost" size="icon" onClick={() => openEdit(c)}><Pencil className="h-4 w-4" /></Button>}
-                    {podeApagar && <Button variant="ghost" size="icon" onClick={() => setDeleting(c)}><Trash2 className="h-4 w-4" /></Button>}
+                    <AcoesLinha
+                        rotulo={c.nome}
+                        onEditar={podeCriar ? () => openEdit(c) : undefined}
+                        onExcluir={podeApagar ? () => setDeleting(c) : undefined}
+                      />
                   </TableCell>
                 </TableRow>
               ))}

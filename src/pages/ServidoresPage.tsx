@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { getErrorMessage } from "@/lib/utils";
-import { Pencil, Plus, Trash2, Users, Building2 } from "lucide-react";
+import { Plus, Users, Building2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,6 +10,7 @@ import { CrudTableLayout } from "@/components/CrudTableLayout";
 import { ConfirmDelete } from "@/components/ConfirmDelete";
 import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
+import { AcoesLinha } from "@/components/admin/AcoesLinha";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
@@ -191,6 +192,7 @@ export default function ServidoresPage() {
   return (
     <div>
       <PageHeader
+        eyebrow="Pessoal"
         title="Servidores da Segurança"
         description="Cadastro funcional dos servidores vinculados à segurança institucional."
         actions={podeCriar ? <Button onClick={openCreate}><Plus className="mr-1 h-4 w-4" />Novo servidor</Button> : undefined}
@@ -285,8 +287,11 @@ export default function ServidoresPage() {
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      {podeEditar("servidores", s.unidade_id) && <Button variant="ghost" size="icon" onClick={() => openEdit(s)}><Pencil className="h-4 w-4" /></Button>}
-                      {podeExcluir("servidores", s.unidade_id) && <Button variant="ghost" size="icon" onClick={() => setDeleting(s)}><Trash2 className="h-4 w-4" /></Button>}
+                      <AcoesLinha
+                        rotulo={s.nome}
+                        onEditar={podeEditar("servidores", s.unidade_id) ? () => openEdit(s) : undefined}
+                        onExcluir={podeExcluir("servidores", s.unidade_id) ? () => setDeleting(s) : undefined}
+                      />
                     </TableCell>
                   </TableRow>
                 );

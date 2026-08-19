@@ -74,6 +74,7 @@ export default function ConsultasPage() {
   return (
     <div>
       <PageHeader
+        eyebrow="Análise"
         title="Consultas"
         description="Relatórios e buscas cruzadas sobre equipamentos, pessoal, contratos e ocorrências."
         actions={

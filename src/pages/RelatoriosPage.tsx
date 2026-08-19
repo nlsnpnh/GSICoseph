@@ -266,6 +266,7 @@ export default function RelatoriosPage() {
   return (
     <div>
       <PageHeader
+        eyebrow="Análise"
         title="Relatórios consolidados"
         description="Visão analítica integrando unidades, equipamentos, pessoal, portões, contratos e ocorrências."
         actions={

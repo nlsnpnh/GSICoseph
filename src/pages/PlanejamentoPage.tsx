@@ -46,7 +46,7 @@ export default function PlanejamentoPage() {
   if (!isAdmin) {
     return (
       <div>
-        <PageHeader title="Planejamento" description="Plano Anual de Atividades COSEPH." />
+        <PageHeader eyebrow="Planejamento" title="Planejamento" description="Plano Anual de Atividades COSEPH." />
         <Card>
           <CardContent className="flex flex-col items-center justify-center gap-2 p-12 text-center">
             <Lock className="h-8 w-8 text-muted-foreground" />
@@ -62,6 +62,7 @@ export default function PlanejamentoPage() {
   return (
     <div>
       <PageHeader
+        eyebrow="Planejamento"
         title="Planejamento"
         description="Plano Anual de Atividades COSEPH — acompanhamento de ações por setor."
         actions={

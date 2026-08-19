@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { getErrorMessage } from "@/lib/utils";
-import { Building2, Pencil, Plus, Trash2 } from "lucide-react";
+import { Building2, Plus, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
 import { CrudTableLayout } from "@/components/CrudTableLayout";
+import { AcoesLinha } from "@/components/admin/AcoesLinha";
+import { SinalSeguranca } from "@/components/admin/SinalSeguranca";
+import { SUB } from "@/components/admin/estilos";
 import { ConfirmDelete } from "@/components/ConfirmDelete";
 import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
@@ -148,9 +151,10 @@ export default function UnidadesPage() {
   return (
     <div>
       <PageHeader
+        eyebrow="Cadastro"
         title="Unidades Prediais"
         description="Gestão das edificações sob responsabilidade do TJRO."
-        actions={podeGravar ? <Button onClick={openCreate}><Plus className="mr-1 h-4 w-4" />Nova unidade</Button> : undefined}
+        actions={podeGravar ? <Button size="sm" onClick={openCreate}><Plus className="mr-1 h-4 w-4" />Nova unidade</Button> : undefined}
       />
 
       <CrudTableLayout
@@ -163,28 +167,46 @@ export default function UnidadesPage() {
         ) : (
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
+              <TableRow className="border-b border-border hover:bg-transparent">
+                <TableHead>Unidade</TableHead>
                 <TableHead>Comarca</TableHead>
                 <TableHead>Responsável</TableHead>
-                <TableHead>Substituto</TableHead>
-                <TableHead>Telefone</TableHead>
-                {podeGravar && <TableHead className="w-[60px] text-right" />}
+                <TableHead className="text-right">Telefone</TableHead>
+                <TableHead>Segurança</TableHead>
+                {(podeGravar || podeApagar) && <TableHead className="w-[64px]" />}
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.map((u) => (
                 <TableRow key={u.id}>
-                  <TableCell className="font-medium">{u.nome}</TableCell>
+                  {/* Nome é o protagonista da linha; o endereço vira apoio. */}
+                  <TableCell>
+                    <span className="font-medium text-foreground">{u.nome}</span>
+                    {u.endereco && <p className={SUB}>{u.endereco}</p>}
+                  </TableCell>
                   <TableCell className="text-muted-foreground">{u.comarca_nome || "—"}</TableCell>
-                  <TableCell className="text-muted-foreground">{u.responsavel_local}</TableCell>
-                  <TableCell className="text-muted-foreground">{u.responsavel_substituto || "—"}</TableCell>
-                  <TableCell className="text-muted-foreground tabular-nums">{u.telefone || "—"}</TableCell>
-                  {podeGravar && (
+                  {/* Titular e substituto ocupavam duas colunas: viram uma, empilhados. */}
+                  <TableCell>
+                    <span className="text-foreground/90">{u.responsavel_local || "—"}</span>
+                    {u.responsavel_substituto && <p className={SUB}>Subst.: {u.responsavel_substituto}</p>}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums text-muted-foreground">
+                    {u.telefone || "—"}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1">
+                      <SinalSeguranca label="DERSO" ativo={u.possui_derso} />
+                      <SinalSeguranca label="Acesso" ativo={u.controle_acesso} tituloInativo="Sem controle de acesso" />
+                      <SinalSeguranca label="CFTV" ativo={u.vigilancia_eletronica} tituloInativo="Sem vigilância eletrônica" />
+                    </div>
+                  </TableCell>
+                  {(podeGravar || podeApagar) && (
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={() => openEdit(u)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
+                      <AcoesLinha
+                        rotulo={u.nome}
+                        onEditar={podeGravar ? () => openEdit(u) : undefined}
+                        onExcluir={podeApagar ? () => setDeleting(u) : undefined}
+                      />
                     </TableCell>
                   )}
                 </TableRow>

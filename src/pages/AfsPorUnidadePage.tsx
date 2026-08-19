@@ -53,6 +53,7 @@ export default function AfsPorUnidadePage() {
   return (
     <div>
       <PageHeader
+        eyebrow="Pessoal · Distribuição"
         title="AFS por unidade predial"
         description="Unidades com terceirizados ativos lançados e a respectiva quantidade."
         actions={

@@ -49,7 +49,7 @@ export default function OrcamentoPage() {
   if (!isAdmin) {
     return (
       <div>
-        <PageHeader title="Orçamento" description="Acompanhamento da Execução Orçamentária GSI." />
+        <PageHeader eyebrow="Planejamento" title="Orçamento" description="Acompanhamento da Execução Orçamentária GSI." />
         <Card>
           <CardContent className="flex flex-col items-center justify-center gap-2 p-12 text-center">
             <Lock className="h-8 w-8 text-muted-foreground" />
@@ -65,6 +65,7 @@ export default function OrcamentoPage() {
   return (
     <div>
       <PageHeader
+        eyebrow="Planejamento"
         title="Orçamento"
         description="Acompanhamento da Execução Orçamentária GSI — por ação orçamentária."
         actions={

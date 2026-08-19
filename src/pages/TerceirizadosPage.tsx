@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { getErrorMessage } from "@/lib/utils";
-import { Pencil, Plus, Trash2, UserCog, AlertTriangle, Building2 } from "lucide-react";
+import { Plus, UserCog, AlertTriangle, Building2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,6 +10,7 @@ import { CrudTableLayout } from "@/components/CrudTableLayout";
 import { ConfirmDelete } from "@/components/ConfirmDelete";
 import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
+import { AcoesLinha } from "@/components/admin/AcoesLinha";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
@@ -192,6 +193,7 @@ export default function TerceirizadosPage() {
   return (
     <div>
       <PageHeader
+        eyebrow="Pessoal"
         title="Terceirizados"
         description="Controle de profissionais terceirizados, contratos e certificações."
         actions={podeCriar ? <Button onClick={openCreate}><Plus className="mr-1 h-4 w-4" />Novo terceirizado</Button> : undefined}
@@ -281,8 +283,11 @@ export default function TerceirizadosPage() {
                     </TableCell>
                     <TableCell><Badge variant="outline" className={situacaoTone[t.situacao]}>{t.situacao}</Badge></TableCell>
                     <TableCell className="text-right">
-                      {podeEditar("terceirizados", t.unidade_id) && <Button variant="ghost" size="icon" onClick={() => openEdit(t)}><Pencil className="h-4 w-4" /></Button>}
-                      {podeExcluir("terceirizados", t.unidade_id) && <Button variant="ghost" size="icon" onClick={() => setDeleting(t)}><Trash2 className="h-4 w-4" /></Button>}
+                      <AcoesLinha
+                        rotulo={t.nome}
+                        onEditar={podeEditar("terceirizados", t.unidade_id) ? () => openEdit(t) : undefined}
+                        onExcluir={podeExcluir("terceirizados", t.unidade_id) ? () => setDeleting(t) : undefined}
+                      />
                     </TableCell>
                   </TableRow>
                 );

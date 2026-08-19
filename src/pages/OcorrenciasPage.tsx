@@ -27,6 +27,7 @@ export default function OcorrenciasPage() {
   return (
     <div>
       <PageHeader
+        eyebrow="Operação"
         title="Manutenção"
         description="Controle de chamados técnicos e manutenção predial, com acompanhamento de SLA por unidade."
       />

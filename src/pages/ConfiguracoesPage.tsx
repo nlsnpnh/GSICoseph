@@ -115,7 +115,7 @@ export default function ConfiguracoesPage() {
   if (!isAdmin) {
     return (
       <div>
-        <PageHeader title="Configurações" description="Parâmetros do sistema, perfis e permissões." />
+        <PageHeader eyebrow="Sistema" title="Configurações" description="Parâmetros do sistema, perfis e permissões." />
         <Card>
           <CardContent className="p-12 text-center text-sm text-muted-foreground">
             Apenas administradores podem acessar esta área.
@@ -127,7 +127,7 @@ export default function ConfiguracoesPage() {
 
   return (
     <div>
-      <PageHeader title="Configurações" description="Parâmetros do sistema, perfis e permissões." />
+      <PageHeader eyebrow="Sistema" title="Configurações" description="Parâmetros do sistema, perfis e permissões." />
 
       <Card>
         <CardHeader>
