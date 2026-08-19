@@ -60,7 +60,7 @@ const mapRow = (r: any): PortaoAcesso => ({
   observacoes: r.observacoes ?? "",
 });
 
-export function usePortoesMock(): PortaoAcesso[] {
+export function usePortoes(): PortaoAcesso[] {
   const { data } = useQuery({
     queryKey: KEY,
     queryFn: async () => {

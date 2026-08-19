@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { type Criticidade } from "@/data/mockDashboard";
+import { type Criticidade } from "@/data/mapa";
 import { ComarcaDetailDrawer } from "./ComarcaDetailDrawer";
 import muniData from "@/data/ro-municipios.json";
 import { useMapaComarcasResumo, useMapaUnidadesPontos, type MapaComarcaResumo } from "@/data/mapa";
@@ -74,7 +74,8 @@ export function ComarcasMap() {
 
   return (
     <>
-      <div className="w-full overflow-hidden rounded-md border border-border bg-card p-2">
+      {/* Sem borda propria: o card ao redor ja emoldura o mapa. */}
+      <div className="w-full overflow-hidden">
         <svg
           viewBox={`0 0 ${vbW} ${vbH}`}
           preserveAspectRatio="xMidYMid meet"

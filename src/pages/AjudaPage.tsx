@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, LayoutDashboard, Building2, Map, Users, UserCog, Cpu, DoorOpen, FileText, AlertTriangle, BarChart3, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FioAcento } from "@/components/admin/FioAcento";
 
 const passos = [
   {
@@ -145,7 +146,8 @@ export default function AjudaPage() {
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {passos.map(({ icon: Icon, titulo, descricao, steps }) => (
-          <Card key={titulo} className="shadow-sm">
+          <Card key={titulo} className="overflow-hidden border-border/80 shadow-sm">
+            <FioAcento />
             <CardHeader className="border-b border-border pb-3">
               <CardTitle className="flex items-center gap-2 text-sm font-semibold">
                 <span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10">

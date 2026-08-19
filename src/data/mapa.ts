@@ -4,7 +4,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { Criticidade } from "@/data/mockDashboard";
+/** Nivel de estrutura de seguranca de uma comarca, usado no mapa e nos paineis. */
+export type Criticidade = "adequado" | "parcial" | "critico" | "sem_dados";
 
 export type MapaComarcaResumo = {
   comarcaId: string;

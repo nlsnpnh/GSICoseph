@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAlertas } from "@/hooks/useAlertas";
 import { cn } from "@/lib/utils";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const notifIcon = {
   critical: { Icon: AlertCircle, color: "text-critical" },
@@ -129,7 +130,10 @@ export default function AdminLayout() {
           </header>
 
           <main className="min-w-0 flex-1 p-5">
-            <Outlet />
+            {/* Erro de render fica contido aqui: o menu e o cabecalho seguem de pe. */}
+            <ErrorBoundary>
+              <Outlet />
+            </ErrorBoundary>
           </main>
         </div>
       </div>

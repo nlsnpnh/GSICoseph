@@ -1,31 +1,27 @@
 import type { StatusPlanejamento, PrioridadePlanejamento } from "@/data/planejamento";
 
-/** Classe de cor (Badge) para cada status, no padrão de cores do sistema. */
-export function statusBadgeClass(status: StatusPlanejamento): string {
+/**
+ * Cor do ponto que identifica o status. O ponto acompanha o rótulo tanto na
+ * lista de opções quanto no campo já preenchido — antes o campo mostrava o
+ * rótulo dentro de uma bolha, que dentro da tabela virava ruído.
+ */
+export function statusDotClass(status: StatusPlanejamento): string {
   switch (status) {
-    case "Concluída":
-      return "bg-adequate/10 text-adequate border-adequate/30";
-    case "Em andamento":
-      return "bg-blue-500/10 text-blue-600 border-blue-500/30";
-    case "Atrasada":
-      return "bg-critical/10 text-critical border-critical/30";
-    case "Suspensa":
-      return "bg-partial/15 text-partial border-partial/30";
+    case "Concluída":    return "bg-adequate";
+    case "Em andamento": return "bg-blue-500";
+    case "Atrasada":     return "bg-critical";
+    case "Suspensa":     return "bg-partial";
     case "Não iniciada":
-    default:
-      return "bg-muted text-muted-foreground border-border";
+    default:             return "bg-muted-foreground/40";
   }
 }
 
-export function prioridadeBadgeClass(prioridade: PrioridadePlanejamento | null): string {
+/** Cor do ponto que identifica a prioridade. */
+export function prioridadeDotClass(prioridade: PrioridadePlanejamento | null): string {
   switch (prioridade) {
-    case "Alta":
-      return "bg-critical/10 text-critical border-critical/30";
-    case "Média":
-      return "bg-partial/15 text-partial border-partial/30";
-    case "Baixa":
-      return "bg-blue-500/10 text-blue-600 border-blue-500/30";
-    default:
-      return "bg-muted text-muted-foreground border-border";
+    case "Alta":  return "bg-critical";
+    case "Média": return "bg-partial";
+    case "Baixa": return "bg-blue-500";
+    default:      return "bg-muted-foreground/40";
   }
 }

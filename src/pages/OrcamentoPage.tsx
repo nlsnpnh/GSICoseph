@@ -19,6 +19,7 @@ import { toast } from "@/hooks/use-toast";
 import { OrcamentoMacrodesafios } from "@/components/orcamento/OrcamentoMacrodesafios";
 import { OrcamentoTabela } from "@/components/orcamento/OrcamentoTabela";
 import { OrcamentoSuperavit } from "@/components/orcamento/OrcamentoSuperavit";
+import { FioAcento } from "@/components/admin/FioAcento";
 import {
   ACOES,
   useAnosOrcamento,
@@ -49,8 +50,9 @@ export default function OrcamentoPage() {
   if (!isAdmin) {
     return (
       <div>
-        <PageHeader title="Orçamento" description="Acompanhamento da Execução Orçamentária GSI." />
-        <Card>
+        <PageHeader eyebrow="Planejamento" title="Orçamento" description="Acompanhamento da Execução Orçamentária GSI." />
+        <Card className="overflow-hidden border-border/80 shadow-sm">
+          <FioAcento />
           <CardContent className="flex flex-col items-center justify-center gap-2 p-12 text-center">
             <Lock className="h-8 w-8 text-muted-foreground" />
             <p className="text-sm text-muted-foreground">
@@ -65,6 +67,7 @@ export default function OrcamentoPage() {
   return (
     <div>
       <PageHeader
+        eyebrow="Planejamento"
         title="Orçamento"
         description="Acompanhamento da Execução Orçamentária GSI — por ação orçamentária."
         actions={

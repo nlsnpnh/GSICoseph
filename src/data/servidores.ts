@@ -3,6 +3,7 @@
 // regenerar types.ts via `supabase gen types`.
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useQuery } from "@tanstack/react-query";
+import { addAnosISO, anosCompletosISO, diffDiasISO, hojeISO, isISODate } from "@/lib/dates";
 import { supabase } from "@/integrations/supabase/client";
 import { queryClient } from "@/lib/queryClient";
 
@@ -63,7 +64,7 @@ const mapRow = (r: any): ServidorSeg => ({
   observacoes: r.observacoes ?? "",
 });
 
-export function useServidoresMock(): ServidorSeg[] {
+export function useServidores(): ServidorSeg[] {
   const { data } = useQuery({
     queryKey: KEY,
     queryFn: async () => {
@@ -83,17 +84,17 @@ const toPayload = (d: Omit<ServidorSeg, "id">) => ({
   data_nascimento: d.data_nascimento || null,
 });
 
-export async function addServidorMock(d: Omit<ServidorSeg, "id">) {
+export async function addServidor(d: Omit<ServidorSeg, "id">) {
   const { error } = await supabase.from("servidores").insert(toPayload(d) as any);
   if (error) throw error;
   invalidate();
 }
-export async function updateServidorMock(id: string, d: Omit<ServidorSeg, "id">) {
+export async function updateServidor(id: string, d: Omit<ServidorSeg, "id">) {
   const { error } = await supabase.from("servidores").update(toPayload(d) as any).eq("id", id);
   if (error) throw error;
   invalidate();
 }
-export async function removeServidorMock(id: string) {
+export async function removeServidor(id: string) {
   const { error } = await supabase.from("servidores").delete().eq("id", id);
   if (error) throw error;
   invalidate();
@@ -101,14 +102,8 @@ export async function removeServidorMock(id: string) {
 
 // ===== Helpers de indicadores =====
 export function calcIdade(dataNascISO: string): number | null {
-  if (!dataNascISO) return null;
-  const d = new Date(dataNascISO + "T00:00:00");
-  if (isNaN(d.getTime())) return null;
-  const now = new Date();
-  let age = now.getFullYear() - d.getFullYear();
-  const m = now.getMonth() - d.getMonth();
-  if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
-  return age;
+  if (!isISODate(dataNascISO)) return null;
+  return anosCompletosISO(dataNascISO, hojeISO());
 }
 
 export function faixaEtaria(idade: number | null): string {
@@ -121,10 +116,17 @@ export function faixaEtaria(idade: number | null): string {
 }
 
 export function tempoServicoAnos(dataIngressoISO: string): number | null {
-  if (!dataIngressoISO) return null;
-  const d = new Date(dataIngressoISO + "T00:00:00");
-  if (isNaN(d.getTime())) return null;
-  const now = new Date();
-  const diff = (now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
-  return Math.floor(diff * 10) / 10;
+  if (!isISODate(dataIngressoISO)) return null;
+  const hoje = hojeISO();
+  if (hoje < dataIngressoISO) return 0; // ingresso futuro: sem tempo de servico
+  // Anos completos + a fracao ja corrida do ano em curso. Usar a duracao real
+  // do ano (e nao a media de 365,25 dias) faz o aniversario cair exato: no 10o
+  // aniversario o resultado e 10, nao 9,9.
+  const anos = anosCompletosISO(dataIngressoISO, hoje);
+  const ultimoAniversario = addAnosISO(dataIngressoISO, anos);
+  const proximoAniversario = addAnosISO(dataIngressoISO, anos + 1);
+  const fracao =
+    diffDiasISO(ultimoAniversario, hoje) /
+    diffDiasISO(ultimoAniversario, proximoAniversario);
+  return Math.floor((anos + fracao) * 10) / 10;
 }

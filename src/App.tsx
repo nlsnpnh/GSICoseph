@@ -1,3 +1,4 @@
+import { Suspense, lazy } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
@@ -10,30 +11,41 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { PeriodProvider } from "@/contexts/PeriodContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AdminLayout from "./layouts/AdminLayout";
-import Dashboard from "./pages/Dashboard";
 
-import UnidadesPage from "./pages/UnidadesPage";
-import ComarcasPage from "./pages/ComarcasPage";
-import ServidoresPage from "./pages/ServidoresPage";
-import ServidoresPorUnidadePage from "./pages/ServidoresPorUnidadePage";
-import ConfiguracoesPage from "./pages/ConfiguracoesPage";
-import OcorrenciasPage from "./pages/OcorrenciasPage";
-import BoletimPage from "./pages/BoletimPage";
-import RelatoriosPage from "./pages/RelatoriosPage";
-import EquipamentosPage from "./pages/EquipamentosPage";
-import TerceirizadosPage from "./pages/TerceirizadosPage";
-import AfsPorUnidadePage from "./pages/AfsPorUnidadePage";
-import PortoesPage from "./pages/PortoesPage";
-import ContratosPage from "./pages/ContratosPage";
-import PlanejamentoPage from "./pages/PlanejamentoPage";
-import OrcamentoPage from "./pages/OrcamentoPage";
-import ConsultasPage from "./pages/ConsultasPage";
-import AjudaPage from "./pages/AjudaPage";
+// Auth fica no bundle inicial: e a primeira tela de quem nao esta logado,
+// entao carregar sob demanda custaria um round-trip a mais no acesso mais comum.
 import AuthPage from "./pages/Auth";
-import CadastroPendentePage from "./pages/CadastroPendentePage";
-import BootstrapAdminPage from "./pages/BootstrapAdminPage";
-import ResetPasswordPage from "./pages/ResetPassword";
-import NotFound from "./pages/NotFound";
+
+// Demais rotas sao carregadas sob demanda. Sem isso, abrir /auth baixava
+// recharts + o geojson do mapa + o sistema inteiro antes de mostrar o campo de senha.
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const UnidadesPage = lazy(() => import("./pages/UnidadesPage"));
+const ComarcasPage = lazy(() => import("./pages/ComarcasPage"));
+const ServidoresPage = lazy(() => import("./pages/ServidoresPage"));
+const ServidoresPorUnidadePage = lazy(() => import("./pages/ServidoresPorUnidadePage"));
+const ConfiguracoesPage = lazy(() => import("./pages/ConfiguracoesPage"));
+const OcorrenciasPage = lazy(() => import("./pages/OcorrenciasPage"));
+const BoletimPage = lazy(() => import("./pages/BoletimPage"));
+const RelatoriosPage = lazy(() => import("./pages/RelatoriosPage"));
+const EquipamentosPage = lazy(() => import("./pages/EquipamentosPage"));
+const TerceirizadosPage = lazy(() => import("./pages/TerceirizadosPage"));
+const AfsPorUnidadePage = lazy(() => import("./pages/AfsPorUnidadePage"));
+const PortoesPage = lazy(() => import("./pages/PortoesPage"));
+const ContratosPage = lazy(() => import("./pages/ContratosPage"));
+const PlanejamentoPage = lazy(() => import("./pages/PlanejamentoPage"));
+const OrcamentoPage = lazy(() => import("./pages/OrcamentoPage"));
+const ConsultasPage = lazy(() => import("./pages/ConsultasPage"));
+const AjudaPage = lazy(() => import("./pages/AjudaPage"));
+const CadastroPendentePage = lazy(() => import("./pages/CadastroPendentePage"));
+const BootstrapAdminPage = lazy(() => import("./pages/BootstrapAdminPage"));
+const ResetPasswordPage = lazy(() => import("./pages/ResetPassword"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+
+const PageLoader = () => (
+  <div className="flex h-screen items-center justify-center text-sm text-muted-foreground">
+    Carregando...
+  </div>
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -44,10 +56,18 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <PeriodProvider>
+          <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/aguardando-aprovacao" element={<CadastroPendentePage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
+
+            {/* Bootstrap do primeiro admin: precisa ser alcancavel por quem ainda nao
+                tem papel, senao a tela so existiria quando ja e desnecessaria. A edge
+                function recusa a promocao assim que existe um admin no sistema. */}
+            <Route element={<ProtectedRoute exigeLiberacao={false} />}>
+              <Route path="/bootstrap-admin" element={<BootstrapAdminPage />} />
+            </Route>
 
             <Route element={<ProtectedRoute />}>
               <Route element={<AdminLayout />}>
@@ -70,13 +90,13 @@ const App = () => (
                 <Route path="/consultas" element={<ConsultasPage />} />
                 <Route path="/relatorios" element={<RelatoriosPage />} />
                 <Route path="/configuracoes" element={<ConfiguracoesPage />} />
-                <Route path="/bootstrap-admin" element={<BootstrapAdminPage />} />
                 <Route path="/ajuda" element={<AjudaPage />} />
               </Route>
             </Route>
 
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </Suspense>
           </PeriodProvider>
         </AuthProvider>
       </BrowserRouter>

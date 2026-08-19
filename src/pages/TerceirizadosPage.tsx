@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { getErrorMessage } from "@/lib/utils";
-import { Pencil, Plus, Trash2, UserCog, AlertTriangle, Building2 } from "lucide-react";
+import { Plus, UserCog, AlertTriangle, Building2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,6 +10,8 @@ import { CrudTableLayout } from "@/components/CrudTableLayout";
 import { ConfirmDelete } from "@/components/ConfirmDelete";
 import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
+import { AcoesLinha } from "@/components/admin/AcoesLinha";
+import { SUB } from "@/components/admin/estilos";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
@@ -24,14 +26,14 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { useUnidadesMock } from "@/data/unidadesMock";
+import { useUnidades } from "@/data/unidades";
 import { useComarcas } from "@/data/api";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   EMPRESAS, EMPRESA_PADRAO, FUNCOES, ESCALAS_TERC, TURNOS, SITUACOES_TERC,
   type Terceirizado, type SituacaoTerc,
-  useTerceirizadosMock, addTerceirizado, updateTerceirizado, removeTerceirizado,
-} from "@/data/terceirizadosMock";
+  useTerceirizados, addTerceirizado, updateTerceirizado, removeTerceirizado,
+} from "@/data/terceirizados";
 import { toast } from "@/hooks/use-toast";
 
 const schema = z.object({
@@ -79,10 +81,12 @@ function certStatus(d: string): { label: string; tone: string } | null {
 }
 
 export default function TerceirizadosPage() {
-  const { isOperador, unidadeId: authUnidadeId, unidadeNome: authUnidadeNome } = useAuth();
+  const { isOperador, unidadeId: authUnidadeId, unidadeNome: authUnidadeNome, podeEditar, podeExcluir } = useAuth();
+  // Operador escreve so na propria unidade — mesma regra da RLS.
+  const podeCriar = podeEditar("terceirizados");
   const navigate = useNavigate();
-  const items = useTerceirizadosMock();
-  const unidades = useUnidadesMock();
+  const items = useTerceirizados();
+  const unidades = useUnidades();
   const { data: comarcas = [] } = useComarcas();
   const [search, setSearch] = useState("");
   const [empresaFilter, setEmpresaFilter] = useState<string>("all");
@@ -108,7 +112,7 @@ export default function TerceirizadosPage() {
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    return items.filter((t) => {
+    const encontrados = items.filter((t) => {
       if (empresaFilter !== "all" && t.empresa !== empresaFilter) return false;
       if (situacaoFilter !== "all" && t.situacao !== situacaoFilter) return false;
       return (
@@ -120,7 +124,26 @@ export default function TerceirizadosPage() {
         (t.unidade_id ? (unidadeMap[t.unidade_id]?.nome ?? "").toLowerCase().includes(q) : false)
       );
     });
-  }, [items, search, empresaFilter, situacaoFilter, unidadeMap]);
+
+    // Operador ve uma unidade so, entao agrupar por unidade nao diz nada: fica
+    // em ordem alfabetica. Admin e gestor veem a rede inteira, e ai a leitura
+    // util e por unidade predial e, dentro dela, por nome.
+    const nomeUnidade = (t: Terceirizado) =>
+      t.unidade_id ? (unidadeMap[t.unidade_id]?.nome ?? "") : "";
+    const porNome = (a: Terceirizado, b: Terceirizado) =>
+      a.nome.localeCompare(b.nome, "pt-BR");
+
+    if (isOperador) return encontrados.sort(porNome);
+
+    return encontrados.sort((a, b) => {
+      const ua = nomeUnidade(a);
+      const ub = nomeUnidade(b);
+      // Sem unidade vinculada vai para o fim da lista.
+      if (!ua !== !ub) return ua ? -1 : 1;
+      const porUnidade = ua.localeCompare(ub, "pt-BR");
+      return porUnidade !== 0 ? porUnidade : porNome(a, b);
+    });
+  }, [items, search, empresaFilter, situacaoFilter, unidadeMap, isOperador]);
 
   const openCreate = () => {
     setEditing(null);
@@ -190,9 +213,10 @@ export default function TerceirizadosPage() {
   return (
     <div>
       <PageHeader
+        eyebrow="Pessoal"
         title="Terceirizados"
         description="Controle de profissionais terceirizados, contratos e certificações."
-        actions={<Button onClick={openCreate}><Plus className="mr-1 h-4 w-4" />Novo terceirizado</Button>}
+        actions={podeCriar ? <Button onClick={openCreate}><Plus className="mr-1 h-4 w-4" />Novo terceirizado</Button> : undefined}
       />
 
       <CrudTableLayout
@@ -229,40 +253,61 @@ export default function TerceirizadosPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Nome</TableHead>
+                <TableHead>Terceirizado</TableHead>
                 <TableHead>Empresa / Contrato</TableHead>
-                <TableHead>Função</TableHead>
-                <TableHead>Posto / Unidade</TableHead>
+                <TableHead>Função / Posto</TableHead>
                 <TableHead>Escala / Turno</TableHead>
                 <TableHead>Certificação</TableHead>
                 <TableHead>Situação</TableHead>
-                <TableHead className="w-[100px] text-right">Ações</TableHead>
+                <TableHead className="w-[80px] text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((t) => {
+              {filtered.map((t, i) => {
                 const cert = certStatus(t.validade_certificacao);
                 const unid = t.unidade_id ? unidadeMap[t.unidade_id] : null;
+                // A lista vem agrupada por unidade para admin/gestor: marca onde
+                // o grupo troca, senao o nome se repete sem o olho perceber.
+                const anterior = i > 0 ? filtered[i - 1] : null;
+                const abreGrupo =
+                  !isOperador && (!anterior || anterior.unidade_id !== t.unidade_id);
                 return (
-                  <TableRow key={t.id}>
-                    <TableCell className="font-medium">
-                      <div>{t.nome}</div>
-                      <div className="text-xs text-muted-foreground">CPF {t.cpf}</div>
+                  <Fragment key={t.id}>
+                  {abreGrupo && (
+                    <TableRow className="hover:bg-transparent">
+                      <TableCell colSpan={7} className="border-y border-border bg-muted/40 py-1">
+                        <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-foreground/70">
+                          {unid?.nome ?? "Sem unidade vinculada"}
+                        </span>
+                        {unid?.comarca_nome && (
+                          <span className="ml-2 text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+                            {unid.comarca_nome}
+                          </span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  <TableRow>
+                    <TableCell>
+                      <span className="font-medium text-foreground">{t.nome}</span>
+                      <p className={`${SUB} tabular-nums`}>CPF {t.cpf}</p>
                     </TableCell>
                     <TableCell>
-                      <div>{t.empresa}</div>
-                      <div className="text-xs text-muted-foreground">Contrato {t.contrato}</div>
+                      <span className="text-foreground/90">{t.empresa}</span>
+                      <p className={SUB}>Contrato {t.contrato}</p>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{t.funcao}</TableCell>
+                    {/* Função e posto viram uma coluna só. A unidade sai daqui:
+                        já é o título da faixa de grupo logo acima. */}
                     <TableCell>
-                      <div>{t.posto_trabalho}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {unid?.nome ?? "—"}{unid?.comarca_nome ? ` • ${unid.comarca_nome}` : ""}
-                      </div>
+                      <span className="text-foreground/90">{t.funcao}</span>
+                      <p className={SUB}>
+                        {t.posto_trabalho}
+                        {isOperador && unid?.nome ? ` · ${unid.nome}` : ""}
+                      </p>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      <div>{t.escala}</div>
-                      <div className="text-xs">{t.turno}</div>
+                    <TableCell>
+                      <span className="text-muted-foreground">{t.escala}</span>
+                      <p className={SUB}>{t.turno}</p>
                     </TableCell>
                     <TableCell>
                       {cert ? (
@@ -279,10 +324,14 @@ export default function TerceirizadosPage() {
                     </TableCell>
                     <TableCell><Badge variant="outline" className={situacaoTone[t.situacao]}>{t.situacao}</Badge></TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={() => openEdit(t)}><Pencil className="h-4 w-4" /></Button>
-                      <Button variant="ghost" size="icon" onClick={() => setDeleting(t)}><Trash2 className="h-4 w-4" /></Button>
+                      <AcoesLinha
+                        rotulo={t.nome}
+                        onEditar={podeEditar("terceirizados", t.unidade_id) ? () => openEdit(t) : undefined}
+                        onExcluir={podeExcluir("terceirizados", t.unidade_id) ? () => setDeleting(t) : undefined}
+                      />
                     </TableCell>
                   </TableRow>
+                  </Fragment>
                 );
               })}
             </TableBody>

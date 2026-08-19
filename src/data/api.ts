@@ -1,6 +1,8 @@
-// Camada de acesso a dados: tipos gerados do Supabase (types.ts) incompletos para
-// varias tabelas/joins, entao o uso de `any` aqui e intencional. Fix definitivo:
-// regenerar types.ts via `supabase gen types`.
+// Camada de acesso a dados generica (comarcas e anexos de ocorrencia).
+// As demais entidades tem modulo proprio em src/data/.
+//
+// Tipos gerados do Supabase (types.ts) nao cobrem joins dinamicos, entao o uso
+// de `any` no cliente abaixo e intencional.
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,26 +13,6 @@ export type Comarca = {
   nome: string;
 };
 
-export type Unidade = {
-  id: string;
-  nome: string;
-  tipo: "Fórum" | "Sede Administrativa" | "Anexo" | "Depósito";
-  endereco: string | null;
-  cidade: string | null;
-  comarca_id: string | null;
-  status: "Ativa" | "Inativa" | "Em reforma";
-};
-
-export type Servidor = {
-  id: string;
-  nome: string;
-  matricula: string;
-  cargo: string | null;
-  lotacao: string | null;
-  email: string | null;
-  status: "Ativo" | "Afastado" | "Aposentado";
-};
-
 // Cliente sem tipos para tabelas dinâmicas / não geradas em types.ts
 const sb = supabase as unknown as {
   from: (table: string) => any;
@@ -38,7 +20,7 @@ const sb = supabase as unknown as {
   auth: typeof supabase.auth;
 };
 
-// ===== Hooks genéricos =====
+// ===== Hooks genéricos de CRUD =====
 function useList<T>(table: string, orderBy = "nome") {
   return useQuery({
     queryKey: [table],
@@ -84,39 +66,13 @@ function useRemove(table: string) {
   });
 }
 
-// ===== APIs por entidade =====
+// ===== Comarcas =====
 export const useComarcas = () => useList<Comarca>("comarcas");
 export const useCreateComarca = () => useCreate<Partial<Comarca>>("comarcas");
 export const useUpdateComarca = () => useUpdate<Partial<Comarca>>("comarcas");
 export const useRemoveComarca = () => useRemove("comarcas");
 
-export const useUnidades = () => useList<Unidade>("unidades");
-export const useCreateUnidade = () => useCreate<Partial<Unidade>>("unidades");
-export const useUpdateUnidade = () => useUpdate<Partial<Unidade>>("unidades");
-export const useRemoveUnidade = () => useRemove("unidades");
-
-export const useServidores = () => useList<Servidor>("servidores");
-export const useCreateServidor = () => useCreate<Partial<Servidor>>("servidores");
-export const useUpdateServidor = () => useUpdate<Partial<Servidor>>("servidores");
-export const useRemoveServidor = () => useRemove("servidores");
-
-// ===== Ocorrências =====
-export type Ocorrencia = {
-  id: string;
-  titulo: string;
-  descricao: string | null;
-  tipo: string;
-  gravidade: "Baixa" | "Media" | "Alta" | "Critica";
-  status: "Aberta" | "Em andamento" | "Resolvida" | "Cancelada";
-  data_fato: string;
-  unidade_id: string | null;
-  comarca_id: string | null;
-  servidor_id: string | null;
-  created_by: string | null;
-  created_at: string;
-  updated_at: string;
-};
-
+// ===== Anexos de ocorrência =====
 export type OcorrenciaAnexo = {
   id: string;
   ocorrencia_id: string;
@@ -125,58 +81,6 @@ export type OcorrenciaAnexo = {
   mime_type: string | null;
   tamanho: number | null;
   created_at: string;
-};
-
-export const useOcorrencias = () =>
-  useQuery({
-    queryKey: ["ocorrencias"],
-    queryFn: async () => {
-      const { data, error } = await sb
-        .from("ocorrencias")
-        .select("*")
-        .order("data_fato", { ascending: false });
-      if (error) throw error;
-      return (data ?? []) as Ocorrencia[];
-    },
-  });
-
-export const useCreateOcorrencia = () => {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (payload: Partial<Ocorrencia>) => {
-      const { data: u } = await supabase.auth.getUser();
-      const { data, error } = await sb
-        .from("ocorrencias")
-        .insert({ ...payload, created_by: u.user?.id })
-        .select()
-        .single();
-      if (error) throw error;
-      return data as Ocorrencia;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["ocorrencias"] }),
-  });
-};
-
-export const useUpdateOcorrencia = () => {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<Ocorrencia> }) => {
-      const { error } = await sb.from("ocorrencias").update(data).eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["ocorrencias"] }),
-  });
-};
-
-export const useRemoveOcorrencia = () => {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await sb.from("ocorrencias").delete().eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["ocorrencias"] }),
-  });
 };
 
 export const useAnexos = (ocorrenciaId: string | null) =>

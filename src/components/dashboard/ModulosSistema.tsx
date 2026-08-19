@@ -2,21 +2,23 @@ import { Search, Building2, CheckCircle2, XCircle } from "lucide-react";
 import { ReactNode, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FioAcento } from "@/components/admin/FioAcento";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useUnidadesMock } from "@/data/unidadesMock";
-import { useServidoresMock } from "@/data/servidoresMock";
-import { useTerceirizadosMock } from "@/data/terceirizadosMock";
+import { useUnidades } from "@/data/unidades";
+import { useServidores } from "@/data/servidores";
+import { useTerceirizados } from "@/data/terceirizados";
 import { useUnidadeEquipamentos } from "@/data/equipamentos";
-import { useContratosMock, statusFromVigencia } from "@/data/contratosMock";
+import { useContratos, statusFromVigencia } from "@/data/contratos";
 
 function ModuleCard({ title, children, footer, to }: { title: string; children: ReactNode; footer: string; to: string }) {
   const navigate = useNavigate();
   return (
-    <Card className="flex flex-col shadow-sm">
-      <CardHeader className="border-b border-border bg-muted/40 py-2 text-center">
-        <CardTitle className="text-xs font-bold uppercase tracking-wider text-foreground">{title}</CardTitle>
+    <Card className="flex flex-col overflow-hidden border-border/80 shadow-sm">
+      <FioAcento />
+      <CardHeader className="border-b border-border bg-muted/30 px-3 py-2">
+        <CardTitle className="text-[11px] font-medium uppercase tracking-[0.14em] text-foreground/70">{title}</CardTitle>
       </CardHeader>
       <CardContent className="flex-1 p-3 text-xs">{children}</CardContent>
       <div className="border-t border-border p-2">
@@ -71,11 +73,11 @@ function statusToneContrato(s: string) {
 const MAX_ROWS = 6;
 
 export function ModulosSistema() {
-  const unidades = useUnidadesMock();
-  const servidores = useServidoresMock();
-  const terceirizados = useTerceirizadosMock();
+  const unidades = useUnidades();
+  const servidores = useServidores();
+  const terceirizados = useTerceirizados();
   const distribuicao = useUnidadeEquipamentos();
-  const contratos = useContratosMock();
+  const contratos = useContratos();
 
   const [qUni, setQUni] = useState("");
   const [qServ, setQServ] = useState("");

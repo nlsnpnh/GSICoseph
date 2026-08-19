@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { ShieldCheck, Trash2, Lock } from "lucide-react";
 import { ConfirmDelete } from "@/components/ConfirmDelete";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
@@ -15,8 +15,9 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useAuth, AppRole } from "@/contexts/AuthContext";
-import { useUnidadesMock } from "@/data/unidadesMock";
+import { useUnidades } from "@/data/unidades";
 import { toast } from "@/hooks/use-toast";
+import { FioAcento } from "@/components/admin/FioAcento";
 
 type Row = {
   user_id: string;
@@ -31,10 +32,30 @@ type Row = {
 
 const ALL_ROLES: AppRole[] = ["admin", "gestor", "operador"];
 
+// Ordem dos grupos na listagem de acessos. Quem ainda não tem papel atribuído
+// fica no fim, depois dos três papéis.
+const PESO_PAPEL: Record<AppRole, number> = { admin: 0, gestor: 1, operador: 2 };
+const SEM_PAPEL = 3;
+
+const ROTULO_GRUPO = ["Administradores", "Gestores", "Operadores", "Aguardando atribuição de papel"];
+
+const pesoDe = (roles: AppRole[]) =>
+  roles.reduce((menor, r) => Math.min(menor, PESO_PAPEL[r] ?? SEM_PAPEL), SEM_PAPEL);
+
+/** Admin, depois gestor, depois operador — e em ordem alfabética dentro de cada um. */
+function ordenarPorPapel(linhas: Row[]): Row[] {
+  return [...linhas].sort((a, b) => {
+    const pa = pesoDe(a.roles);
+    const pb = pesoDe(b.roles);
+    if (pa !== pb) return pa - pb;
+    return (a.nome_completo ?? "").localeCompare(b.nome_completo ?? "", "pt-BR");
+  });
+}
+
 export default function ConfiguracoesPage() {
   const { isAdmin, user } = useAuth();
   const qc = useQueryClient();
-  const unidades = useUnidadesMock();
+  const unidades = useUnidades();
   useEffect(() => { document.title = "Configurações | SIG-COSEPH"; }, []);
 
   const { data: rows = [], isLoading } = useQuery({
@@ -52,12 +73,14 @@ export default function ConfiguracoesPage() {
         arr.push(r.role as AppRole);
         byUser.set(r.user_id, arr);
       });
-      return (profiles ?? []).map((p) => ({
-        ...p,
-        unidade_id: p.unidade_id ?? null,
-        super_admin: p.super_admin ?? false,
-        roles: byUser.get(p.user_id) ?? [],
-      }));
+      return ordenarPorPapel(
+        (profiles ?? []).map((p) => ({
+          ...p,
+          unidade_id: p.unidade_id ?? null,
+          super_admin: p.super_admin ?? false,
+          roles: byUser.get(p.user_id) ?? [],
+        })),
+      );
     },
     enabled: isAdmin,
   });
@@ -115,8 +138,9 @@ export default function ConfiguracoesPage() {
   if (!isAdmin) {
     return (
       <div>
-        <PageHeader title="Configurações" description="Parâmetros do sistema, perfis e permissões." />
-        <Card>
+        <PageHeader eyebrow="Sistema" title="Configurações" description="Parâmetros do sistema, perfis e permissões." />
+        <Card className="overflow-hidden border-border/80 shadow-sm">
+          <FioAcento />
           <CardContent className="p-12 text-center text-sm text-muted-foreground">
             Apenas administradores podem acessar esta área.
           </CardContent>
@@ -127,9 +151,10 @@ export default function ConfiguracoesPage() {
 
   return (
     <div>
-      <PageHeader title="Configurações" description="Parâmetros do sistema, perfis e permissões." />
+      <PageHeader eyebrow="Sistema" title="Configurações" description="Parâmetros do sistema, perfis e permissões." />
 
-      <Card>
+      <Card className="overflow-hidden border-border/80 shadow-sm">
+        <FioAcento />
         <CardHeader>
           <CardTitle className="text-base">Usuários e papéis</CardTitle>
           <CardDescription>
@@ -155,12 +180,25 @@ export default function ConfiguracoesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {rows.map((row) => {
+                {rows.map((row, i) => {
                   const isOperadorRow = row.roles.includes("operador") && !row.roles.includes("admin") && !row.roles.includes("gestor");
                   const otherAdmins = rows.filter((r) => r.user_id !== row.user_id && r.roles.includes("admin"));
                   const isSuperAdmin = row.super_admin;
+                  // A lista vem agrupada por papel: marca onde o grupo troca.
+                  const peso = pesoDe(row.roles);
+                  const abreGrupo = i === 0 || pesoDe(rows[i - 1].roles) !== peso;
                   return (
-                    <TableRow key={row.user_id}>
+                    <Fragment key={row.user_id}>
+                    {abreGrupo && (
+                      <TableRow className="hover:bg-transparent">
+                        <TableCell colSpan={ALL_ROLES.length + 4} className="border-y border-border bg-muted/40 py-1">
+                          <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-foreground/70">
+                            {ROTULO_GRUPO[peso]}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    <TableRow>
                       <TableCell className="font-medium">
                         <div>{row.nome_completo ?? "—"}</div>
                         <div className="text-xs text-muted-foreground">{row.lotacao}</div>
@@ -226,6 +264,7 @@ export default function ConfiguracoesPage() {
                         </Button>
                       </TableCell>
                     </TableRow>
+                    </Fragment>
                   );
                 })}
                 {rows.length === 0 && (
@@ -241,7 +280,8 @@ export default function ConfiguracoesPage() {
         </CardContent>
       </Card>
 
-      <Card className="mt-4">
+      <Card className="overflow-hidden mt-4 border-border/80 shadow-sm">
+        <FioAcento />
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <ShieldCheck className="h-4 w-4" /> Política de acesso

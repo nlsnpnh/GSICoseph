@@ -1,8 +1,8 @@
 import { useMemo } from "react";
-import { useContratosMock } from "@/data/contratosMock";
+import { useContratos } from "@/data/contratos";
 import { useEquipamentosCatalogo, useUnidadeEquipamentos } from "@/data/equipamentos";
-import { useUnidadesMock } from "@/data/unidadesMock";
-import { useOcorrenciasMock, calcSla } from "@/data/ocorrenciasMock";
+import { useUnidades } from "@/data/unidades";
+import { useOcorrencias, calcSla } from "@/data/ocorrencias";
 import { useAuth } from "@/contexts/AuthContext";
 
 export type Alerta = {
@@ -15,11 +15,11 @@ export type Alerta = {
 
 export function useAlertas(): Alerta[] {
   const { isOperador } = useAuth();
-  const contratos    = useContratosMock();
+  const contratos    = useContratos();
   const catalogo     = useEquipamentosCatalogo();
   const distribuicao = useUnidadeEquipamentos();
-  const unidades     = useUnidadesMock();
-  const ocorrencias  = useOcorrenciasMock();
+  const unidades     = useUnidades();
+  const ocorrencias  = useOcorrencias();
 
   return useMemo(() => {
     const hoje = new Date();

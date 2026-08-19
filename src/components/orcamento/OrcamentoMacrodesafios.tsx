@@ -6,6 +6,8 @@ import {
 } from "recharts";
 import { StatCard } from "@/components/StatCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FioAcento } from "@/components/admin/FioAcento";
+import { CHART } from "@/lib/design-tokens";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -49,7 +51,8 @@ export function OrcamentoMacrodesafios({ itens }: Props) {
       </div>
 
       {/* Tabela consolidada por ação */}
-      <Card>
+      <Card className="overflow-hidden border-border/80 shadow-sm">
+        <FioAcento />
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Consolidado por Ação Orçamentária</CardTitle>
         </CardHeader>
@@ -99,7 +102,8 @@ export function OrcamentoMacrodesafios({ itens }: Props) {
 
       <div className="grid gap-5 lg:grid-cols-5">
         {/* Dotação x Empenho x Liquidado por ação */}
-        <Card className="lg:col-span-3">
+        <Card className="overflow-hidden lg:col-span-3 border-border/80 shadow-sm">
+          <FioAcento />
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Execução por Ação (R$)</CardTitle>
           </CardHeader>
@@ -110,7 +114,7 @@ export function OrcamentoMacrodesafios({ itens }: Props) {
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
                   <XAxis dataKey="acao" tick={{ fontSize: 11 }} interval={0} />
                   <YAxis tick={{ fontSize: 10 }} tickFormatter={(v: number) => `${(v / 1_000_000).toFixed(1)}M`} />
-                  <Tooltip formatter={(v: number) => fmtBRL(v)} />
+                  <Tooltip {...CHART.tooltip} cursor={{ fill: "hsl(var(--muted))" }} formatter={(v: number) => fmtBRL(v)} />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
                   <Bar dataKey="Dotação" fill="hsl(217 91% 55%)" radius={[3, 3, 0, 0]} />
                   <Bar dataKey="Empenho" fill="hsl(270 65% 55%)" radius={[3, 3, 0, 0]} />
@@ -122,7 +126,8 @@ export function OrcamentoMacrodesafios({ itens }: Props) {
         </Card>
 
         {/* Distribuição do saldo por ação */}
-        <Card className="lg:col-span-2">
+        <Card className="overflow-hidden lg:col-span-2 border-border/80 shadow-sm">
+          <FioAcento />
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Saldo da Dotação por Ação</CardTitle>
           </CardHeader>
@@ -143,7 +148,7 @@ export function OrcamentoMacrodesafios({ itens }: Props) {
                       <Cell key={i} fill={d.cor} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(v: number, nm: string) => [fmtBRL(v), nm]} />
+                  <Tooltip {...CHART.tooltip} formatter={(v: number, nm: string) => [fmtBRL(v), nm]} />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
                 </PieChart>
               </ResponsiveContainer>

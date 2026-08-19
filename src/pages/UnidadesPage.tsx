@@ -1,11 +1,15 @@
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { getErrorMessage } from "@/lib/utils";
-import { Building2, Pencil, Plus, Trash2 } from "lucide-react";
+import { Building2, Plus, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
 import { CrudTableLayout } from "@/components/CrudTableLayout";
+import { AcoesLinha } from "@/components/admin/AcoesLinha";
+import { SinalSeguranca } from "@/components/admin/SinalSeguranca";
+import { comparaComarca, comparaTexto } from "@/lib/ordenacao";
+import { SUB } from "@/components/admin/estilos";
 import { ConfirmDelete } from "@/components/ConfirmDelete";
 import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
@@ -24,8 +28,8 @@ import {
 } from "@/components/ui/table";
 import {
   type UnidadePredial,
-  useUnidadesMock, addUnidade, updateUnidade, removeUnidade,
-} from "@/data/unidadesMock";
+  useUnidades, addUnidade, updateUnidade, removeUnidade,
+} from "@/data/unidades";
 import { useComarcas } from "@/data/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
@@ -68,8 +72,10 @@ const defaults: FormData = {
 };
 
 export default function UnidadesPage() {
-  const { isOperador } = useAuth();
-  const items = useUnidadesMock();
+  const { isOperador, podeEditar, podeExcluir } = useAuth();
+  const podeGravar = podeEditar("unidades");
+  const podeApagar = podeExcluir("unidades"); // RLS: exclusao de unidade e so do admin
+  const items = useUnidades();
   const { data: comarcas = [] } = useComarcas();
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
@@ -80,14 +86,23 @@ export default function UnidadesPage() {
 
   const form = useForm<FormData>({ resolver: zodResolver(schema), defaultValues: defaults });
 
+  // A coluna de ações só existe com permissão: a faixa de grupo acompanha.
+  const colunas = podeGravar || podeApagar ? 5 : 4;
+
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    return items.filter((u) =>
-      u.nome.toLowerCase().includes(q) ||
-      u.comarca_nome.toLowerCase().includes(q) ||
-      u.endereco.toLowerCase().includes(q) ||
-      u.responsavel_local.toLowerCase().includes(q),
-    );
+    return items
+      .filter((u) =>
+        u.nome.toLowerCase().includes(q) ||
+        u.comarca_nome.toLowerCase().includes(q) ||
+        u.endereco.toLowerCase().includes(q) ||
+        u.responsavel_local.toLowerCase().includes(q),
+      )
+      // Porto Velho abre a lista; demais comarcas em ordem alfabética e, dentro
+      // de cada uma, as unidades por nome.
+      .sort((a, b) =>
+        comparaComarca(a.comarca_nome, b.comarca_nome) || comparaTexto(a.nome, b.nome),
+      );
   }, [items, search]);
 
   const openCreate = () => {
@@ -146,9 +161,10 @@ export default function UnidadesPage() {
   return (
     <div>
       <PageHeader
+        eyebrow="Cadastro"
         title="Unidades Prediais"
         description="Gestão das edificações sob responsabilidade do TJRO."
-        actions={!isOperador ? <Button onClick={openCreate}><Plus className="mr-1 h-4 w-4" />Nova unidade</Button> : undefined}
+        actions={podeGravar ? <Button size="sm" onClick={openCreate}><Plus className="mr-1 h-4 w-4" />Nova unidade</Button> : undefined}
       />
 
       <CrudTableLayout
@@ -161,32 +177,66 @@ export default function UnidadesPage() {
         ) : (
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Comarca</TableHead>
+              <TableRow className="border-b border-border hover:bg-transparent">
+                <TableHead>Unidade</TableHead>
                 <TableHead>Responsável</TableHead>
-                <TableHead>Substituto</TableHead>
-                <TableHead>Telefone</TableHead>
-                {!isOperador && <TableHead className="w-[60px] text-right" />}
+                <TableHead className="text-right">Telefone</TableHead>
+                <TableHead>Segurança</TableHead>
+                {(podeGravar || podeApagar) && <TableHead className="w-[64px]" />}
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((u) => (
-                <TableRow key={u.id}>
-                  <TableCell className="font-medium">{u.nome}</TableCell>
-                  <TableCell className="text-muted-foreground">{u.comarca_nome || "—"}</TableCell>
-                  <TableCell className="text-muted-foreground">{u.responsavel_local}</TableCell>
-                  <TableCell className="text-muted-foreground">{u.responsavel_substituto || "—"}</TableCell>
-                  <TableCell className="text-muted-foreground tabular-nums">{u.telefone || "—"}</TableCell>
-                  {!isOperador && (
+              {filtered.map((u, i) => {
+                const abreGrupo = i === 0 || filtered[i - 1].comarca_nome !== u.comarca_nome;
+                const naComarca = filtered.filter((x) => x.comarca_nome === u.comarca_nome).length;
+                return (
+                <Fragment key={u.id}>
+                {abreGrupo && (
+                  <TableRow className="hover:bg-transparent">
+                    <TableCell colSpan={colunas} className="border-y border-border bg-muted/40 py-1">
+                      <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-foreground/70">
+                        {u.comarca_nome || "Sem comarca vinculada"}
+                      </span>
+                      <span className="ml-2 text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+                        {naComarca} {naComarca === 1 ? "unidade" : "unidades"}
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                )}
+                <TableRow>
+                  {/* Nome é o protagonista da linha; o endereço vira apoio. */}
+                  <TableCell>
+                    <span className="font-medium text-foreground">{u.nome}</span>
+                    {u.endereco && <p className={SUB}>{u.endereco}</p>}
+                  </TableCell>
+                  {/* Titular e substituto ocupavam duas colunas: viram uma, empilhados. */}
+                  <TableCell>
+                    <span className="text-foreground/90">{u.responsavel_local || "—"}</span>
+                    {u.responsavel_substituto && <p className={SUB}>Subst.: {u.responsavel_substituto}</p>}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums text-muted-foreground">
+                    {u.telefone || "—"}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1">
+                      <SinalSeguranca label="DERSO" ativo={u.possui_derso} />
+                      <SinalSeguranca label="Acesso" ativo={u.controle_acesso} tituloInativo="Sem controle de acesso" />
+                      <SinalSeguranca label="CFTV" ativo={u.vigilancia_eletronica} tituloInativo="Sem vigilância eletrônica" />
+                    </div>
+                  </TableCell>
+                  {(podeGravar || podeApagar) && (
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={() => openEdit(u)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
+                      <AcoesLinha
+                        rotulo={u.nome}
+                        onEditar={podeGravar ? () => openEdit(u) : undefined}
+                        onExcluir={podeApagar ? () => setDeleting(u) : undefined}
+                      />
                     </TableCell>
                   )}
                 </TableRow>
-              ))}
+                </Fragment>
+                );
+              })}
             </TableBody>
           </Table>
         )}
@@ -261,7 +311,7 @@ export default function UnidadesPage() {
 
             <DialogFooter className="gap-2 sm:justify-between">
               <div>
-                {editing && !isOperador && (
+                {editing && podeApagar && (
                   <Button
                     type="button"
                     variant="ghost"

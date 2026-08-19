@@ -8,6 +8,8 @@ import {
 } from "recharts";
 import { StatCard } from "@/components/StatCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FioAcento } from "@/components/admin/FioAcento";
+import { CHART } from "@/lib/design-tokens";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -76,7 +78,8 @@ export function PlanejamentoPainel({ acoes }: Props) {
 
       <div className="grid gap-5 lg:grid-cols-5">
         {/* Tabela consolidada por setor */}
-        <Card className="lg:col-span-3">
+        <Card className="overflow-hidden lg:col-span-3 border-border/80 shadow-sm">
+          <FioAcento />
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Consolidado por Setor</CardTitle>
           </CardHeader>
@@ -125,7 +128,8 @@ export function PlanejamentoPainel({ acoes }: Props) {
         </Card>
 
         {/* Gráfico de execução por setor */}
-        <Card className="lg:col-span-2">
+        <Card className="overflow-hidden lg:col-span-2 border-border/80 shadow-sm">
+          <FioAcento />
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Execução por Setor (% médio)</CardTitle>
           </CardHeader>
@@ -136,7 +140,7 @@ export function PlanejamentoPainel({ acoes }: Props) {
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
                   <XAxis dataKey="setor" tick={{ fontSize: 11 }} interval={0} />
                   <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
-                  <Tooltip formatter={(v: number) => [`${v}%`, "% médio"]} />
+                  <Tooltip {...CHART.tooltip} cursor={{ fill: "hsl(var(--muted))" }} formatter={(v: number) => [`${v}%`, "% médio"]} />
                   <Bar dataKey="pct" radius={[4, 4, 0, 0]}>
                     {execData.map((d) => (
                       <Cell key={d.key} fill={SETOR_COR[d.key] ?? "hsl(217 91% 55%)"} />
@@ -150,7 +154,8 @@ export function PlanejamentoPainel({ acoes }: Props) {
       </div>
 
       {/* Distribuição de status por setor (barras empilhadas) */}
-      <Card>
+      <Card className="overflow-hidden border-border/80 shadow-sm">
+        <FioAcento />
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Distribuição de Status por Setor</CardTitle>
         </CardHeader>
@@ -161,7 +166,7 @@ export function PlanejamentoPainel({ acoes }: Props) {
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
                 <XAxis dataKey="setor" tick={{ fontSize: 11 }} interval={0} />
                 <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
-                <Tooltip />
+                <Tooltip {...CHART.tooltip} cursor={{ fill: "hsl(var(--muted))" }} />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
                 {STATUS_DEFS.map((s) => (
                   <Bar key={s.key} dataKey={s.key} stackId="st" fill={s.cor} radius={[2, 2, 0, 0]} />
@@ -180,7 +185,8 @@ export function PlanejamentoPainel({ acoes }: Props) {
       </div>
 
       {/* Objetivos das unidades/setores */}
-      <Card>
+      <Card className="overflow-hidden border-border/80 shadow-sm">
+        <FioAcento />
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Objetivos das Unidades</CardTitle>
         </CardHeader>
@@ -207,7 +213,8 @@ function SetorDonut({ resumo: r }: { resumo: ResumoSetor }) {
   ].filter((d) => d.value > 0);
 
   return (
-    <Card>
+    <Card className="overflow-hidden border-border/80 shadow-sm">
+      <FioAcento />
       <CardHeader className="pb-1">
         <CardTitle className="text-sm">{r.label}</CardTitle>
       </CardHeader>
@@ -228,7 +235,7 @@ function SetorDonut({ resumo: r }: { resumo: ResumoSetor }) {
                   <Cell key={i} fill={d.cor} />
                 ))}
               </Pie>
-              <Tooltip formatter={(v: number, n: string) => [v, n]} />
+              <Tooltip {...CHART.tooltip} formatter={(v: number, n: string) => [v, n]} />
             </PieChart>
           </ResponsiveContainer>
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">

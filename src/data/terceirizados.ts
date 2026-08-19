@@ -64,7 +64,7 @@ const mapRow = (r: any): Terceirizado => ({
   observacoes: r.observacoes ?? "",
 });
 
-export function useTerceirizadosMock(): Terceirizado[] {
+export function useTerceirizados(): Terceirizado[] {
   const { data } = useQuery({
     queryKey: KEY,
     queryFn: async () => {

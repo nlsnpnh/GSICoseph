@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { Fragment, useEffect, useMemo } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
@@ -10,15 +10,17 @@ import {
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/EmptyState";
 import { UserCog } from "lucide-react";
-import { useUnidadesMock } from "@/data/unidadesMock";
-import { useTerceirizadosMock } from "@/data/terceirizadosMock";
+import { useUnidades } from "@/data/unidades";
+import { useTerceirizados } from "@/data/terceirizados";
 import { useAuth } from "@/contexts/AuthContext";
+import { comparaComarca, comparaTexto } from "@/lib/ordenacao";
+import { FioAcento } from "@/components/admin/FioAcento";
 
 export default function AfsPorUnidadePage() {
   const { isOperador } = useAuth();
   const navigate = useNavigate();
-  const items = useTerceirizadosMock();
-  const unidades = useUnidadesMock();
+  const items = useTerceirizados();
+  const unidades = useUnidades();
 
   useEffect(() => { document.title = "AFS por unidade | COSEPH TJRO"; }, []);
 
@@ -39,7 +41,7 @@ export default function AfsPorUnidadePage() {
         const u = unidadeMap[unidadeId];
         return { unidadeId, nome: u?.nome ?? "—", comarca: u?.comarca_nome ?? "—", qtd };
       })
-      .sort((a, b) => b.qtd - a.qtd || a.nome.localeCompare(b.nome));
+      .sort((a, b) => comparaComarca(a.comarca, b.comarca) || comparaTexto(a.nome, b.nome));
   }, [items, unidadeMap]);
 
   const totalAfsAtivos = useMemo(
@@ -53,6 +55,7 @@ export default function AfsPorUnidadePage() {
   return (
     <div>
       <PageHeader
+        eyebrow="Pessoal · Distribuição"
         title="AFS por unidade predial"
         description="Unidades com terceirizados ativos lançados e a respectiva quantidade."
         actions={
@@ -62,7 +65,8 @@ export default function AfsPorUnidadePage() {
         }
       />
 
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden border-border/80 shadow-sm">
+        <FioAcento />
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border p-4">
           <h2 className="text-sm font-semibold text-foreground">Resumo</h2>
           <Badge variant="outline" className="text-xs">
@@ -86,13 +90,37 @@ export default function AfsPorUnidadePage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {resumoPorUnidade.map((r) => (
-                <TableRow key={r.unidadeId}>
-                  <TableCell className="font-medium">{r.nome}</TableCell>
-                  <TableCell className="text-muted-foreground">{r.comarca}</TableCell>
-                  <TableCell className="text-right font-semibold">{r.qtd}</TableCell>
-                </TableRow>
-              ))}
+              {resumoPorUnidade.map((r, i) => {
+                // A lista sai agrupada por comarca: marca onde o grupo troca e
+                // fecha o subtotal de AFS da comarca na própria faixa.
+                const abreGrupo = i === 0 || resumoPorUnidade[i - 1].comarca !== r.comarca;
+                const totalComarca = resumoPorUnidade
+                  .filter((x) => x.comarca === r.comarca)
+                  .reduce((soma, x) => soma + x.qtd, 0);
+                return (
+                  <Fragment key={r.unidadeId}>
+                    {abreGrupo && (
+                      <TableRow className="hover:bg-transparent">
+                        <TableCell colSpan={2} className="border-y border-border bg-muted/40 py-1">
+                          <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-foreground/70">
+                            {r.comarca}
+                          </span>
+                        </TableCell>
+                        <TableCell className="border-y border-border bg-muted/40 py-1 text-right">
+                          <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                            {totalComarca} AFS
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    <TableRow>
+                      <TableCell className="font-medium">{r.nome}</TableCell>
+                      <TableCell className="text-muted-foreground">{r.comarca}</TableCell>
+                      <TableCell className="text-right font-semibold tabular-nums">{r.qtd}</TableCell>
+                    </TableRow>
+                  </Fragment>
+                );
+              })}
             </TableBody>
           </Table>
         )}

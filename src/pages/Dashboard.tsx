@@ -6,19 +6,20 @@ import {
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { StatCard } from "@/components/StatCard";
+import { FioAcento } from "@/components/admin/FioAcento";
 import { AlertsPanel } from "@/components/dashboard/AlertsPanel";
 import { MapaComarcasCard } from "@/components/dashboard/MapaComarcasCard";
 import { ServidoresPorComarca, EquipamentosDonut, ResultadosOperacionaisPie, ContratosVigencia } from "@/components/dashboard/MiniCharts";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { useUnidadesMock } from "@/data/unidadesMock";
-import { useServidoresMock } from "@/data/servidoresMock";
-import { useTerceirizadosMock } from "@/data/terceirizadosMock";
+import { useUnidades } from "@/data/unidades";
+import { useServidores } from "@/data/servidores";
+import { useTerceirizados } from "@/data/terceirizados";
 import { useComarcas } from "@/data/api";
 import { useUnidadeEquipamentos } from "@/data/equipamentos";
-import { useContratosMock, statusFromVigencia } from "@/data/contratosMock";
-import { useOcorrenciasMock } from "@/data/ocorrenciasMock";
+import { useContratos, statusFromVigencia } from "@/data/contratos";
+import { useOcorrencias } from "@/data/ocorrencias";
 import { useAlertas } from "@/hooks/useAlertas";
 import { usePeriod, applyPeriod, type Period } from "@/contexts/PeriodContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -52,12 +53,12 @@ export default function Dashboard() {
   const [filterUnidade, setFilterUnidade] = useState("todas");
 
   const { data: comarcas = [] } = useComarcas();
-  const unidadesRaw     = useUnidadesMock();
-  const servidoresRaw   = useServidoresMock();
-  const terceirizadosRaw = useTerceirizadosMock();
+  const unidadesRaw     = useUnidades();
+  const servidoresRaw   = useServidores();
+  const terceirizadosRaw = useTerceirizados();
   const distribuicaoRaw = useUnidadeEquipamentos();
-  const contratosRaw    = useContratosMock();
-  const ocorrenciasRaw  = useOcorrenciasMock();
+  const contratosRaw    = useContratos();
+  const ocorrenciasRaw  = useOcorrencias();
   const alertas         = useAlertas();
   const { period, setPeriod, factor } = usePeriod();
 
@@ -133,32 +134,41 @@ export default function Dashboard() {
   }, [unidades, servidores, terceirizados, distribuicao, contratosRaw, ocorrencias, alertas, factor]);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {/* Cabeçalho unificado: título + filtros + usuário */}
-      <div className="rounded-lg border border-border bg-card px-5 py-4 shadow-sm">
+      <div className="overflow-hidden rounded-lg border border-border/80 bg-card shadow-sm">
+        <FioAcento />
+        <div className="px-4 py-3">
         {/* Linha superior: título e usuário */}
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-foreground">Painel Executivo</h1>
-            <p className="mt-0.5 text-sm text-muted-foreground">Visão geral da segurança institucional do TJRO</p>
+            <div className="flex items-center gap-2">
+              <span className="h-px w-5 bg-accent" aria-hidden="true" />
+              <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-accent">
+                Painel executivo
+              </span>
+            </div>
+            <h1 className="mt-1 text-[22px] font-light leading-tight tracking-[-0.025em] text-foreground sm:text-[26px]">
+              Visão geral da segurança institucional
+            </h1>
           </div>
-          <div className="flex shrink-0 items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
+          <div className="flex shrink-0 items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-[12px] font-medium text-primary-foreground">
               {iniciais}
             </div>
             <div className="leading-tight text-right">
-              <p className="text-sm font-semibold text-foreground">{primeiroNome}</p>
-              <p className="text-xs text-muted-foreground">{roleLabel}</p>
+              <p className="text-[13px] font-medium text-foreground">{primeiroNome}</p>
+              <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">{roleLabel}</p>
             </div>
           </div>
         </div>
 
         {/* Linha inferior: filtros e última atualização */}
-        <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-3">
-          <span className="text-xs font-semibold text-muted-foreground">Filtros:</span>
+        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-2.5">
+          <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">Filtros</span>
 
           <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
-            <SelectTrigger className="h-8 w-[140px] text-xs">
+            <SelectTrigger className="h-7 w-[140px] text-[12px]">
               <SelectValue placeholder="Período" />
             </SelectTrigger>
             <SelectContent>
@@ -169,7 +179,7 @@ export default function Dashboard() {
           </Select>
 
           <Select value={filterComarca} onValueChange={(v) => { setFilterComarca(v); setFilterUnidade("todas"); }}>
-            <SelectTrigger className="h-8 w-[160px] text-xs">
+            <SelectTrigger className="h-7 w-[160px] text-[12px]">
               <SelectValue placeholder="Comarca" />
             </SelectTrigger>
             <SelectContent>
@@ -179,7 +189,7 @@ export default function Dashboard() {
           </Select>
 
           <Select value={filterUnidade} onValueChange={setFilterUnidade}>
-            <SelectTrigger className="h-8 w-[180px] text-xs">
+            <SelectTrigger className="h-7 w-[180px] text-[12px]">
               <SelectValue placeholder="Unidade" />
             </SelectTrigger>
             <SelectContent>
@@ -192,33 +202,47 @@ export default function Dashboard() {
             <button onClick={handleRefresh} className="text-muted-foreground hover:text-foreground">
               <RefreshCw className="h-3.5 w-3.5" />
             </button>
-            <span className="text-xs text-muted-foreground">
-              Última atualização: <strong className="text-foreground">{updated}</strong>
+            <span className="text-[11px] text-muted-foreground">
+              Atualizado às <strong className="font-medium tabular-nums text-foreground">{updated}</strong>
             </span>
           </div>
         </div>
+        </div>
       </div>
 
-      {/* 8 stat cards — ordem fixa conforme especificação */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
-        <StatCard label="Unidades Monitoradas"    value={stats.unidadesMonitoradas}     icon={Building2}      tone="info" />
-        <StatCard label="Equipamentos Instalados" value={stats.equipamentosInstalados}  icon={Cpu}            tone="primary" />
-        <StatCard label="Câmeras"                 value={stats.cameras}                 icon={Camera}         tone="warning" />
-        <StatCard label="Alertas Críticos"        value={stats.alertasCriticos}         icon={Siren}          tone="destructive" />
-        <StatCard label="Contratos Continuados"   value={stats.contratosVigentes}       icon={FileCheck}      tone="success" />
-        <StatCard label="Terceirizados Ativos"    value={stats.terceirizadosAtivos}     icon={UserCog}        tone="accent" />
-        <StatCard label="Servidores Ativos"       value={stats.servidoresAtivos}        icon={Users}          tone="info" />
-        <StatCard label="Manutenções Abertas"     value={stats.ocorrenciasAbertas}      icon={ClipboardList}  tone="destructive" />
+      {/* Linha unica de oito. O inventario fica neutro; a cor e reservada ao
+          que pede providencia, e so acende quando ha algo pendente. */}
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
+        <StatCard label="Unidades monitoradas"    value={stats.unidadesMonitoradas}     icon={Building2} iconeTom="azul" />
+        <StatCard label="Equipamentos instalados" value={stats.equipamentosInstalados}  icon={Cpu}       iconeTom="violeta" />
+        <StatCard label="Câmeras"                 value={stats.cameras}                 icon={Camera}    iconeTom="ciano" />
+        <StatCard label="Servidores ativos"       value={stats.servidoresAtivos}        icon={Users}     iconeTom="verde" />
+        <StatCard label="Terceirizados ativos"    value={stats.terceirizadosAtivos}     icon={UserCog}   iconeTom="dourado" />
+        <StatCard label="Contratos continuados"   value={stats.contratosVigentes}       icon={FileCheck} iconeTom="turquesa" />
+        <StatCard
+          label="Alertas críticos"
+          value={stats.alertasCriticos}
+          icon={Siren}
+          iconeTom="vermelho"
+          tone={stats.alertasCriticos > 0 ? "destructive" : "default"}
+        />
+        <StatCard
+          label="Manutenções abertas"
+          value={stats.ocorrenciasAbertas}
+          icon={ClipboardList}
+          iconeTom="laranja"
+          tone={stats.ocorrenciasAbertas > 0 ? "warning" : "default"}
+        />
       </div>
 
       {/* Mapa à esquerda; Alertas à direita */}
-      <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
+      <div className="grid gap-3 lg:grid-cols-[2fr_1fr]">
         <MapaComarcasCard />
         <AlertsPanel />
       </div>
 
       {/* 4 gráficos em linha abaixo do mapa */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <EquipamentosDonut />
         <ContratosVigencia />
         <ResultadosOperacionaisPie
@@ -231,20 +255,24 @@ export default function Dashboard() {
       {/* Ações Rápidas — escondidas para operador (rotas restritas) */}
       {!isOperador && (
         <div>
-          <h3 className="mb-3 text-center text-sm font-bold uppercase tracking-wider text-foreground">
-            Ações Rápidas
-          </h3>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mb-2 flex items-center gap-2">
+            <span className="h-px w-5 bg-accent" aria-hidden="true" />
+            <h3 className="text-[10px] font-medium uppercase tracking-[0.18em] text-accent">Ações rápidas</h3>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
             {ACOES_RAPIDAS.map(({ label, icon: Icon, to, color, bg }) => (
               <button
                 key={to}
                 onClick={() => navigate(to)}
-                className={`group flex items-center gap-3 rounded-lg border border-border p-4 text-left shadow-sm transition-all duration-200 ease-out hover:-translate-y-1 hover:scale-[1.02] hover:border-primary/40 hover:shadow-lg hover:ring-1 hover:ring-primary/30 focus-visible:-translate-y-1 focus-visible:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 active:translate-y-0 active:scale-100 ${bg}`}
+                className="flex flex-col overflow-hidden rounded-md border border-border bg-card text-left shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
               >
-                <span className={`rounded-md p-2 transition-transform duration-200 ease-out group-hover:scale-110 group-hover:-rotate-3 ${bg}`}>
-                  <Icon className={`h-5 w-5 transition-transform duration-200 group-hover:scale-110 ${color}`} />
+                <FioAcento />
+                <span className="flex w-full items-center gap-2.5 px-3 py-2.5">
+                  <span className={`rounded p-1.5 ${bg}`}>
+                    <Icon className={`h-4 w-4 ${color}`} />
+                  </span>
+                  <span className="text-[13px] text-foreground">{label}</span>
                 </span>
-                <span className="text-sm font-medium text-foreground transition-colors group-hover:text-primary">{label}</span>
               </button>
             ))}
           </div>

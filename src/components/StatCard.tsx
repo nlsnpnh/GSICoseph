@@ -2,6 +2,7 @@ import { LucideIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { FioAcento } from "@/components/admin/FioAcento";
 
 interface StatCardProps {
   label: string;
@@ -11,44 +12,92 @@ interface StatCardProps {
   hrefLabel?: string;
   tone?: "default" | "success" | "warning" | "destructive" | "accent" | "primary" | "info";
   onClick?: () => void;
+  /**
+   * Cor do ícone. Identifica o domínio do indicador (patrimônio, pessoal,
+   * contratos) sem mexer no número — a cor do número segue reservada ao que
+   * pede providência.
+   */
+  iconeTom?: keyof typeof iconeClasses;
 }
 
-const toneClasses: Record<NonNullable<StatCardProps["tone"]>, { bg: string; icon: string; value: string }> = {
-  default:     { bg: "bg-primary/10",     icon: "text-primary",     value: "text-foreground" },
-  primary:     { bg: "bg-primary/10",     icon: "text-primary",     value: "text-primary" },
-  success:     { bg: "bg-adequate/10",    icon: "text-adequate",    value: "text-adequate" },
-  warning:     { bg: "bg-partial/15",     icon: "text-partial",     value: "text-partial" },
-  destructive: { bg: "bg-critical/10",    icon: "text-critical",    value: "text-critical" },
-  accent:      { bg: "bg-accent/10",      icon: "text-accent",      value: "text-accent" },
-  info:        { bg: "bg-blue-500/10",    icon: "text-blue-600",    value: "text-blue-600" },
+// Um matiz por indicador. O azul institucional (215 65% 22%) e escuro demais
+// para ler como cor num icone pequeno — vira quase cinza —, entao aqui a
+// paleta usa tons de 600, que se distinguem entre si em 16px.
+const iconeClasses = {
+  neutro:   "text-muted-foreground/60",
+  azul:     "text-blue-600 dark:text-blue-400",
+  violeta:  "text-violet-600 dark:text-violet-400",
+  ciano:    "text-cyan-600 dark:text-cyan-400",
+  verde:    "text-emerald-600 dark:text-emerald-400",
+  dourado:  "text-amber-600 dark:text-amber-400",
+  turquesa: "text-teal-600 dark:text-teal-400",
+  laranja:  "text-orange-600 dark:text-orange-400",
+  vermelho: "text-red-600 dark:text-red-400",
 };
 
-export function StatCard({ label, value, icon: Icon, href, hrefLabel, tone = "default", onClick }: StatCardProps) {
+// A cor do número é reservada para o que exige atenção. Indicadores de
+// inventário ficam neutros — quando tudo é colorido, nada se destaca.
+const toneClasses: Record<NonNullable<StatCardProps["tone"]>, { icon: string; value: string }> = {
+  default:     { icon: "text-muted-foreground/60", value: "text-foreground" },
+  primary:     { icon: "text-primary/70",          value: "text-foreground" },
+  info:        { icon: "text-blue-600/70",         value: "text-blue-700 dark:text-blue-400" },
+  success:     { icon: "text-adequate/70",         value: "text-adequate" },
+  warning:     { icon: "text-partial/80",          value: "text-partial" },
+  destructive: { icon: "text-critical/80",         value: "text-critical" },
+  accent:      { icon: "text-accent/70",           value: "text-accent" },
+};
+
+export function StatCard({
+  label, value, icon: Icon, href, hrefLabel, tone = "default", onClick, iconeTom,
+}: StatCardProps) {
   const t = toneClasses[tone];
-  const actionClassName = "mt-3 border-t border-border pt-2 text-left text-[11px] font-medium text-primary hover:underline";
+  const clicavel = !!href || !!onClick;
 
   return (
-    <Card className="flex items-stretch gap-3 border-border p-3 shadow-sm hover:shadow-lg hover:ring-1 hover:ring-primary/60 cursor-pointer">
-      <div className={cn("flex w-12 shrink-0 items-center justify-center rounded-md", t.bg)}>
-        <Icon className={cn("h-6 w-6", t.icon)} />
-      </div>
-      <div className="flex min-w-0 flex-1 flex-col items-center justify-center text-center">
-        <p className="text-[11px] font-medium leading-tight text-muted-foreground line-clamp-2">
-          {label}
-        </p>
-        <p className={cn("mt-1 text-2xl font-bold leading-none tracking-tight", t.value)}>
+    <Card
+      className={cn(
+        "flex flex-col overflow-hidden border-border/80 shadow-sm transition-colors",
+        "min-h-[104px]",
+        clicavel && "cursor-pointer hover:border-primary/40 hover:bg-primary/[0.025]",
+      )}
+    >
+      <FioAcento />
+
+      <div className="flex flex-1 flex-col px-3 py-2.5">
+        <div className="flex items-start justify-between gap-2">
+          {/* Rotulo pode ocupar duas linhas: "Equipamentos instalados" nao cabe
+              em uma so na largura de um oitavo da tela. */}
+          <p className="min-w-0 text-[9px] font-medium uppercase leading-[1.3] tracking-[0.12em] text-muted-foreground">
+            {label}
+          </p>
+          <Icon
+            className={cn("h-[18px] w-[18px] shrink-0", iconeTom ? iconeClasses[iconeTom] : t.icon)}
+            aria-hidden="true"
+          />
+        </div>
+
+        <p
+          className={cn(
+            "mt-auto pt-2 text-[28px] font-light tabular-nums leading-none tracking-[-0.035em]",
+            t.value,
+          )}
+        >
           {value}
         </p>
+
         {(href || hrefLabel) &&
           (href ? (
-            <Link to={href} className="mt-1.5 text-[11px] font-medium text-primary hover:underline">
+            <Link
+              to={href}
+              className="mt-1.5 inline-block text-[10px] font-medium uppercase tracking-[0.1em] text-primary hover:underline"
+            >
               {hrefLabel ?? "Ver detalhes"}
             </Link>
           ) : (
             <button
               type="button"
               onClick={onClick}
-              className="mt-1.5 text-[11px] font-medium text-primary hover:underline"
+              className="mt-1.5 text-left text-[10px] font-medium uppercase tracking-[0.1em] text-primary hover:underline"
             >
               {hrefLabel ?? "Ver detalhes"}
             </button>

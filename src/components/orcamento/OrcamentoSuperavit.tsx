@@ -3,7 +3,7 @@ import { Plus, Save, RotateCcw, Trash2, Loader2, PiggyBank } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { CampoTexto } from "@/components/admin/CampoTexto";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -11,6 +11,7 @@ import { ConfirmDelete } from "@/components/ConfirmDelete";
 import { EmptyState } from "@/components/EmptyState";
 import { CurrencyInput } from "@/components/orcamento/CurrencyInput";
 import { toast } from "@/hooks/use-toast";
+import { FioAcento } from "@/components/admin/FioAcento";
 import {
   ACOES,
   type AcaoCodigo,
@@ -110,7 +111,8 @@ export function OrcamentoSuperavit({ ano, itens }: Props) {
 
   return (
     <div className="space-y-4">
-      <Card>
+      <Card className="overflow-hidden border-border/80 shadow-sm">
+        <FioAcento />
         <CardContent className="flex flex-wrap items-center justify-end gap-2 p-3">
           {dirtyCount > 0 && (
             <span className="mr-auto text-xs font-medium text-partial">
@@ -134,7 +136,8 @@ export function OrcamentoSuperavit({ ano, itens }: Props) {
         const grupo = itens.filter((i) => i.acao === acaoDef.codigo);
         const totalGrupo = grupo.reduce((s, a) => s + Number(val(a, "valor_total") ?? 0), 0);
         return (
-          <Card key={acaoDef.codigo}>
+          <Card key={acaoDef.codigo} className="overflow-hidden border-border/80 shadow-sm">
+            <FioAcento />
             <CardContent className="p-0">
               <div className="flex items-center justify-between gap-2 border-b border-border bg-muted/30 p-3">
                 <p className="text-sm font-semibold">
@@ -172,17 +175,20 @@ export function OrcamentoSuperavit({ ano, itens }: Props) {
                         return (
                           <TableRow key={a.id} className={isDirty ? "bg-partial/5" : undefined}>
                             <TableCell className="align-top">
-                              <Textarea className="min-h-[34px] text-xs" rows={2}
+                              <CampoTexto
+                                aria-label="Especificação"
                                 value={(val(a, "especificacao") as string | null) ?? ""}
-                                onChange={(e) => setField(a.id, { especificacao: e.target.value })} />
+                                onChange={(v) => setField(a.id, { especificacao: v })} />
                             </TableCell>
                             <TableCell className="align-top">
                               <Input className="h-9 text-sm" value={(val(a, "elemento_despesa") as string | null) ?? ""}
                                 onChange={(e) => setField(a.id, { elemento_despesa: e.target.value })} />
                             </TableCell>
                             <TableCell className="align-top">
-                              <Textarea className="min-h-[36px] text-sm" rows={2} value={(val(a, "subelemento") as string | null) ?? ""}
-                                onChange={(e) => setField(a.id, { subelemento: e.target.value })} />
+                              <CampoTexto
+                                aria-label="Subelemento"
+                                value={(val(a, "subelemento") as string | null) ?? ""}
+                                onChange={(v) => setField(a.id, { subelemento: v })} />
                             </TableCell>
                             <TableCell className="align-top">
                               <Input className="h-9 text-sm" value={(val(a, "unidade_medida") as string | null) ?? ""}
@@ -205,9 +211,10 @@ export function OrcamentoSuperavit({ ano, itens }: Props) {
                                 onChange={(e) => setField(a.id, { data_maxima: e.target.value || null })} />
                             </TableCell>
                             <TableCell className="align-top">
-                              <Textarea className="min-h-[34px] text-xs" rows={2}
+                              <CampoTexto
+                                aria-label="Justificativa"
                                 value={(val(a, "justificativa") as string | null) ?? ""}
-                                onChange={(e) => setField(a.id, { justificativa: e.target.value })} />
+                                onChange={(v) => setField(a.id, { justificativa: v })} />
                             </TableCell>
                             <TableCell className="align-top">
                               <Button variant="ghost" size="icon" className="h-8 w-8 text-critical"

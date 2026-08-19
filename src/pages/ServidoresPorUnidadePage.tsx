@@ -9,15 +9,16 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/EmptyState";
-import { useUnidadesMock } from "@/data/unidadesMock";
-import { useServidoresMock } from "@/data/servidoresMock";
+import { useUnidades } from "@/data/unidades";
+import { useServidores } from "@/data/servidores";
 import { useAuth } from "@/contexts/AuthContext";
+import { FioAcento } from "@/components/admin/FioAcento";
 
 export default function ServidoresPorUnidadePage() {
   const { isOperador } = useAuth();
   const navigate = useNavigate();
-  const items = useServidoresMock();
-  const unidades = useUnidadesMock();
+  const items = useServidores();
+  const unidades = useUnidades();
 
   useEffect(() => { document.title = "Servidores por unidade | COSEPH TJRO"; }, []);
 
@@ -52,6 +53,7 @@ export default function ServidoresPorUnidadePage() {
   return (
     <div>
       <PageHeader
+        eyebrow="Pessoal · Distribuição"
         title="Servidores por unidade predial"
         description="Unidades com servidores ativos lotados e a respectiva quantidade."
         actions={
@@ -61,7 +63,8 @@ export default function ServidoresPorUnidadePage() {
         }
       />
 
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden border-border/80 shadow-sm">
+        <FioAcento />
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border p-4">
           <h2 className="text-sm font-semibold text-foreground">Resumo</h2>
           <Badge variant="outline" className="text-xs">

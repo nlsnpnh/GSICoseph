@@ -12,11 +12,130 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
+      boletim_itens_catalogo: {
+        Row: {
+          categoria: string | null
+          descricao: string
+          item_number: number
+        }
+        Insert: {
+          categoria?: string | null
+          descricao: string
+          item_number: number
+        }
+        Update: {
+          categoria?: string | null
+          descricao?: string
+          item_number?: number
+        }
+        Relationships: []
+      }
+      boletim_mensal: {
+        Row: {
+          ano: number
+          created_at: string
+          created_by: string | null
+          id: string
+          item_number: number
+          mes: number
+          observacoes: string | null
+          quantidade: number
+          unidade_id: string
+          updated_at: string
+        }
+        Insert: {
+          ano: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          item_number: number
+          mes: number
+          observacoes?: string | null
+          quantidade?: number
+          unidade_id: string
+          updated_at?: string
+        }
+        Update: {
+          ano?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          item_number?: number
+          mes?: number
+          observacoes?: string | null
+          quantidade?: number
+          unidade_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "boletim_mensal_item_number_fkey"
+            columns: ["item_number"]
+            isOneToOne: false
+            referencedRelation: "boletim_itens_catalogo"
+            referencedColumns: ["item_number"]
+          },
+          {
+            foreignKeyName: "boletim_mensal_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comarcas: {
+        Row: {
+          created_at: string
+          id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       contratos: {
         Row: {
           aditivos: Json | null
+          apostilamentos: Json
           created_at: string
           data_fim: string | null
           data_inicio: string | null
@@ -35,6 +154,7 @@ export type Database = {
         }
         Insert: {
           aditivos?: Json | null
+          apostilamentos?: Json
           created_at?: string
           data_fim?: string | null
           data_inicio?: string | null
@@ -53,6 +173,7 @@ export type Database = {
         }
         Update: {
           aditivos?: Json | null
+          apostilamentos?: Json
           created_at?: string
           data_fim?: string | null
           data_inicio?: string | null
@@ -71,109 +192,89 @@ export type Database = {
         }
         Relationships: []
       }
-      equipamentos: {
-        Row: {
-          created_at: string
-          data_instalacao: string | null
-          fabricante: string | null
-          id: string
-          identificacao: string | null
-          localizacao: string | null
-          modelo: string | null
-          numero_serie: string | null
-          observacoes: string | null
-          proxima_manutencao: string | null
-          status: Database["public"]["Enums"]["status_equipamento"]
-          tipo: string
-          ultima_manutencao: string | null
-          unidade_id: string | null
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          data_instalacao?: string | null
-          fabricante?: string | null
-          id?: string
-          identificacao?: string | null
-          localizacao?: string | null
-          modelo?: string | null
-          numero_serie?: string | null
-          observacoes?: string | null
-          proxima_manutencao?: string | null
-          status?: Database["public"]["Enums"]["status_equipamento"]
-          tipo: string
-          ultima_manutencao?: string | null
-          unidade_id?: string | null
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          data_instalacao?: string | null
-          fabricante?: string | null
-          id?: string
-          identificacao?: string | null
-          localizacao?: string | null
-          modelo?: string | null
-          numero_serie?: string | null
-          observacoes?: string | null
-          proxima_manutencao?: string | null
-          status?: Database["public"]["Enums"]["status_equipamento"]
-          tipo?: string
-          ultima_manutencao?: string | null
-          unidade_id?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "equipamentos_unidade_id_fkey"
-            columns: ["unidade_id"]
-            isOneToOne: false
-            referencedRelation: "unidades"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       equipamentos_catalogo: {
         Row: {
-          contrato_numero: string | null
+          contrato_numero: string
           created_at: string
           descricao: string
           id: string
           item_num: number
           qtd_contrato: number
-          unidade_medida: string | null
+          unidade_medida: string
           updated_at: string
           valor_total: number
           valor_unitario: number
         }
         Insert: {
-          contrato_numero?: string | null
+          contrato_numero?: string
           created_at?: string
           descricao: string
           id?: string
           item_num: number
           qtd_contrato?: number
-          unidade_medida?: string | null
+          unidade_medida?: string
           updated_at?: string
           valor_total?: number
           valor_unitario?: number
         }
         Update: {
-          contrato_numero?: string | null
+          contrato_numero?: string
           created_at?: string
           descricao?: string
           id?: string
           item_num?: number
           qtd_contrato?: number
-          unidade_medida?: string | null
+          unidade_medida?: string
           updated_at?: string
           valor_total?: number
           valor_unitario?: number
         }
         Relationships: []
       }
+      ocorrencia_anexos: {
+        Row: {
+          created_at: string
+          id: string
+          mime_type: string | null
+          nome_arquivo: string
+          ocorrencia_id: string
+          storage_path: string
+          tamanho: number | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mime_type?: string | null
+          nome_arquivo: string
+          ocorrencia_id: string
+          storage_path: string
+          tamanho?: number | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mime_type?: string | null
+          nome_arquivo?: string
+          ocorrencia_id?: string
+          storage_path?: string
+          tamanho?: number | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ocorrencia_anexos_ocorrencia_id_fkey"
+            columns: ["ocorrencia_id"]
+            isOneToOne: false
+            referencedRelation: "ocorrencias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ocorrencias: {
         Row: {
+          categoria: string | null
           created_at: string
           data_abertura: string
           data_conclusao: string | null
@@ -186,13 +287,16 @@ export type Database = {
           prioridade: Database["public"]["Enums"]["prioridade_oco"]
           protocolo: string
           responsavel_nome: string | null
+          servico: string | null
+          servidor_solicitante: string | null
           status: Database["public"]["Enums"]["status_oco"]
-          tipo: Database["public"]["Enums"]["tipo_ocorrencia"]
-          titulo: string
+          tipo: Database["public"]["Enums"]["tipo_ocorrencia"] | null
+          titulo: string | null
           unidade_id: string | null
           updated_at: string
         }
         Insert: {
+          categoria?: string | null
           created_at?: string
           data_abertura?: string
           data_conclusao?: string | null
@@ -205,13 +309,16 @@ export type Database = {
           prioridade?: Database["public"]["Enums"]["prioridade_oco"]
           protocolo?: string
           responsavel_nome?: string | null
+          servico?: string | null
+          servidor_solicitante?: string | null
           status?: Database["public"]["Enums"]["status_oco"]
-          tipo: Database["public"]["Enums"]["tipo_ocorrencia"]
-          titulo: string
+          tipo?: Database["public"]["Enums"]["tipo_ocorrencia"] | null
+          titulo?: string | null
           unidade_id?: string | null
           updated_at?: string
         }
         Update: {
+          categoria?: string | null
           created_at?: string
           data_abertura?: string
           data_conclusao?: string | null
@@ -224,9 +331,11 @@ export type Database = {
           prioridade?: Database["public"]["Enums"]["prioridade_oco"]
           protocolo?: string
           responsavel_nome?: string | null
+          servico?: string | null
+          servidor_solicitante?: string | null
           status?: Database["public"]["Enums"]["status_oco"]
-          tipo?: Database["public"]["Enums"]["tipo_ocorrencia"]
-          titulo?: string
+          tipo?: Database["public"]["Enums"]["tipo_ocorrencia"] | null
+          titulo?: string | null
           unidade_id?: string | null
           updated_at?: string
         }
@@ -239,6 +348,222 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      orcamento_acoes: {
+        Row: {
+          acao: string
+          ano: number
+          anulacao_empenho: number
+          created_at: string
+          created_by: string | null
+          dotacao: number
+          ed: string | null
+          empenho: number
+          fonte: string | null
+          id: string
+          liquidado: number
+          nota_empenho: string | null
+          objeto: string | null
+          observacao: string | null
+          ordem: number
+          protocolo: string | null
+          reforco_empenho: number
+          saldo_dotacao: number
+          saldo_empenho: number
+          sl: string | null
+          updated_at: string
+        }
+        Insert: {
+          acao: string
+          ano?: number
+          anulacao_empenho?: number
+          created_at?: string
+          created_by?: string | null
+          dotacao?: number
+          ed?: string | null
+          empenho?: number
+          fonte?: string | null
+          id?: string
+          liquidado?: number
+          nota_empenho?: string | null
+          objeto?: string | null
+          observacao?: string | null
+          ordem?: number
+          protocolo?: string | null
+          reforco_empenho?: number
+          saldo_dotacao?: number
+          saldo_empenho?: number
+          sl?: string | null
+          updated_at?: string
+        }
+        Update: {
+          acao?: string
+          ano?: number
+          anulacao_empenho?: number
+          created_at?: string
+          created_by?: string | null
+          dotacao?: number
+          ed?: string | null
+          empenho?: number
+          fonte?: string | null
+          id?: string
+          liquidado?: number
+          nota_empenho?: string | null
+          objeto?: string | null
+          observacao?: string | null
+          ordem?: number
+          protocolo?: string | null
+          reforco_empenho?: number
+          saldo_dotacao?: number
+          saldo_empenho?: number
+          sl?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      orcamento_superavit: {
+        Row: {
+          acao: string
+          ano: number
+          created_at: string
+          created_by: string | null
+          data_maxima: string | null
+          elemento_despesa: string | null
+          envolve_pca: string | null
+          especificacao: string | null
+          exercicio: string | null
+          id: string
+          justificativa: string | null
+          ordem: number
+          quantidade: number | null
+          subelemento: string | null
+          unidade_medida: string | null
+          updated_at: string
+          valor_total: number
+          valor_unitario: number | null
+        }
+        Insert: {
+          acao: string
+          ano?: number
+          created_at?: string
+          created_by?: string | null
+          data_maxima?: string | null
+          elemento_despesa?: string | null
+          envolve_pca?: string | null
+          especificacao?: string | null
+          exercicio?: string | null
+          id?: string
+          justificativa?: string | null
+          ordem?: number
+          quantidade?: number | null
+          subelemento?: string | null
+          unidade_medida?: string | null
+          updated_at?: string
+          valor_total?: number
+          valor_unitario?: number | null
+        }
+        Update: {
+          acao?: string
+          ano?: number
+          created_at?: string
+          created_by?: string | null
+          data_maxima?: string | null
+          elemento_despesa?: string | null
+          envolve_pca?: string | null
+          especificacao?: string | null
+          exercicio?: string | null
+          id?: string
+          justificativa?: string | null
+          ordem?: number
+          quantidade?: number | null
+          subelemento?: string | null
+          unidade_medida?: string | null
+          updated_at?: string
+          valor_total?: number
+          valor_unitario?: number | null
+        }
+        Relationships: []
+      }
+      planejamento_acoes: {
+        Row: {
+          acao: string
+          ano: number
+          created_at: string
+          created_by: string | null
+          data_conclusao: string | null
+          data_inicio: string | null
+          eixo: string | null
+          etapas: string | null
+          evidencia_sei: string | null
+          frequencia: string | null
+          id: string
+          indicador: string | null
+          link_documento: string | null
+          observacoes: string | null
+          ordem: number
+          percentual: number | null
+          prazo_data: string | null
+          prioridade: string | null
+          problema: string | null
+          publico_alvo: string | null
+          responsavel: string | null
+          setor: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          acao: string
+          ano?: number
+          created_at?: string
+          created_by?: string | null
+          data_conclusao?: string | null
+          data_inicio?: string | null
+          eixo?: string | null
+          etapas?: string | null
+          evidencia_sei?: string | null
+          frequencia?: string | null
+          id?: string
+          indicador?: string | null
+          link_documento?: string | null
+          observacoes?: string | null
+          ordem?: number
+          percentual?: number | null
+          prazo_data?: string | null
+          prioridade?: string | null
+          problema?: string | null
+          publico_alvo?: string | null
+          responsavel?: string | null
+          setor: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          acao?: string
+          ano?: number
+          created_at?: string
+          created_by?: string | null
+          data_conclusao?: string | null
+          data_inicio?: string | null
+          eixo?: string | null
+          etapas?: string | null
+          evidencia_sei?: string | null
+          frequencia?: string | null
+          id?: string
+          indicador?: string | null
+          link_documento?: string | null
+          observacoes?: string | null
+          ordem?: number
+          percentual?: number | null
+          prazo_data?: string | null
+          prioridade?: string | null
+          problema?: string | null
+          publico_alvo?: string | null
+          responsavel?: string | null
+          setor?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       portoes: {
         Row: {
@@ -354,8 +679,8 @@ export type Database = {
       }
       servidores: {
         Row: {
+          abono_permanencia: boolean
           cargo: string
-          comarca: string | null
           created_at: string
           data_ingresso: string | null
           data_nascimento: string | null
@@ -369,12 +694,12 @@ export type Database = {
           regime: string | null
           situacao: Database["public"]["Enums"]["situacao_servidor"]
           telefone: string | null
-          unidade: string | null
+          unidade_id: string | null
           updated_at: string
         }
         Insert: {
+          abono_permanencia?: boolean
           cargo: string
-          comarca?: string | null
           created_at?: string
           data_ingresso?: string | null
           data_nascimento?: string | null
@@ -388,12 +713,12 @@ export type Database = {
           regime?: string | null
           situacao?: Database["public"]["Enums"]["situacao_servidor"]
           telefone?: string | null
-          unidade?: string | null
+          unidade_id?: string | null
           updated_at?: string
         }
         Update: {
+          abono_permanencia?: boolean
           cargo?: string
-          comarca?: string | null
           created_at?: string
           data_ingresso?: string | null
           data_nascimento?: string | null
@@ -407,18 +732,26 @@ export type Database = {
           regime?: string | null
           situacao?: Database["public"]["Enums"]["situacao_servidor"]
           telefone?: string | null
-          unidade?: string | null
+          unidade_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "servidores_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       terceirizados: {
         Row: {
           certificacoes: string | null
-          comarca: string | null
           contrato: string | null
           cpf: string | null
           created_at: string
+          curso_libras: boolean
           empresa: string | null
           escala: string | null
           funcao: string | null
@@ -428,16 +761,16 @@ export type Database = {
           posto_trabalho: string | null
           situacao: Database["public"]["Enums"]["situacao_terc"]
           turno: string | null
-          unidade: string | null
+          unidade_id: string | null
           updated_at: string
           validade_certificacao: string | null
         }
         Insert: {
           certificacoes?: string | null
-          comarca?: string | null
           contrato?: string | null
           cpf?: string | null
           created_at?: string
+          curso_libras?: boolean
           empresa?: string | null
           escala?: string | null
           funcao?: string | null
@@ -447,16 +780,16 @@ export type Database = {
           posto_trabalho?: string | null
           situacao?: Database["public"]["Enums"]["situacao_terc"]
           turno?: string | null
-          unidade?: string | null
+          unidade_id?: string | null
           updated_at?: string
           validade_certificacao?: string | null
         }
         Update: {
           certificacoes?: string | null
-          comarca?: string | null
           contrato?: string | null
           cpf?: string | null
           created_at?: string
+          curso_libras?: boolean
           empresa?: string | null
           escala?: string | null
           funcao?: string | null
@@ -466,18 +799,26 @@ export type Database = {
           posto_trabalho?: string | null
           situacao?: Database["public"]["Enums"]["situacao_terc"]
           turno?: string | null
-          unidade?: string | null
+          unidade_id?: string | null
           updated_at?: string
           validade_certificacao?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "terceirizados_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       unidade_equipamentos: {
         Row: {
           created_at: string
           equipamento_id: string
           id: string
-          observacoes: string | null
+          observacoes: string
           quantidade: number
           unidade_id: string
           updated_at: string
@@ -486,8 +827,8 @@ export type Database = {
           created_at?: string
           equipamento_id: string
           id?: string
-          observacoes?: string | null
-          quantidade?: number
+          observacoes?: string
+          quantidade: number
           unidade_id: string
           updated_at?: string
         }
@@ -495,7 +836,7 @@ export type Database = {
           created_at?: string
           equipamento_id?: string
           id?: string
-          observacoes?: string | null
+          observacoes?: string
           quantidade?: number
           unidade_id?: string
           updated_at?: string
@@ -519,72 +860,65 @@ export type Database = {
       }
       unidades: {
         Row: {
-          comarca: string
+          comarca_id: string | null
           controle_acesso: boolean
           created_at: string
-          criticidade: Database["public"]["Enums"]["criticidade"]
           endereco: string | null
-          horario_funcionamento: string | null
           id: string
-          imagem_url: string | null
           lat: number | null
           lng: number | null
           nome: string
           observacoes: string | null
           possui_derso: boolean
           responsavel_local: string | null
-          servidor_substituto_id: string | null
-          servidor_titular_id: string | null
+          responsavel_substituto: string
           telefone: string | null
-          tipo: Database["public"]["Enums"]["tipo_unidade"]
           updated_at: string
           vigilancia_eletronica: boolean
         }
         Insert: {
-          comarca: string
+          comarca_id?: string | null
           controle_acesso?: boolean
           created_at?: string
-          criticidade?: Database["public"]["Enums"]["criticidade"]
           endereco?: string | null
-          horario_funcionamento?: string | null
           id?: string
-          imagem_url?: string | null
           lat?: number | null
           lng?: number | null
           nome: string
           observacoes?: string | null
           possui_derso?: boolean
           responsavel_local?: string | null
-          servidor_substituto_id?: string | null
-          servidor_titular_id?: string | null
+          responsavel_substituto?: string
           telefone?: string | null
-          tipo: Database["public"]["Enums"]["tipo_unidade"]
           updated_at?: string
           vigilancia_eletronica?: boolean
         }
         Update: {
-          comarca?: string
+          comarca_id?: string | null
           controle_acesso?: boolean
           created_at?: string
-          criticidade?: Database["public"]["Enums"]["criticidade"]
           endereco?: string | null
-          horario_funcionamento?: string | null
           id?: string
-          imagem_url?: string | null
           lat?: number | null
           lng?: number | null
           nome?: string
           observacoes?: string | null
           possui_derso?: boolean
           responsavel_local?: string | null
-          servidor_substituto_id?: string | null
-          servidor_titular_id?: string | null
+          responsavel_substituto?: string
           telefone?: string | null
-          tipo?: Database["public"]["Enums"]["tipo_unidade"]
           updated_at?: string
           vigilancia_eletronica?: boolean
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "unidades_comarca_id_fkey"
+            columns: ["comarca_id"]
+            isOneToOne: false
+            referencedRelation: "comarcas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -612,12 +946,44 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      current_user_can_write: { Args: never; Returns: boolean }
+      current_user_is_admin: { Args: never; Returns: boolean }
+      get_user_comarca_nome: { Args: never; Returns: string }
+      get_user_unidade_id: { Args: never; Returns: string }
+      get_user_unidade_nome: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      mapa_comarcas_resumo: {
+        Args: never
+        Returns: {
+          cobertura: number
+          comarca_id: string
+          itens_vinculados: number
+          lat: number
+          lng: number
+          nivel: string
+          nome: string
+          ocorrencias_abertas: number
+          possui_derso: boolean
+          quantidade_total: number
+          unidades: number
+          valor_estimado: number
+        }[]
+      }
+      mapa_unidades_pontos: {
+        Args: never
+        Returns: {
+          comarca_id: string
+          id: string
+          lat: number
+          lng: number
+          nome: string
+        }[]
       }
     }
     Enums: {
@@ -789,6 +1155,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       app_role: ["admin", "gestor", "operador"],
