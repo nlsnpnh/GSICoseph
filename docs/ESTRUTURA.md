@@ -267,10 +267,14 @@ Os quatro precisam passar.
 
 ## 10. O que ainda está aberto
 
-| Pendência | Onde |
-|---|---|
-| Mapa das comarcas sem revisão de apresentação | `components/dashboard/ComarcaDetailDrawer.tsx`, `MapaComarcasCard.tsx` |
-| `RelatoriosPage` com 489 linhas — o miolo é um bloco de `useMemo` | `pages/RelatoriosPage.tsx` |
-| Nenhum teste de componente | — |
-| Ano do exercício vem do relógio do navegador | `data/orcamento.ts:96`, `data/planejamento.ts:109` |
-| `equipamentos_catalogo` existe no banco sem migration no repositório | `supabase/migrations/` |
+| Pendência | Onde | Peso |
+|---|---|---|
+| Nenhum teste de componente — nove telas tiveram estrutura ou layout reescritos apoiados só em `tsc` e `build` | — | alto |
+| Ano do exercício vem do relógio do navegador, não do fuso de Rondônia | `data/orcamento.ts:96`, `data/planejamento.ts:109` | baixo |
+| `equipamentos_catalogo` existe no banco sem migration no repositório | `supabase/migrations/` | baixo |
+| `RelatoriosPage` com 495 linhas — o miolo é um bloco de `useMemo` que renderia um hook de ~15 retornos | `pages/RelatoriosPage.tsx` | baixo |
+| Gráficos "unidades por comarca" e "servidores por comarca" seguem separados; fundir num só permitiria o cruzamento | `pages/RelatoriosPage.tsx` | a decidir |
+
+Resolvido e removido desta lista: revisão de apresentação do mapa das comarcas
+e do painel lateral (feita), e o `manualChunks` que quebrava os gráficos em
+produção (removido — ver CHANGELOG).
