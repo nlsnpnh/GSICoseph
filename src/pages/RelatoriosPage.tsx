@@ -21,6 +21,7 @@ import { useOcorrencias, calcSla } from "@/data/ocorrencias";
 import {
   BarHorizontal, ChartCard, CoverageBar, Donut, Kpi, PendRow,
 } from "@/components/relatorios/ui";
+import { FioAcento } from "@/components/admin/FioAcento";
 
 const COLORS = [
   "hsl(217 91% 55%)",
@@ -294,8 +295,9 @@ export default function RelatoriosPage() {
       </div>
 
       {/* Cobertura de segurança */}
-      <Card className="mt-4">
-        <CardHeader><CardTitle className="text-base">Cobertura de segurança nas unidades</CardTitle></CardHeader>
+      <Card className="mt-3 overflow-hidden border-border/80 shadow-sm">
+        <FioAcento />
+        <CardHeader className="border-b border-border bg-muted/30 px-3 py-2"><CardTitle className="text-[11px] font-medium uppercase tracking-[0.14em] text-foreground/70">Cobertura de segurança nas unidades</CardTitle></CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-3">
             <CoverageBar label="Possui DERSO" pct={cobertura.derso} />
@@ -334,8 +336,9 @@ export default function RelatoriosPage() {
       </div>
 
       {/* Indicadores de Servidores */}
-      <Card className="mt-4">
-        <CardHeader>
+      <Card className="mt-3 overflow-hidden border-border/80 shadow-sm">
+        <FioAcento />
+        <CardHeader className="border-b border-border bg-muted/30 px-3 py-2">
           <CardTitle className="flex items-center gap-2 text-base">
             <Users className="h-4 w-4 text-primary" />Indicadores de Servidores
           </CardTitle>
@@ -364,7 +367,8 @@ export default function RelatoriosPage() {
       </Card>
 
       {/* Relatório cadastral de servidores */}
-      <Card className="mt-4">
+      <Card className="mt-3 overflow-hidden border-border/80 shadow-sm">
+        <FioAcento />
         <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
           <CardTitle className="flex items-center gap-2 text-base">
             <Users className="h-4 w-4 text-primary" />Relatório cadastral de servidores
@@ -434,8 +438,9 @@ export default function RelatoriosPage() {
       </Card>
 
       {/* Pendências consolidadas */}
-      <Card className="mt-4">
-        <CardHeader>
+      <Card className="mt-3 overflow-hidden border-border/80 shadow-sm">
+        <FioAcento />
+        <CardHeader className="border-b border-border bg-muted/30 px-3 py-2">
           <CardTitle className="flex items-center gap-2 text-base">
             <ShieldCheck className="h-4 w-4 text-primary" />Pendências e ações necessárias
           </CardTitle>
