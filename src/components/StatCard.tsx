@@ -20,15 +20,19 @@ interface StatCardProps {
   iconeTom?: keyof typeof iconeClasses;
 }
 
-// Tons de ícone: suaves de propósito. Em 14px, cor cheia vira ruído.
+// Um matiz por indicador. O azul institucional (215 65% 22%) e escuro demais
+// para ler como cor num icone pequeno — vira quase cinza —, entao aqui a
+// paleta usa tons de 600, que se distinguem entre si em 16px.
 const iconeClasses = {
   neutro:   "text-muted-foreground/60",
-  primary:  "text-primary/70",
-  info:     "text-blue-600/70",
-  success:  "text-adequate/70",
-  warning:  "text-partial/80",
-  critical: "text-critical/80",
-  accent:   "text-accent/80",
+  azul:     "text-blue-600 dark:text-blue-400",
+  violeta:  "text-violet-600 dark:text-violet-400",
+  ciano:    "text-cyan-600 dark:text-cyan-400",
+  verde:    "text-emerald-600 dark:text-emerald-400",
+  dourado:  "text-amber-600 dark:text-amber-400",
+  turquesa: "text-teal-600 dark:text-teal-400",
+  laranja:  "text-orange-600 dark:text-orange-400",
+  vermelho: "text-red-600 dark:text-red-400",
 };
 
 // A cor do número é reservada para o que exige atenção. Indicadores de
@@ -67,7 +71,7 @@ export function StatCard({
             {label}
           </p>
           <Icon
-            className={cn("h-3.5 w-3.5 shrink-0", iconeTom ? iconeClasses[iconeTom] : t.icon)}
+            className={cn("h-[18px] w-[18px] shrink-0", iconeTom ? iconeClasses[iconeTom] : t.icon)}
             aria-hidden="true"
           />
         </div>
