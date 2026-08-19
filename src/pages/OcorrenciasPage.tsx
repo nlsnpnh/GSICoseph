@@ -43,6 +43,7 @@ import {
   useAnexos, useUploadAnexo, useDeleteAnexo, getAnexoSignedUrl, type OcorrenciaAnexo,
 } from "@/data/api";
 import { exportPdfTable, exportExcelMulti, type Column } from "@/lib/exporters";
+import { hojeISO } from "@/lib/dates";
 import { toast } from "@/hooks/use-toast";
 
 // =====================================================================
@@ -68,7 +69,8 @@ const CHART_COLORS = [
   "hsl(262 70% 60%)", "hsl(180 65% 45%)", "hsl(215 15% 60%)", "hsl(30 80% 55%)",
 ];
 
-const today = () => new Date().toISOString().slice(0, 10);
+// Data de Rondonia: com toISOString(), chamados abertos a noite (UTC-4) caiam no dia seguinte.
+const today = () => hojeISO();
 const fmtDate = (d: string) => (d ? new Date(d + "T00:00:00").toLocaleDateString("pt-BR") : "—");
 
 // =====================================================================
@@ -591,7 +593,7 @@ function RelatoriosTab({
 
   const subtitle = `${total} chamados${de || ate ? ` · período ${de ? fmtDate(de) : "…"} a ${ate ? fmtDate(ate) : "…"}` : ""}`;
 
-  const handlePdf = () => {
+  const handlePdf = async () => {
     const columns: Column[] = [
       { header: "Número", key: "Numero" }, { header: "Aberto em", key: "Aberto em" },
       { header: "Data Final", key: "Data Final" }, { header: "SLA", key: "SLA" },
@@ -599,15 +601,15 @@ function RelatoriosTab({
       { header: "Categoria", key: "Categoria" }, { header: "Cliente", key: "Cliente" },
       { header: "Solicitante", key: "Solicitante TJRO" }, { header: "Responsável", key: "Responsavel" },
     ];
-    exportPdfTable({
+    await exportPdfTable({
       title: "Relatório de Manutenções — COSEPH/TJRO",
       subtitle, columns, rows: linhasChamados(), fileName: "manutencoes",
     });
     toast({ title: "PDF gerado" });
   };
 
-  const handleExcel = () => {
-    exportExcelMulti([
+  const handleExcel = async () => {
+    await exportExcelMulti([
       { name: "Chamados", rows: linhasChamados() },
       { name: "Por unidade", rows: resumoUnidade.map((r) => ({ Unidade: r.unidade, Total: r.total, Abertos: r.abertos, Concluidos: r.concluidos, Atrasados: r.atrasados })) },
       { name: "Por categoria", rows: porCategoria.map((c) => ({ Categoria: c.name, Quantidade: c.value })) },

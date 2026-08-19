@@ -38,3 +38,5 @@ supabase/.temp/
 
 # Pacotes gerados (a apresentacao vive em apresentacao/)
 *.zip
+.claude/settings.local.json
+.cockpit/

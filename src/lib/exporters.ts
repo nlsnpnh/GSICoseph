@@ -1,6 +1,5 @@
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
-import * as XLSX from "xlsx";
+// jspdf, jspdf-autotable e xlsx sao carregados sob demanda (import dinamico):
+// somados passam de 400 kB e so sao usados quando o usuario clica em exportar.
 
 // =====================================================================
 // Utilitários de exportação de relatórios (PDF e Excel)
@@ -14,7 +13,12 @@ const stamp = () => new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
 const BRAND: [number, number, number] = [29, 78, 137];
 
 /** Exporta uma tabela para .xlsx (uma planilha). */
-export function exportExcel(rows: Record<string, unknown>[], fileName: string, sheetName = "Dados") {
+export async function exportExcel(
+  rows: Record<string, unknown>[],
+  fileName: string,
+  sheetName = "Dados",
+) {
+  const XLSX = await import("xlsx");
   const ws = XLSX.utils.json_to_sheet(rows.length ? rows : [{}]);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, sheetName.slice(0, 31));
@@ -22,10 +26,11 @@ export function exportExcel(rows: Record<string, unknown>[], fileName: string, s
 }
 
 /** Exporta várias planilhas em um único arquivo .xlsx. */
-export function exportExcelMulti(
+export async function exportExcelMulti(
   sheets: { name: string; rows: Record<string, unknown>[] }[],
   fileName: string,
 ) {
+  const XLSX = await import("xlsx");
   const wb = XLSX.utils.book_new();
   for (const s of sheets) {
     const ws = XLSX.utils.json_to_sheet(s.rows.length ? s.rows : [{}]);
@@ -35,7 +40,7 @@ export function exportExcelMulti(
 }
 
 /** Exporta uma tabela para PDF (A4 paisagem) com cabeçalho institucional. */
-export function exportPdfTable(opts: {
+export async function exportPdfTable(opts: {
   title: string;
   subtitle?: string;
   columns: Column[];
@@ -44,6 +49,10 @@ export function exportPdfTable(opts: {
   orientation?: "portrait" | "landscape";
 }) {
   const { title, subtitle, columns, rows, fileName, orientation = "landscape" } = opts;
+  const [{ jsPDF }, { default: autoTable }] = await Promise.all([
+    import("jspdf"),
+    import("jspdf-autotable"),
+  ]);
   const doc = new jsPDF({ orientation, unit: "pt", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
 

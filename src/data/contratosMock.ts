@@ -3,6 +3,7 @@
 // regenerar types.ts via `supabase gen types`.
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useQuery } from "@tanstack/react-query";
+import { diffDiasISO, hojeISO } from "@/lib/dates";
 import { supabase } from "@/integrations/supabase/client";
 import { queryClient } from "@/lib/queryClient";
 import { EMPRESAS } from "./terceirizadosMock";
@@ -91,9 +92,9 @@ export async function removeContrato(id: string) {
 
 export function statusFromVigencia(data_fim: string): StatusContrato {
   if (!data_fim) return "Vigente";
-  const today = new Date();
-  const fim = new Date(data_fim + "T00:00:00");
-  const diffDays = Math.floor((fim.getTime() - today.getTime()) / 86400000);
+  // Dia contra dia (fuso de Rondonia): o contrato vale ate o fim da data de
+  // vigencia, entao so vira "Vencido" no dia seguinte.
+  const diffDays = diffDiasISO(hojeISO(), data_fim);
   if (diffDays < 0) return "Vencido";
   if (diffDays <= 90) return "A vencer";
   return "Vigente";

@@ -3,6 +3,7 @@
 // regenerar types.ts via `supabase gen types`.
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useQuery } from "@tanstack/react-query";
+import { addDiasISO, diffDiasISO, hojeISO } from "@/lib/dates";
 import { supabase } from "@/integrations/supabase/client";
 import { queryClient } from "@/lib/queryClient";
 
@@ -88,21 +89,17 @@ export function calcSla(
     return { indicador: "—", tone: "muted", dataLimite: null, diasRestantes: null };
   }
   const dias = slaDiasDaCategoria(o.categoria);
-  const limite = new Date(o.data_abertura + "T00:00:00");
-  limite.setDate(limite.getDate() + dias);
-  const dataLimite = limite.toISOString().slice(0, 10);
+  const dataLimite = addDiasISO(o.data_abertura, dias);
 
   if (o.status === "Concluído") {
     if (!o.data_conclusao) return { indicador: "No prazo", tone: "adequate", dataLimite, diasRestantes: null };
-    const fim = new Date(o.data_conclusao + "T00:00:00");
-    return fim.getTime() <= limite.getTime()
+    // Datas YYYY-MM-DD comparam corretamente como texto.
+    return o.data_conclusao <= dataLimite
       ? { indicador: "No prazo", tone: "adequate", dataLimite, diasRestantes: null }
       : { indicador: "Fora do prazo", tone: "critical", dataLimite, diasRestantes: null };
   }
 
-  const hoje = new Date();
-  hoje.setHours(0, 0, 0, 0);
-  const diasRestantes = Math.round((limite.getTime() - hoje.getTime()) / 86_400_000);
+  const diasRestantes = diffDiasISO(hojeISO(), dataLimite);
   if (diasRestantes < 0)  return { indicador: "Atrasado", tone: "critical",  dataLimite, diasRestantes };
   if (diasRestantes <= 1) return { indicador: "Em risco", tone: "partial",   dataLimite, diasRestantes };
   return { indicador: "No prazo", tone: "adequate", dataLimite, diasRestantes };

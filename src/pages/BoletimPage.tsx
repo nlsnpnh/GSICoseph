@@ -511,7 +511,7 @@ function RelatorioGeralTab({
     [rows],
   );
 
-  const exportarExcel = () => {
+  const exportarExcel = async () => {
     if (totalGeral === 0) {
       toast({ title: "Sem dados para exportar" });
       return;
@@ -543,7 +543,7 @@ function RelatorioGeralTab({
       return linha;
     });
 
-    exportExcelMulti(
+    await exportExcelMulti(
       [
         { name: "Filtros", rows: filtrosSheet },
         { name: "Resumo", rows: resumoSheet },
