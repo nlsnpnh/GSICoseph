@@ -9,6 +9,7 @@ import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent,
   SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar,
 } from "@/components/ui/sidebar";
+import { APP_VERSION } from "@/lib/versao";
 import { useAuth } from "@/contexts/AuthContext";
 
 type NavItem = { title: string; url: string; icon: LucideIcon; adminOnly?: boolean };
@@ -95,6 +96,12 @@ export function AppSidebar() {
             </div>
           )}
         </button>
+
+        {!collapsed && (
+          <p className="mt-2 px-2 text-[10px] uppercase tracking-[0.14em] text-sidebar-foreground/40">
+            SIG-COSEPH v{APP_VERSION}
+          </p>
+        )}
       </SidebarFooter>
     </Sidebar>
   );
