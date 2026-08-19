@@ -210,35 +210,27 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Dois planos de leitura: o que pede providência ocupa a esquerda em
-          destaque; o inventário fica compacto à direita. Oito indicadores com
-          o mesmo peso não deixavam nada sobressair. */}
-      <div className="grid gap-2 lg:grid-cols-12">
-        <div className="grid grid-cols-2 gap-2 lg:col-span-5 lg:col-start-1">
-          <StatCard
-            destaque
-            label="Alertas críticos"
-            value={stats.alertasCriticos}
-            icon={Siren}
-            tone={stats.alertasCriticos > 0 ? "destructive" : "default"}
-          />
-          <StatCard
-            destaque
-            label="Manutenções abertas"
-            value={stats.ocorrenciasAbertas}
-            icon={ClipboardList}
-            tone={stats.ocorrenciasAbertas > 0 ? "warning" : "default"}
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:col-span-7 lg:col-start-6">
-          <StatCard label="Unidades"       value={stats.unidadesMonitoradas}    icon={Building2} />
-          <StatCard label="Equipamentos"   value={stats.equipamentosInstalados} icon={Cpu} />
-          <StatCard label="Câmeras"        value={stats.cameras}                icon={Camera} />
-          <StatCard label="Servidores"     value={stats.servidoresAtivos}       icon={Users} />
-          <StatCard label="Terceirizados"  value={stats.terceirizadosAtivos}    icon={UserCog} />
-          <StatCard label="Contratos"      value={stats.contratosVigentes}      icon={FileCheck} />
-        </div>
+      {/* Linha unica de oito. O inventario fica neutro; a cor e reservada ao
+          que pede providencia, e so acende quando ha algo pendente. */}
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
+        <StatCard label="Unidades monitoradas"    value={stats.unidadesMonitoradas}     icon={Building2} />
+        <StatCard label="Equipamentos instalados" value={stats.equipamentosInstalados}  icon={Cpu} />
+        <StatCard label="Câmeras"                 value={stats.cameras}                 icon={Camera} />
+        <StatCard label="Servidores ativos"       value={stats.servidoresAtivos}        icon={Users} />
+        <StatCard label="Terceirizados ativos"    value={stats.terceirizadosAtivos}     icon={UserCog} />
+        <StatCard label="Contratos continuados"   value={stats.contratosVigentes}       icon={FileCheck} />
+        <StatCard
+          label="Alertas críticos"
+          value={stats.alertasCriticos}
+          icon={Siren}
+          tone={stats.alertasCriticos > 0 ? "destructive" : "default"}
+        />
+        <StatCard
+          label="Manutenções abertas"
+          value={stats.ocorrenciasAbertas}
+          icon={ClipboardList}
+          tone={stats.ocorrenciasAbertas > 0 ? "warning" : "default"}
+        />
       </div>
 
       {/* Mapa à esquerda; Alertas à direita */}

@@ -12,11 +12,6 @@ interface StatCardProps {
   hrefLabel?: string;
   tone?: "default" | "success" | "warning" | "destructive" | "accent" | "primary" | "info";
   onClick?: () => void;
-  /**
-   * Protagonista da tela: card mais alto e número maior. Reserve para os dois
-   * ou três indicadores que pedem providência — se tudo é destaque, nada é.
-   */
-  destaque?: boolean;
 }
 
 // A cor do número é reservada para o que exige atenção. Indicadores de
@@ -32,7 +27,7 @@ const toneClasses: Record<NonNullable<StatCardProps["tone"]>, { icon: string; va
 };
 
 export function StatCard({
-  label, value, icon: Icon, href, hrefLabel, tone = "default", onClick, destaque = false,
+  label, value, icon: Icon, href, hrefLabel, tone = "default", onClick,
 }: StatCardProps) {
   const t = toneClasses[tone];
   const clicavel = !!href || !!onClick;
@@ -41,32 +36,25 @@ export function StatCard({
     <Card
       className={cn(
         "flex flex-col overflow-hidden border-border/80 shadow-sm transition-colors",
-        destaque ? "min-h-[112px]" : "min-h-[84px]",
+        "min-h-[104px]",
         clicavel && "cursor-pointer hover:border-primary/40 hover:bg-primary/[0.025]",
       )}
     >
       <FioAcento />
 
-      <div className={cn("flex flex-1 flex-col", destaque ? "px-4 py-3" : "px-3 py-2.5")}>
+      <div className="flex flex-1 flex-col px-3 py-2.5">
         <div className="flex items-start justify-between gap-2">
-          <p
-            className={cn(
-              "min-w-0 font-medium uppercase leading-tight text-muted-foreground",
-              destaque ? "text-[10px] tracking-[0.16em]" : "text-[9px] tracking-[0.12em]",
-            )}
-          >
+          {/* Rotulo pode ocupar duas linhas: "Equipamentos instalados" nao cabe
+              em uma so na largura de um oitavo da tela. */}
+          <p className="min-w-0 text-[9px] font-medium uppercase leading-[1.3] tracking-[0.12em] text-muted-foreground">
             {label}
           </p>
-          <Icon
-            className={cn("shrink-0", destaque ? "h-4 w-4" : "h-3.5 w-3.5", t.icon)}
-            aria-hidden="true"
-          />
+          <Icon className={cn("h-3.5 w-3.5 shrink-0", t.icon)} aria-hidden="true" />
         </div>
 
         <p
           className={cn(
-            "mt-auto pt-2 font-extralight tabular-nums leading-none tracking-[-0.04em]",
-            destaque ? "text-[38px] md:text-[44px]" : "text-[24px]",
+            "mt-auto pt-2 text-[28px] font-light tabular-nums leading-none tracking-[-0.035em]",
             t.value,
           )}
         >
