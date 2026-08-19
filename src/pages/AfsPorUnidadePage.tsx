@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { Fragment, useEffect, useMemo } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
@@ -13,6 +13,11 @@ import { UserCog } from "lucide-react";
 import { useUnidades } from "@/data/unidades";
 import { useTerceirizados } from "@/data/terceirizados";
 import { useAuth } from "@/contexts/AuthContext";
+
+/** Porto Velho abre a listagem. A comparação com sensitivity "base" ignora
+ *  caixa e acento, então "PORTO VELHO" e "Pôrto Velho" também casam. */
+const ehCapital = (comarca: string) =>
+  comarca.trim().localeCompare("Porto Velho", "pt-BR", { sensitivity: "base" }) === 0;
 
 export default function AfsPorUnidadePage() {
   const { isOperador } = useAuth();
@@ -39,7 +44,15 @@ export default function AfsPorUnidadePage() {
         const u = unidadeMap[unidadeId];
         return { unidadeId, nome: u?.nome ?? "—", comarca: u?.comarca_nome ?? "—", qtd };
       })
-      .sort((a, b) => b.qtd - a.qtd || a.nome.localeCompare(b.nome));
+      .sort((a, b) => {
+        // Porto Velho abre a lista (sede da capital); as demais comarcas vêm
+        // em ordem alfabética, e dentro de cada uma as unidades por nome.
+        const pa = ehCapital(a.comarca);
+        const pb = ehCapital(b.comarca);
+        if (pa !== pb) return pa ? -1 : 1;
+        const porComarca = a.comarca.localeCompare(b.comarca, "pt-BR");
+        return porComarca !== 0 ? porComarca : a.nome.localeCompare(b.nome, "pt-BR");
+      });
   }, [items, unidadeMap]);
 
   const totalAfsAtivos = useMemo(
@@ -87,13 +100,37 @@ export default function AfsPorUnidadePage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {resumoPorUnidade.map((r) => (
-                <TableRow key={r.unidadeId}>
-                  <TableCell className="font-medium">{r.nome}</TableCell>
-                  <TableCell className="text-muted-foreground">{r.comarca}</TableCell>
-                  <TableCell className="text-right font-semibold">{r.qtd}</TableCell>
-                </TableRow>
-              ))}
+              {resumoPorUnidade.map((r, i) => {
+                // A lista sai agrupada por comarca: marca onde o grupo troca e
+                // fecha o subtotal de AFS da comarca na própria faixa.
+                const abreGrupo = i === 0 || resumoPorUnidade[i - 1].comarca !== r.comarca;
+                const totalComarca = resumoPorUnidade
+                  .filter((x) => x.comarca === r.comarca)
+                  .reduce((soma, x) => soma + x.qtd, 0);
+                return (
+                  <Fragment key={r.unidadeId}>
+                    {abreGrupo && (
+                      <TableRow className="hover:bg-transparent">
+                        <TableCell colSpan={2} className="border-y border-border bg-muted/40 py-1">
+                          <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-foreground/70">
+                            {r.comarca}
+                          </span>
+                        </TableCell>
+                        <TableCell className="border-y border-border bg-muted/40 py-1 text-right">
+                          <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                            {totalComarca} AFS
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    <TableRow>
+                      <TableCell className="font-medium">{r.nome}</TableCell>
+                      <TableCell className="text-muted-foreground">{r.comarca}</TableCell>
+                      <TableCell className="text-right font-semibold tabular-nums">{r.qtd}</TableCell>
+                    </TableRow>
+                  </Fragment>
+                );
+              })}
             </TableBody>
           </Table>
         )}
