@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { getErrorMessage } from "@/lib/utils";
 import { Plus, UserCog, AlertTriangle, Building2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -111,7 +111,7 @@ export default function TerceirizadosPage() {
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    return items.filter((t) => {
+    const encontrados = items.filter((t) => {
       if (empresaFilter !== "all" && t.empresa !== empresaFilter) return false;
       if (situacaoFilter !== "all" && t.situacao !== situacaoFilter) return false;
       return (
@@ -123,7 +123,26 @@ export default function TerceirizadosPage() {
         (t.unidade_id ? (unidadeMap[t.unidade_id]?.nome ?? "").toLowerCase().includes(q) : false)
       );
     });
-  }, [items, search, empresaFilter, situacaoFilter, unidadeMap]);
+
+    // Operador ve uma unidade so, entao agrupar por unidade nao diz nada: fica
+    // em ordem alfabetica. Admin e gestor veem a rede inteira, e ai a leitura
+    // util e por unidade predial e, dentro dela, por nome.
+    const nomeUnidade = (t: Terceirizado) =>
+      t.unidade_id ? (unidadeMap[t.unidade_id]?.nome ?? "") : "";
+    const porNome = (a: Terceirizado, b: Terceirizado) =>
+      a.nome.localeCompare(b.nome, "pt-BR");
+
+    if (isOperador) return encontrados.sort(porNome);
+
+    return encontrados.sort((a, b) => {
+      const ua = nomeUnidade(a);
+      const ub = nomeUnidade(b);
+      // Sem unidade vinculada vai para o fim da lista.
+      if (!ua !== !ub) return ua ? -1 : 1;
+      const porUnidade = ua.localeCompare(ub, "pt-BR");
+      return porUnidade !== 0 ? porUnidade : porNome(a, b);
+    });
+  }, [items, search, empresaFilter, situacaoFilter, unidadeMap, isOperador]);
 
   const openCreate = () => {
     setEditing(null);
@@ -244,11 +263,31 @@ export default function TerceirizadosPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((t) => {
+              {filtered.map((t, i) => {
                 const cert = certStatus(t.validade_certificacao);
                 const unid = t.unidade_id ? unidadeMap[t.unidade_id] : null;
+                // A lista vem agrupada por unidade para admin/gestor: marca onde
+                // o grupo troca, senao o nome se repete sem o olho perceber.
+                const anterior = i > 0 ? filtered[i - 1] : null;
+                const abreGrupo =
+                  !isOperador && (!anterior || anterior.unidade_id !== t.unidade_id);
                 return (
-                  <TableRow key={t.id}>
+                  <Fragment key={t.id}>
+                  {abreGrupo && (
+                    <TableRow className="hover:bg-transparent">
+                      <TableCell colSpan={8} className="border-y border-border bg-muted/40 py-1">
+                        <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-foreground/70">
+                          {unid?.nome ?? "Sem unidade vinculada"}
+                        </span>
+                        {unid?.comarca_nome && (
+                          <span className="ml-2 text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+                            {unid.comarca_nome}
+                          </span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  <TableRow>
                     <TableCell className="font-medium">
                       <div>{t.nome}</div>
                       <div className="text-xs text-muted-foreground">CPF {t.cpf}</div>
@@ -290,6 +329,7 @@ export default function TerceirizadosPage() {
                       />
                     </TableCell>
                   </TableRow>
+                  </Fragment>
                 );
               })}
             </TableBody>
