@@ -5,11 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useUnidadesMock } from "@/data/unidadesMock";
-import { useServidoresMock } from "@/data/servidoresMock";
-import { useTerceirizadosMock } from "@/data/terceirizadosMock";
+import { useUnidades } from "@/data/unidades";
+import { useServidores } from "@/data/servidores";
+import { useTerceirizados } from "@/data/terceirizados";
 import { useUnidadeEquipamentos } from "@/data/equipamentos";
-import { useContratosMock, statusFromVigencia } from "@/data/contratosMock";
+import { useContratos, statusFromVigencia } from "@/data/contratos";
 
 function ModuleCard({ title, children, footer, to }: { title: string; children: ReactNode; footer: string; to: string }) {
   const navigate = useNavigate();
@@ -71,11 +71,11 @@ function statusToneContrato(s: string) {
 const MAX_ROWS = 6;
 
 export function ModulosSistema() {
-  const unidades = useUnidadesMock();
-  const servidores = useServidoresMock();
-  const terceirizados = useTerceirizadosMock();
+  const unidades = useUnidades();
+  const servidores = useServidores();
+  const terceirizados = useTerceirizados();
   const distribuicao = useUnidadeEquipamentos();
-  const contratos = useContratosMock();
+  const contratos = useContratos();
 
   const [qUni, setQUni] = useState("");
   const [qServ, setQServ] = useState("");

@@ -12,12 +12,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useUnidadesMock } from "@/data/unidadesMock";
+import { useUnidades } from "@/data/unidades";
 import { useEquipamentosCatalogo, useUnidadeEquipamentos } from "@/data/equipamentos";
-import { useServidoresMock, calcIdade, faixaEtaria, tempoServicoAnos } from "@/data/servidoresMock";
-import { useTerceirizadosMock } from "@/data/terceirizadosMock";
-import { useContratosMock, statusFromVigencia } from "@/data/contratosMock";
-import { useOcorrenciasMock, calcSla } from "@/data/ocorrenciasMock";
+import { useServidores, calcIdade, faixaEtaria, tempoServicoAnos } from "@/data/servidores";
+import { useTerceirizados } from "@/data/terceirizados";
+import { useContratos, statusFromVigencia } from "@/data/contratos";
+import { useOcorrencias, calcSla } from "@/data/ocorrencias";
 
 const COLORS = [
   "hsl(217 91% 55%)",
@@ -69,13 +69,13 @@ function categoriaDoItem(itemNum: number): string {
 }
 
 export default function RelatoriosPage() {
-  const unidades = useUnidadesMock();
+  const unidades = useUnidades();
   const catalogo = useEquipamentosCatalogo();
   const distribuicao = useUnidadeEquipamentos();
-  const servidores = useServidoresMock();
-  const terceirizados = useTerceirizadosMock();
-  const contratos = useContratosMock();
-  const ocorrencias = useOcorrenciasMock();
+  const servidores = useServidores();
+  const terceirizados = useTerceirizados();
+  const contratos = useContratos();
+  const ocorrencias = useOcorrencias();
 
   useEffect(() => { document.title = "Relatórios | COSEPH TJRO"; }, []);
 

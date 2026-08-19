@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { diffDiasISO, hojeISO } from "@/lib/dates";
 import { supabase } from "@/integrations/supabase/client";
 import { queryClient } from "@/lib/queryClient";
-import { EMPRESAS } from "./terceirizadosMock";
+import { EMPRESAS } from "./terceirizados";
 
 export const STATUS_CONTRATO = ["Vigente", "A vencer", "Vencido", "Encerrado", "Suspenso"] as const;
 export type StatusContrato = (typeof STATUS_CONTRATO)[number];
@@ -52,7 +52,7 @@ const mapRow = (r: any): Contrato => ({
   observacoes: r.observacoes ?? "",
 });
 
-export function useContratosMock(): Contrato[] {
+export function useContratos(): Contrato[] {
   const { data } = useQuery({
     queryKey: KEY,
     queryFn: async () => {

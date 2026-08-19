@@ -142,7 +142,7 @@ const mapRow = (r: any): OcorrenciaManut => ({
   observacoes: r.observacoes ?? "",
 });
 
-export function useOcorrenciasMock(): OcorrenciaManut[] {
+export function useOcorrencias(): OcorrenciaManut[] {
   const { data } = useQuery({
     queryKey: KEY,
     queryFn: async () => {
@@ -185,17 +185,17 @@ const toPayload = (d: ManutInput) => ({
   tipo: "Manutenção corretiva",
 });
 
-export async function addOcorrenciaMock(d: ManutInput) {
+export async function addOcorrencia(d: ManutInput) {
   const { error } = await supabase.from("ocorrencias").insert(toPayload(d) as any);
   if (error) throw error;
   invalidate();
 }
-export async function updateOcorrenciaMock(id: string, d: ManutInput) {
+export async function updateOcorrencia(id: string, d: ManutInput) {
   const { error } = await supabase.from("ocorrencias").update(toPayload(d) as any).eq("id", id);
   if (error) throw error;
   invalidate();
 }
-export async function removeOcorrenciaMock(id: string) {
+export async function removeOcorrencia(id: string) {
   const { error } = await supabase.from("ocorrencias").delete().eq("id", id);
   if (error) throw error;
   invalidate();

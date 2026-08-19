@@ -22,15 +22,15 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { useUnidadesMock } from "@/data/unidadesMock";
+import { useUnidades } from "@/data/unidades";
 import { useComarcas } from "@/data/api";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   CARGOS, REGIMES, ESCALAS, SITUACOES,
   type ServidorSeg, type SituacaoFuncional,
-  useServidoresMock, addServidorMock, updateServidorMock, removeServidorMock,
+  useServidores, addServidor, updateServidor, removeServidor,
   calcIdade, tempoServicoAnos,
-} from "@/data/servidoresMock";
+} from "@/data/servidores";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/hooks/use-toast";
@@ -71,10 +71,12 @@ const defaults: FormData = {
 };
 
 export default function ServidoresPage() {
-  const { isOperador, unidadeId: authUnidadeId, unidadeNome: authUnidadeNome } = useAuth();
+  const { isOperador, unidadeId: authUnidadeId, unidadeNome: authUnidadeNome, podeEditar, podeExcluir } = useAuth();
+  // Operador escreve so na propria unidade — mesma regra da RLS.
+  const podeCriar = podeEditar("servidores");
   const navigate = useNavigate();
-  const items = useServidoresMock();
-  const unidades = useUnidadesMock();
+  const items = useServidores();
+  const unidades = useUnidades();
   const { data: comarcas = [] } = useComarcas();
   const [search, setSearch] = useState("");
   const [comarcaFilter, setComarcaFilter] = useState<string>("all");
@@ -174,10 +176,10 @@ export default function ServidoresPage() {
     };
     try {
       if (editing) {
-        await updateServidorMock(editing.id, payload);
+        await updateServidor(editing.id, payload);
         toast({ title: "Servidor atualizado" });
       } else {
-        await addServidorMock(payload);
+        await addServidor(payload);
         toast({ title: "Servidor cadastrado" });
       }
       setOpen(false);
@@ -191,7 +193,7 @@ export default function ServidoresPage() {
       <PageHeader
         title="Servidores da Segurança"
         description="Cadastro funcional dos servidores vinculados à segurança institucional."
-        actions={<Button onClick={openCreate}><Plus className="mr-1 h-4 w-4" />Novo servidor</Button>}
+        actions={podeCriar ? <Button onClick={openCreate}><Plus className="mr-1 h-4 w-4" />Novo servidor</Button> : undefined}
       />
 
       <CrudTableLayout
@@ -283,8 +285,8 @@ export default function ServidoresPage() {
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={() => openEdit(s)}><Pencil className="h-4 w-4" /></Button>
-                      <Button variant="ghost" size="icon" onClick={() => setDeleting(s)}><Trash2 className="h-4 w-4" /></Button>
+                      {podeEditar("servidores", s.unidade_id) && <Button variant="ghost" size="icon" onClick={() => openEdit(s)}><Pencil className="h-4 w-4" /></Button>}
+                      {podeExcluir("servidores", s.unidade_id) && <Button variant="ghost" size="icon" onClick={() => setDeleting(s)}><Trash2 className="h-4 w-4" /></Button>}
                     </TableCell>
                   </TableRow>
                 );
@@ -439,7 +441,7 @@ export default function ServidoresPage() {
         onConfirm={async () => {
           if (!deleting) return;
           try {
-            await removeServidorMock(deleting.id);
+            await removeServidor(deleting.id);
             toast({ title: "Servidor excluído" });
           } catch (e) {
             toast({ title: "Erro ao excluir", description: getErrorMessage(e), variant: "destructive" });

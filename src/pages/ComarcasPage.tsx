@@ -28,7 +28,9 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 export default function ComarcasPage() {
-  const { canEdit, canDelete } = useAuth();
+  const { podeEditar, podeExcluir } = useAuth();
+  const podeCriar = podeEditar("comarcas");
+  const podeApagar = podeExcluir("comarcas");
   const { data: items = [], isLoading } = useComarcas();
   const createMut = useCreateComarca();
   const updateMut = useUpdateComarca();
@@ -83,7 +85,7 @@ export default function ComarcasPage() {
       <PageHeader
         title="Comarcas"
         description="Cadastro e organização das comarcas do estado."
-        actions={canEdit ? <Button onClick={openCreate}><Plus className="mr-1 h-4 w-4" />Nova comarca</Button> : null}
+        actions={podeCriar ? <Button onClick={openCreate}><Plus className="mr-1 h-4 w-4" />Nova comarca</Button> : null}
       />
 
       <CrudTableLayout search={search} onSearchChange={setSearch} placeholder="Buscar por nome ou município..." count={filtered.length}>
@@ -104,8 +106,8 @@ export default function ComarcasPage() {
                 <TableRow key={c.id}>
                   <TableCell className="font-medium">{c.nome}</TableCell>
                   <TableCell className="text-right">
-                    {canEdit && <Button variant="ghost" size="icon" onClick={() => openEdit(c)}><Pencil className="h-4 w-4" /></Button>}
-                    {canDelete && <Button variant="ghost" size="icon" onClick={() => setDeleting(c)}><Trash2 className="h-4 w-4" /></Button>}
+                    {podeCriar && <Button variant="ghost" size="icon" onClick={() => openEdit(c)}><Pencil className="h-4 w-4" /></Button>}
+                    {podeApagar && <Button variant="ghost" size="icon" onClick={() => setDeleting(c)}><Trash2 className="h-4 w-4" /></Button>}
                   </TableCell>
                 </TableRow>
               ))}

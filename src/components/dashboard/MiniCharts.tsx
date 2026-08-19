@@ -2,11 +2,11 @@ import { useMemo } from "react";
 import { XAxis, YAxis, ResponsiveContainer, Tooltip,
   PieChart, Pie, Cell, LineChart, Line, CartesianGrid } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useServidoresMock } from "@/data/servidoresMock";
-import { useUnidadesMock } from "@/data/unidadesMock";
+import { useServidores } from "@/data/servidores";
+import { useUnidades } from "@/data/unidades";
 import { useEquipamentosCatalogo, useUnidadeEquipamentos } from "@/data/equipamentos";
-import { useOcorrenciasMock } from "@/data/ocorrenciasMock";
-import { useContratosMock, statusFromVigencia } from "@/data/contratosMock";
+import { useOcorrencias } from "@/data/ocorrencias";
+import { useContratos, statusFromVigencia } from "@/data/contratos";
 import { useResultadosOperacionais } from "@/data/boletim";
 import { usePeriod } from "@/contexts/PeriodContext";
 
@@ -31,8 +31,8 @@ const CORES_SERVIDORES = [
 ];
 
 export function ServidoresPorComarca() {
-  const servidores = useServidoresMock();
-  const unidades   = useUnidadesMock();
+  const servidores = useServidores();
+  const unidades   = useUnidades();
 
   const { data, total } = useMemo(() => {
     const unidadeMap = Object.fromEntries(unidades.map((u) => [u.id, u]));
@@ -218,7 +218,7 @@ export function ResultadosOperacionaisPie({
 }
 
 export function OcorrenciasPorMes() {
-  const ocorrencias = useOcorrenciasMock();
+  const ocorrencias = useOcorrencias();
 
   const data = useMemo(() => {
     const hoje = new Date();
@@ -265,7 +265,7 @@ const CORES_VIGENCIA: Record<string, string> = {
 };
 
 export function ContratosVigencia() {
-  const contratos = useContratosMock();
+  const contratos = useContratos();
 
   const data = useMemo(() => {
     const contagem = new Map<string, number>();

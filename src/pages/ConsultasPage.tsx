@@ -11,12 +11,12 @@ import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { useUnidadesMock } from "@/data/unidadesMock";
+import { useUnidades } from "@/data/unidades";
 import { useEquipamentosCatalogo, useUnidadeEquipamentos } from "@/data/equipamentos";
-import { useServidoresMock } from "@/data/servidoresMock";
-import { useTerceirizadosMock } from "@/data/terceirizadosMock";
-import { useContratosMock } from "@/data/contratosMock";
-import { useOcorrenciasMock } from "@/data/ocorrenciasMock";
+import { useServidores } from "@/data/servidores";
+import { useTerceirizados } from "@/data/terceirizados";
+import { useContratos } from "@/data/contratos";
+import { useOcorrencias } from "@/data/ocorrencias";
 
 type Row = Record<string, unknown>;
 type Column = {
@@ -53,13 +53,13 @@ export default function ConsultasPage() {
   useEffect(() => { document.title = "Consultas | COSEPH TJRO"; }, []);
   const { isOperador } = useAuth();
 
-  const unidades    = useUnidadesMock();
+  const unidades    = useUnidades();
   const catalogo    = useEquipamentosCatalogo();
   const distribuicao = useUnidadeEquipamentos();
-  const servidores  = useServidoresMock();
-  const terceirizados = useTerceirizadosMock();
-  const contratos   = useContratosMock();
-  const ocorrencias = useOcorrenciasMock();
+  const servidores  = useServidores();
+  const terceirizados = useTerceirizados();
+  const contratos   = useContratos();
+  const ocorrencias = useOcorrencias();
 
   const [search, setSearch]   = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);

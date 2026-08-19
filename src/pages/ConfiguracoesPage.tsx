@@ -15,7 +15,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useAuth, AppRole } from "@/contexts/AuthContext";
-import { useUnidadesMock } from "@/data/unidadesMock";
+import { useUnidades } from "@/data/unidades";
 import { toast } from "@/hooks/use-toast";
 
 type Row = {
@@ -34,7 +34,7 @@ const ALL_ROLES: AppRole[] = ["admin", "gestor", "operador"];
 export default function ConfiguracoesPage() {
   const { isAdmin, user } = useAuth();
   const qc = useQueryClient();
-  const unidades = useUnidadesMock();
+  const unidades = useUnidades();
   useEffect(() => { document.title = "Configurações | SIG-COSEPH"; }, []);
 
   const { data: rows = [], isLoading } = useQuery({

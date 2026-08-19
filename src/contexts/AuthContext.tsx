@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { podeEditar, podeExcluir, type Recurso } from "@/lib/permissoes";
 
 export type AppRole = "admin" | "gestor" | "operador";
 
@@ -12,8 +13,10 @@ type AuthContextValue = {
   isAdmin: boolean;
   isGestor: boolean;
   isOperador: boolean;
-  canEdit: boolean;
-  canDelete: boolean;
+  /** Espelha a RLS: true quando o usuario pode criar/editar o recurso. */
+  podeEditar: (recurso: Recurso, unidadeIdRegistro?: string | null) => boolean;
+  /** Espelha a RLS: true quando o usuario pode excluir o registro. */
+  podeExcluir: (recurso: Recurso, unidadeIdRegistro?: string | null) => boolean;
   unidadeId: string | null;
   unidadeNome: string | null;
   comarcaNome: string | null;
@@ -119,8 +122,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     session, user, roles,
     loading: loading || resolving,
     isAdmin, isGestor, isOperador,
-    canEdit: true,
-    canDelete: isAdmin,
+    podeEditar: (recurso, unidadeIdRegistro) =>
+      podeEditar({ isAdmin, isGestor, isOperador, unidadeId }, recurso, unidadeIdRegistro),
+    podeExcluir: (recurso, unidadeIdRegistro) =>
+      podeExcluir({ isAdmin, isGestor, isOperador, unidadeId }, recurso, unidadeIdRegistro),
     unidadeId,
     unidadeNome,
     comarcaNome,

@@ -24,8 +24,8 @@ import {
 } from "@/components/ui/table";
 import {
   type UnidadePredial,
-  useUnidadesMock, addUnidade, updateUnidade, removeUnidade,
-} from "@/data/unidadesMock";
+  useUnidades, addUnidade, updateUnidade, removeUnidade,
+} from "@/data/unidades";
 import { useComarcas } from "@/data/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
@@ -68,8 +68,10 @@ const defaults: FormData = {
 };
 
 export default function UnidadesPage() {
-  const { isOperador } = useAuth();
-  const items = useUnidadesMock();
+  const { isOperador, podeEditar, podeExcluir } = useAuth();
+  const podeGravar = podeEditar("unidades");
+  const podeApagar = podeExcluir("unidades"); // RLS: exclusao de unidade e so do admin
+  const items = useUnidades();
   const { data: comarcas = [] } = useComarcas();
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
@@ -148,7 +150,7 @@ export default function UnidadesPage() {
       <PageHeader
         title="Unidades Prediais"
         description="Gestão das edificações sob responsabilidade do TJRO."
-        actions={!isOperador ? <Button onClick={openCreate}><Plus className="mr-1 h-4 w-4" />Nova unidade</Button> : undefined}
+        actions={podeGravar ? <Button onClick={openCreate}><Plus className="mr-1 h-4 w-4" />Nova unidade</Button> : undefined}
       />
 
       <CrudTableLayout
@@ -167,7 +169,7 @@ export default function UnidadesPage() {
                 <TableHead>Responsável</TableHead>
                 <TableHead>Substituto</TableHead>
                 <TableHead>Telefone</TableHead>
-                {!isOperador && <TableHead className="w-[60px] text-right" />}
+                {podeGravar && <TableHead className="w-[60px] text-right" />}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -178,7 +180,7 @@ export default function UnidadesPage() {
                   <TableCell className="text-muted-foreground">{u.responsavel_local}</TableCell>
                   <TableCell className="text-muted-foreground">{u.responsavel_substituto || "—"}</TableCell>
                   <TableCell className="text-muted-foreground tabular-nums">{u.telefone || "—"}</TableCell>
-                  {!isOperador && (
+                  {podeGravar && (
                     <TableCell className="text-right">
                       <Button variant="ghost" size="icon" onClick={() => openEdit(u)}>
                         <Pencil className="h-4 w-4" />
@@ -261,7 +263,7 @@ export default function UnidadesPage() {
 
             <DialogFooter className="gap-2 sm:justify-between">
               <div>
-                {editing && !isOperador && (
+                {editing && podeApagar && (
                   <Button
                     type="button"
                     variant="ghost"

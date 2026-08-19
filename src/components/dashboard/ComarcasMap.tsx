@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { type Criticidade } from "@/data/mockDashboard";
+import { type Criticidade } from "@/data/mapa";
 import { ComarcaDetailDrawer } from "./ComarcaDetailDrawer";
 import muniData from "@/data/ro-municipios.json";
 import { useMapaComarcasResumo, useMapaUnidadesPontos, type MapaComarcaResumo } from "@/data/mapa";

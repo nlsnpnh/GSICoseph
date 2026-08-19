@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { statusFromVigencia } from "./contratosMock";
+import { statusFromVigencia } from "./contratos";
 
 // Relogio congelado num instante absoluto correspondente a 19/08/2026 em
 // Rondonia — a funcao compara dia contra dia no fuso de RO.

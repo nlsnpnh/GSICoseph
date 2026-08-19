@@ -12,13 +12,13 @@ import { ServidoresPorComarca, EquipamentosDonut, ResultadosOperacionaisPie, Con
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { useUnidadesMock } from "@/data/unidadesMock";
-import { useServidoresMock } from "@/data/servidoresMock";
-import { useTerceirizadosMock } from "@/data/terceirizadosMock";
+import { useUnidades } from "@/data/unidades";
+import { useServidores } from "@/data/servidores";
+import { useTerceirizados } from "@/data/terceirizados";
 import { useComarcas } from "@/data/api";
 import { useUnidadeEquipamentos } from "@/data/equipamentos";
-import { useContratosMock, statusFromVigencia } from "@/data/contratosMock";
-import { useOcorrenciasMock } from "@/data/ocorrenciasMock";
+import { useContratos, statusFromVigencia } from "@/data/contratos";
+import { useOcorrencias } from "@/data/ocorrencias";
 import { useAlertas } from "@/hooks/useAlertas";
 import { usePeriod, applyPeriod, type Period } from "@/contexts/PeriodContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -52,12 +52,12 @@ export default function Dashboard() {
   const [filterUnidade, setFilterUnidade] = useState("todas");
 
   const { data: comarcas = [] } = useComarcas();
-  const unidadesRaw     = useUnidadesMock();
-  const servidoresRaw   = useServidoresMock();
-  const terceirizadosRaw = useTerceirizadosMock();
+  const unidadesRaw     = useUnidades();
+  const servidoresRaw   = useServidores();
+  const terceirizadosRaw = useTerceirizados();
   const distribuicaoRaw = useUnidadeEquipamentos();
-  const contratosRaw    = useContratosMock();
-  const ocorrenciasRaw  = useOcorrenciasMock();
+  const contratosRaw    = useContratos();
+  const ocorrenciasRaw  = useOcorrencias();
   const alertas         = useAlertas();
   const { period, setPeriod, factor } = usePeriod();
 

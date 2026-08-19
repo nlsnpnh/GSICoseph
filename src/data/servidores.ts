@@ -64,7 +64,7 @@ const mapRow = (r: any): ServidorSeg => ({
   observacoes: r.observacoes ?? "",
 });
 
-export function useServidoresMock(): ServidorSeg[] {
+export function useServidores(): ServidorSeg[] {
   const { data } = useQuery({
     queryKey: KEY,
     queryFn: async () => {
@@ -84,17 +84,17 @@ const toPayload = (d: Omit<ServidorSeg, "id">) => ({
   data_nascimento: d.data_nascimento || null,
 });
 
-export async function addServidorMock(d: Omit<ServidorSeg, "id">) {
+export async function addServidor(d: Omit<ServidorSeg, "id">) {
   const { error } = await supabase.from("servidores").insert(toPayload(d) as any);
   if (error) throw error;
   invalidate();
 }
-export async function updateServidorMock(id: string, d: Omit<ServidorSeg, "id">) {
+export async function updateServidor(id: string, d: Omit<ServidorSeg, "id">) {
   const { error } = await supabase.from("servidores").update(toPayload(d) as any).eq("id", id);
   if (error) throw error;
   invalidate();
 }
-export async function removeServidorMock(id: string) {
+export async function removeServidor(id: string) {
   const { error } = await supabase.from("servidores").delete().eq("id", id);
   if (error) throw error;
   invalidate();

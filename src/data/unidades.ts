@@ -42,7 +42,7 @@ const mapRow = (r: any): UnidadePredial => ({
   lng: r.lng ?? null,
 });
 
-export function useUnidadesMock(): UnidadePredial[] {
+export function useUnidades(): UnidadePredial[] {
   const { data } = useQuery({
     queryKey: KEY,
     queryFn: async () => {

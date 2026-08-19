@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { calcSla, slaDiasDaCategoria, tempoAtendimentoDias } from "./ocorrenciasMock";
+import { calcSla, slaDiasDaCategoria, tempoAtendimentoDias } from "./ocorrencias";
 
 // Relogio congelado num instante absoluto que corresponde a 19/08/2026 em
 // Rondonia. Como calcSla usa o fuso de RO, o teste independe do fuso da maquina.

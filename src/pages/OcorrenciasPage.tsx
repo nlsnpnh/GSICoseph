@@ -31,14 +31,14 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { useUnidadesMock } from "@/data/unidadesMock";
+import { useUnidades } from "@/data/unidades";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   STATUS_MANUT, CATEGORIAS_NOMES, type OcorrenciaManut, type StatusManut,
   type ManutInput, type SlaTone,
   calcSla, isAberto, tempoAtendimentoDias, slaDiasDaCategoria,
-  useOcorrenciasMock, addOcorrenciaMock, updateOcorrenciaMock, removeOcorrenciaMock,
-} from "@/data/ocorrenciasMock";
+  useOcorrencias, addOcorrencia, updateOcorrencia, removeOcorrencia,
+} from "@/data/ocorrencias";
 import {
   useAnexos, useUploadAnexo, useDeleteAnexo, getAnexoSignedUrl, type OcorrenciaAnexo,
 } from "@/data/api";
@@ -98,11 +98,11 @@ const defaults: FormData = {
 // Página principal
 // =====================================================================
 export default function OcorrenciasPage() {
-  const { isAdmin, isGestor, isOperador, unidadeId, unidadeNome: authUnidadeNome } = useAuth();
-  const podeGerenciar = isAdmin || isGestor;
+  const { isAdmin, isGestor, isOperador, unidadeId, unidadeNome: authUnidadeNome, podeEditar } = useAuth();
+  const podeGerenciar = podeEditar("ocorrencias");
 
-  const itemsAll = useOcorrenciasMock();
-  const unidadesAll = useUnidadesMock();
+  const itemsAll = useOcorrencias();
+  const unidadesAll = useUnidades();
   const items = isOperador && unidadeId
     ? itemsAll.filter((o) => o.unidade_id === unidadeId)
     : itemsAll;
@@ -164,7 +164,7 @@ function ChamadosTab({
   items, unidades, unidadeNome, podeGerenciar, operadorUnidadeId, operadorUnidadeNome,
 }: {
   items: OcorrenciaManut[];
-  unidades: ReturnType<typeof useUnidadesMock>;
+  unidades: ReturnType<typeof useUnidades>;
   unidadeNome: (id: string) => string;
   podeGerenciar: boolean;
   operadorUnidadeId: string | null;
@@ -272,10 +272,10 @@ function ChamadosTab({
     };
     try {
       if (editing) {
-        await updateOcorrenciaMock(editing.id, payload);
+        await updateOcorrencia(editing.id, payload);
         toast({ title: "Manutenção atualizada" });
       } else {
-        await addOcorrenciaMock(payload);
+        await addOcorrencia(payload);
         toast({ title: "Manutenção registrada" });
       }
       setOpen(false);
@@ -483,7 +483,7 @@ function ChamadosTab({
         onConfirm={async () => {
           if (!deleting) return;
           try {
-            await removeOcorrenciaMock(deleting.id);
+            await removeOcorrencia(deleting.id);
             toast({ title: "Manutenção excluída" });
           } catch (e) {
             toast({ title: "Erro ao excluir", description: getErrorMessage(e), variant: "destructive" });
@@ -503,7 +503,7 @@ function RelatoriosTab({
   items, unidades, unidadeNome,
 }: {
   items: OcorrenciaManut[];
-  unidades: ReturnType<typeof useUnidadesMock>;
+  unidades: ReturnType<typeof useUnidades>;
   unidadeNome: (id: string) => string;
 }) {
   const [unidadeFilter, setUnidadeFilter] = useState("all");

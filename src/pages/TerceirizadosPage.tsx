@@ -24,14 +24,14 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { useUnidadesMock } from "@/data/unidadesMock";
+import { useUnidades } from "@/data/unidades";
 import { useComarcas } from "@/data/api";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   EMPRESAS, EMPRESA_PADRAO, FUNCOES, ESCALAS_TERC, TURNOS, SITUACOES_TERC,
   type Terceirizado, type SituacaoTerc,
-  useTerceirizadosMock, addTerceirizado, updateTerceirizado, removeTerceirizado,
-} from "@/data/terceirizadosMock";
+  useTerceirizados, addTerceirizado, updateTerceirizado, removeTerceirizado,
+} from "@/data/terceirizados";
 import { toast } from "@/hooks/use-toast";
 
 const schema = z.object({
@@ -79,10 +79,12 @@ function certStatus(d: string): { label: string; tone: string } | null {
 }
 
 export default function TerceirizadosPage() {
-  const { isOperador, unidadeId: authUnidadeId, unidadeNome: authUnidadeNome } = useAuth();
+  const { isOperador, unidadeId: authUnidadeId, unidadeNome: authUnidadeNome, podeEditar, podeExcluir } = useAuth();
+  // Operador escreve so na propria unidade — mesma regra da RLS.
+  const podeCriar = podeEditar("terceirizados");
   const navigate = useNavigate();
-  const items = useTerceirizadosMock();
-  const unidades = useUnidadesMock();
+  const items = useTerceirizados();
+  const unidades = useUnidades();
   const { data: comarcas = [] } = useComarcas();
   const [search, setSearch] = useState("");
   const [empresaFilter, setEmpresaFilter] = useState<string>("all");
@@ -192,7 +194,7 @@ export default function TerceirizadosPage() {
       <PageHeader
         title="Terceirizados"
         description="Controle de profissionais terceirizados, contratos e certificações."
-        actions={<Button onClick={openCreate}><Plus className="mr-1 h-4 w-4" />Novo terceirizado</Button>}
+        actions={podeCriar ? <Button onClick={openCreate}><Plus className="mr-1 h-4 w-4" />Novo terceirizado</Button> : undefined}
       />
 
       <CrudTableLayout
@@ -279,8 +281,8 @@ export default function TerceirizadosPage() {
                     </TableCell>
                     <TableCell><Badge variant="outline" className={situacaoTone[t.situacao]}>{t.situacao}</Badge></TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={() => openEdit(t)}><Pencil className="h-4 w-4" /></Button>
-                      <Button variant="ghost" size="icon" onClick={() => setDeleting(t)}><Trash2 className="h-4 w-4" /></Button>
+                      {podeEditar("terceirizados", t.unidade_id) && <Button variant="ghost" size="icon" onClick={() => openEdit(t)}><Pencil className="h-4 w-4" /></Button>}
+                      {podeExcluir("terceirizados", t.unidade_id) && <Button variant="ghost" size="icon" onClick={() => setDeleting(t)}><Trash2 className="h-4 w-4" /></Button>}
                     </TableCell>
                   </TableRow>
                 );

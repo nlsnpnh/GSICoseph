@@ -10,15 +10,15 @@ import {
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/EmptyState";
 import { UserCog } from "lucide-react";
-import { useUnidadesMock } from "@/data/unidadesMock";
-import { useTerceirizadosMock } from "@/data/terceirizadosMock";
+import { useUnidades } from "@/data/unidades";
+import { useTerceirizados } from "@/data/terceirizados";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function AfsPorUnidadePage() {
   const { isOperador } = useAuth();
   const navigate = useNavigate();
-  const items = useTerceirizadosMock();
-  const unidades = useUnidadesMock();
+  const items = useTerceirizados();
+  const unidades = useUnidades();
 
   useEffect(() => { document.title = "AFS por unidade | COSEPH TJRO"; }, []);
 

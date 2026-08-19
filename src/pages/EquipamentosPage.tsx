@@ -29,7 +29,7 @@ import {
   addUnidadeEquipamento, updateUnidadeEquipamento, removeUnidadeEquipamento,
   type UnidadeEquipamento,
 } from "@/data/equipamentos";
-import { useUnidadesMock } from "@/data/unidadesMock";
+import { useUnidades } from "@/data/unidades";
 import { toast } from "@/hooks/use-toast";
 
 const schema = z.object({
@@ -46,10 +46,12 @@ const fmtMoney = (n: number) =>
   n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 export default function EquipamentosPage() {
-  const { isOperador, unidadeId } = useAuth();
+  const { isOperador, unidadeId, podeEditar, podeExcluir } = useAuth();
+  const podeGravar = podeEditar("equipamentos");
+  const podeApagar = podeExcluir("equipamentos");
   const distribuicao = useUnidadeEquipamentos();
   const catalogo = useEquipamentosCatalogo();
-  const unidades = useUnidadesMock();
+  const unidades = useUnidades();
 
   const [tab, setTab] = useState("distribuicao");
   const [search, setSearch] = useState("");
@@ -152,7 +154,7 @@ export default function EquipamentosPage() {
         title="Equipamentos"
         description="Catálogo do contrato 115/2023 e distribuição por unidade predial."
         actions={
-          isOperador ? null : (
+          !podeGravar ? null : (
             <Button onClick={openCreate} disabled={unidades.length === 0 || catalogo.length === 0}>
               <Plus className="mr-1 h-4 w-4" />Vincular equipamento
             </Button>
@@ -201,7 +203,7 @@ export default function EquipamentosPage() {
                     <TableHead>Comarca</TableHead>
                     <TableHead className="text-right">Quantidade</TableHead>
                     <TableHead>Unid.</TableHead>
-                    {!isOperador && <TableHead className="w-[100px] text-right">Ações</TableHead>}
+                    {(podeGravar || podeApagar) && <TableHead className="w-[100px] text-right">Ações</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -213,10 +215,10 @@ export default function EquipamentosPage() {
                       <TableCell className="text-muted-foreground">{d.comarca_nome}</TableCell>
                       <TableCell className="text-right font-mono">{d.quantidade}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">{d.unidade_medida}</TableCell>
-                      {!isOperador && (
+                      {(podeGravar || podeApagar) && (
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="icon" onClick={() => openEdit(d)}><Pencil className="h-4 w-4" /></Button>
-                          <Button variant="ghost" size="icon" onClick={() => setDeleting(d)}><Trash2 className="h-4 w-4" /></Button>
+                          {podeGravar && <Button variant="ghost" size="icon" onClick={() => openEdit(d)}><Pencil className="h-4 w-4" /></Button>}
+                          {podeApagar && <Button variant="ghost" size="icon" onClick={() => setDeleting(d)}><Trash2 className="h-4 w-4" /></Button>}
                         </TableCell>
                       )}
                     </TableRow>

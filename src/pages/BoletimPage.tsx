@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmptyState } from "@/components/EmptyState";
-import { useUnidadesMock } from "@/data/unidadesMock";
+import { useUnidades } from "@/data/unidades";
 import { useComarcas } from "@/data/api";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -65,8 +65,8 @@ const linhasZeradas = (): Record<number, LinhaForm> =>
 
 export default function BoletimPage() {
   useEffect(() => { document.title = "Boletim Operacional | COSEPH TJRO"; }, []);
-  const { isOperador, unidadeId } = useAuth();
-  const unidades = useUnidadesMock();
+  const { isOperador, unidadeId, podeEditar } = useAuth();
+  const unidades = useUnidades();
   const { data: comarcas = [] } = useComarcas();
 
   const hoje = new Date();
@@ -207,10 +207,13 @@ export default function BoletimPage() {
               <CardTitle className="text-sm font-semibold">
                 Indicadores — {MESES[mes - 1]}/{ano}
               </CardTitle>
-              <Button onClick={onSalvar} disabled={upsert.isPending || !unidade}>
-                <Save className="mr-1.5 h-4 w-4" />
-                {upsert.isPending ? "Salvando..." : "Salvar Boletim Mensal"}
-              </Button>
+              {/* RLS do boletim: operador so grava a propria unidade. */}
+              {podeEditar("boletim", unidade || null) && (
+                <Button onClick={onSalvar} disabled={upsert.isPending || !unidade}>
+                  <Save className="mr-1.5 h-4 w-4" />
+                  {upsert.isPending ? "Salvando..." : "Salvar Boletim Mensal"}
+                </Button>
+              )}
             </CardHeader>
             <CardContent className="p-0">
               <Table>

@@ -62,6 +62,13 @@ const App = () => (
             <Route path="/aguardando-aprovacao" element={<CadastroPendentePage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
 
+            {/* Bootstrap do primeiro admin: precisa ser alcancavel por quem ainda nao
+                tem papel, senao a tela so existiria quando ja e desnecessaria. A edge
+                function recusa a promocao assim que existe um admin no sistema. */}
+            <Route element={<ProtectedRoute exigeLiberacao={false} />}>
+              <Route path="/bootstrap-admin" element={<BootstrapAdminPage />} />
+            </Route>
+
             <Route element={<ProtectedRoute />}>
               <Route element={<AdminLayout />}>
                 <Route path="/" element={<Dashboard />} />
@@ -83,7 +90,6 @@ const App = () => (
                 <Route path="/consultas" element={<ConsultasPage />} />
                 <Route path="/relatorios" element={<RelatoriosPage />} />
                 <Route path="/configuracoes" element={<ConfiguracoesPage />} />
-                <Route path="/bootstrap-admin" element={<BootstrapAdminPage />} />
                 <Route path="/ajuda" element={<AjudaPage />} />
               </Route>
             </Route>

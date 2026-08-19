@@ -22,11 +22,12 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { useUnidadesMock } from "@/data/unidadesMock";
+import { useUnidades } from "@/data/unidades";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   type Contrato, type StatusContrato,
-  useContratosMock, addContrato, updateContrato, removeContrato, statusFromVigencia,
-} from "@/data/contratosMock";
+  useContratos, addContrato, updateContrato, removeContrato, statusFromVigencia,
+} from "@/data/contratos";
 import { toast } from "@/hooks/use-toast";
 
 const aditivoSchema = z.object({
@@ -77,8 +78,11 @@ const fmtMoney = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 
 export default function ContratosPage() {
-  const items = useContratosMock();
-  const unidades = useUnidadesMock();
+  const { podeEditar, podeExcluir } = useAuth();
+  const podeGravar = podeEditar("contratos");
+  const podeApagar = podeExcluir("contratos"); // RLS: exclusao de contrato e so do admin
+  const items = useContratos();
+  const unidades = useUnidades();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [open, setOpen] = useState(false);
@@ -155,7 +159,7 @@ export default function ContratosPage() {
       <PageHeader
         title="Contratos"
         description="Gestão dos contratos de segurança, fiscais, SLA e aditivos."
-        actions={<Button onClick={openCreate}><Plus className="mr-1 h-4 w-4" />Novo contrato</Button>}
+        actions={podeGravar ? <Button onClick={openCreate}><Plus className="mr-1 h-4 w-4" />Novo contrato</Button> : undefined}
       />
 
       <CrudTableLayout
@@ -231,8 +235,8 @@ export default function ContratosPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={() => openEdit(c)}><Pencil className="h-4 w-4" /></Button>
-                      <Button variant="ghost" size="icon" onClick={() => setDeleting(c)}><Trash2 className="h-4 w-4" /></Button>
+                      {podeGravar && <Button variant="ghost" size="icon" onClick={() => openEdit(c)}><Pencil className="h-4 w-4" /></Button>}
+                      {podeApagar && <Button variant="ghost" size="icon" onClick={() => setDeleting(c)}><Trash2 className="h-4 w-4" /></Button>}
                     </TableCell>
                   </TableRow>
                 );

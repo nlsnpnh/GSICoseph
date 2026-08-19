@@ -10,12 +10,12 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { useUnidadesMock, type UnidadePredial } from "@/data/unidadesMock";
+import { useUnidades, type UnidadePredial } from "@/data/unidades";
 import { useUnidadeEquipamentos, type UnidadeEquipamento } from "@/data/equipamentos";
-import { useServidoresMock, type ServidorSeg } from "@/data/servidoresMock";
-import { useTerceirizadosMock, type Terceirizado } from "@/data/terceirizadosMock";
+import { useServidores, type ServidorSeg } from "@/data/servidores";
+import { useTerceirizados, type Terceirizado } from "@/data/terceirizados";
 import type { MapaComarcaResumo } from "@/data/mapa";
-import type { Criticidade } from "@/data/mockDashboard";
+import type { Criticidade } from "@/data/mapa";
 import { useAuth } from "@/contexts/AuthContext";
 
 const nivelTone: Record<Criticidade, string> = {
@@ -57,10 +57,10 @@ interface Props {
 
 export function ComarcaDetailDrawer({ comarca, onOpenChange }: Props) {
   const { isOperador, unidadeId } = useAuth();
-  const unidades      = useUnidadesMock();
+  const unidades      = useUnidades();
   const distribuicao  = useUnidadeEquipamentos();
-  const servidores    = useServidoresMock();
-  const terceirizados = useTerceirizadosMock();
+  const servidores    = useServidores();
+  const terceirizados = useTerceirizados();
 
   const dados = useMemo(() => {
     if (!comarca) return null;

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { calcIdade, faixaEtaria, tempoServicoAnos } from "./servidoresMock";
+import { calcIdade, faixaEtaria, tempoServicoAnos } from "./servidores";
 
 // Instante absoluto que corresponde a 19/08/2026 em Rondonia. As funcoes usam
 // o fuso de RO, entao o teste independe do fuso da maquina.
