@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
+import { FioAcento } from "@/components/admin/FioAcento";
 
 // Acesso ao Supabase sem tipagem estrita para colunas fora do types.ts gerado.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -120,7 +121,8 @@ export default function AuthPage() {
           </p>
         </div>
 
-        <Card>
+        <Card className="overflow-hidden border-border/80 shadow-sm">
+          <FioAcento />
           <CardHeader>
             <CardTitle className="text-base">Acesso ao sistema</CardTitle>
             <CardDescription>Entre com suas credenciais institucionais.</CardDescription>

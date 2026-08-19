@@ -19,6 +19,7 @@ import {
 import { exportExcelMulti } from "@/lib/exporters";
 import { toast } from "@/hooks/use-toast";
 import { ANOS, ANO_VIGENTE, MESES, MESES_ABREV } from "./constantes";
+import { FioAcento } from "@/components/admin/FioAcento";
 
 const CHART_TOOLTIP = {
   background: "hsl(var(--popover))",
@@ -146,7 +147,8 @@ export function RelatorioGeralTab({
   return (
     <div className="space-y-4">
       {/* Filtros */}
-      <Card>
+      <Card className="overflow-hidden border-border/80 shadow-sm">
+        <FioAcento />
         <CardHeader className="border-b border-border">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <CardTitle className="text-sm font-semibold">Filtros</CardTitle>
@@ -195,7 +197,8 @@ export function RelatorioGeralTab({
       {isLoading ? (
         <p className="px-4 py-8 text-center text-xs text-muted-foreground">Carregando...</p>
       ) : totalGeral === 0 ? (
-        <Card>
+        <Card className="overflow-hidden border-border/80 shadow-sm">
+          <FioAcento />
           <CardContent className="p-0">
             <EmptyState
               icon={BarChart3}
@@ -209,7 +212,8 @@ export function RelatorioGeralTab({
           {/* Cards resumo */}
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             {resumo.map((c) => (
-              <Card key={c.label} className="shadow-sm">
+              <Card key={c.label} className="overflow-hidden border-border/80 shadow-sm">
+                <FioAcento />
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2">
                     <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ background: c.color }} />
@@ -223,7 +227,8 @@ export function RelatorioGeralTab({
 
           {/* Gráficos */}
           <div className="grid gap-4 lg:grid-cols-2">
-            <Card className="shadow-sm">
+            <Card className="overflow-hidden shadow-sm border-border/80">
+              <FioAcento />
               <CardHeader className="border-b border-border pb-3">
                 <CardTitle className="text-sm font-semibold">Evolução mensal dos indicadores</CardTitle>
               </CardHeader>
@@ -251,7 +256,8 @@ export function RelatorioGeralTab({
               </CardContent>
             </Card>
 
-            <Card className="shadow-sm">
+            <Card className="overflow-hidden shadow-sm border-border/80">
+              <FioAcento />
               <CardHeader className="border-b border-border pb-3">
                 <CardTitle className="text-sm font-semibold">Ranking dos indicadores por quantidade</CardTitle>
               </CardHeader>
@@ -290,7 +296,8 @@ export function RelatorioGeralTab({
           </div>
 
           {/* Tabela consolidada */}
-          <Card>
+          <Card className="overflow-hidden border-border/80 shadow-sm">
+            <FioAcento />
             <CardHeader className="border-b border-border pb-3">
               <CardTitle className="text-sm font-semibold">
                 Consolidado dos indicadores — {fAno}

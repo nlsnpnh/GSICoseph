@@ -22,6 +22,7 @@ import {
 import { exportPdfTable, exportExcelMulti, type Column } from "@/lib/exporters";
 import { toast } from "@/hooks/use-toast";
 import { CHART_COLORS, fmtDate, count } from "./formatacao";
+import { FioAcento } from "@/components/admin/FioAcento";
 
 export function RelatoriosTab({
   items, unidades, unidadeNome,
@@ -146,7 +147,8 @@ export function RelatoriosTab({
   return (
     <div className="space-y-4">
       {/* Filtros */}
-      <Card>
+      <Card className="overflow-hidden border-border/80 shadow-sm">
+        <FioAcento />
         <CardContent className="flex flex-wrap items-end gap-3 p-4">
           {unidades.length > 1 && (
             <FilterField label="Cliente (unidade)">
@@ -206,7 +208,8 @@ export function RelatoriosTab({
       </div>
 
       {/* Tabela resumo */}
-      <Card>
+      <Card className="overflow-hidden border-border/80 shadow-sm">
+        <FioAcento />
         <CardHeader><CardTitle className="text-sm">Resumo por unidade</CardTitle></CardHeader>
         <CardContent className="pt-0">
           {resumoUnidade.length === 0 ? (
@@ -257,7 +260,8 @@ function FilterField({ label, children }: { label: string; children: React.React
 function Kpi({ label, value, tone }: { label: string; value: number | string; tone?: SlaTone }) {
   const color = tone === "critical" ? "text-critical" : tone === "partial" ? "text-partial" : tone === "adequate" ? "text-adequate" : "";
   return (
-    <Card>
+    <Card className="overflow-hidden border-border/80 shadow-sm">
+      <FioAcento />
       <CardContent className="p-4">
         <p className="text-xs text-muted-foreground">{label}</p>
         <p className={`mt-1 text-2xl font-semibold ${color}`}>{value}</p>
@@ -268,7 +272,8 @@ function Kpi({ label, value, tone }: { label: string; value: number | string; to
 
 function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <Card>
+    <Card className="overflow-hidden border-border/80 shadow-sm">
+      <FioAcento />
       <CardHeader><CardTitle className="text-sm">{title}</CardTitle></CardHeader>
       <CardContent className="pt-0">{children}</CardContent>
     </Card>

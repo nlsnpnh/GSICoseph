@@ -8,6 +8,7 @@ import {
 } from "recharts";
 import { StatCard } from "@/components/StatCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FioAcento } from "@/components/admin/FioAcento";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -76,7 +77,8 @@ export function PlanejamentoPainel({ acoes }: Props) {
 
       <div className="grid gap-5 lg:grid-cols-5">
         {/* Tabela consolidada por setor */}
-        <Card className="lg:col-span-3">
+        <Card className="overflow-hidden lg:col-span-3 border-border/80 shadow-sm">
+          <FioAcento />
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Consolidado por Setor</CardTitle>
           </CardHeader>
@@ -125,7 +127,8 @@ export function PlanejamentoPainel({ acoes }: Props) {
         </Card>
 
         {/* Gráfico de execução por setor */}
-        <Card className="lg:col-span-2">
+        <Card className="overflow-hidden lg:col-span-2 border-border/80 shadow-sm">
+          <FioAcento />
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Execução por Setor (% médio)</CardTitle>
           </CardHeader>
@@ -150,7 +153,8 @@ export function PlanejamentoPainel({ acoes }: Props) {
       </div>
 
       {/* Distribuição de status por setor (barras empilhadas) */}
-      <Card>
+      <Card className="overflow-hidden border-border/80 shadow-sm">
+        <FioAcento />
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Distribuição de Status por Setor</CardTitle>
         </CardHeader>
@@ -180,7 +184,8 @@ export function PlanejamentoPainel({ acoes }: Props) {
       </div>
 
       {/* Objetivos das unidades/setores */}
-      <Card>
+      <Card className="overflow-hidden border-border/80 shadow-sm">
+        <FioAcento />
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Objetivos das Unidades</CardTitle>
         </CardHeader>
@@ -207,7 +212,8 @@ function SetorDonut({ resumo: r }: { resumo: ResumoSetor }) {
   ].filter((d) => d.value > 0);
 
   return (
-    <Card>
+    <Card className="overflow-hidden border-border/80 shadow-sm">
+      <FioAcento />
       <CardHeader className="pb-1">
         <CardTitle className="text-sm">{r.label}</CardTitle>
       </CardHeader>

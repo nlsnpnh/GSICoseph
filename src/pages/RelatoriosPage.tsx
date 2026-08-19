@@ -395,7 +395,7 @@ export default function RelatoriosPage() {
           {servidoresCadastral.length === 0 ? (
             <p className="py-8 text-center text-xs text-muted-foreground">Sem servidores cadastrados</p>
           ) : (
-            <div className="max-h-[480px] overflow-auto">
+            <div className="max-h-[480px] overflow-auto scrollbar-hide">
               <Table>
                 <TableHeader>
                   <TableRow>

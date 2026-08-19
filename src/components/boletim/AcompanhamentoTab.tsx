@@ -11,6 +11,7 @@ import {
 import { EmptyState } from "@/components/EmptyState";
 import { useBoletimList } from "@/data/boletim";
 import { ANOS, ANO_VIGENTE, MES_VIGENTE, MESES } from "./constantes";
+import { FioAcento } from "@/components/admin/FioAcento";
 
 export function AcompanhamentoTab({
   unidades, comarcas,
@@ -79,7 +80,8 @@ export function AcompanhamentoTab({
 
   return (
     <div className="space-y-4">
-      <Card>
+      <Card className="overflow-hidden border-border/80 shadow-sm">
+        <FioAcento />
         <CardHeader className="border-b border-border">
           <CardTitle className="text-sm font-semibold">Período</CardTitle>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -113,7 +115,8 @@ export function AcompanhamentoTab({
         <SummaryCard label="% preenchido" value={`${pct}%`} icon={BarChart3} />
       </div>
 
-      <Card>
+      <Card className="overflow-hidden border-border/80 shadow-sm">
+        <FioAcento />
         <CardHeader className="border-b border-border pb-3">
           <CardTitle className="text-sm font-semibold">
             Status por unidade — {MESES[fMes - 1]}/{fAno}

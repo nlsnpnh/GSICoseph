@@ -17,6 +17,7 @@ import { BOLETIM_ITENS_FIXOS, useBoletimMes, useUpsertBoletim } from "@/data/bol
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { ANOS, ANO_VIGENTE, MES_VIGENTE, MESES } from "./constantes";
+import { FioAcento } from "@/components/admin/FioAcento";
 
 type LinhaForm = { quantidade: number; observacoes: string };
 
@@ -90,7 +91,8 @@ export function LancamentoTab({ unidades }: { unidades: ReturnType<typeof useUni
 
   return (
     <>
-          <Card>
+          <Card className="overflow-hidden border-border/80 shadow-sm">
+            <FioAcento />
             <CardHeader className="border-b border-border">
               <CardTitle className="text-sm font-semibold">Período e unidade</CardTitle>
             </CardHeader>
@@ -139,7 +141,8 @@ export function LancamentoTab({ unidades }: { unidades: ReturnType<typeof useUni
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="overflow-hidden border-border/80 shadow-sm">
+            <FioAcento />
             <CardHeader className="flex flex-row items-center justify-between border-b border-border pb-3">
               <CardTitle className="text-sm font-semibold">
                 Indicadores — {MESES[mes - 1]}/{ano}

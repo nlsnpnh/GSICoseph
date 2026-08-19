@@ -11,6 +11,7 @@ import { ConfirmDelete } from "@/components/ConfirmDelete";
 import { EmptyState } from "@/components/EmptyState";
 import { CurrencyInput } from "@/components/orcamento/CurrencyInput";
 import { toast } from "@/hooks/use-toast";
+import { FioAcento } from "@/components/admin/FioAcento";
 import {
   ACOES,
   type AcaoCodigo,
@@ -110,7 +111,8 @@ export function OrcamentoSuperavit({ ano, itens }: Props) {
 
   return (
     <div className="space-y-4">
-      <Card>
+      <Card className="overflow-hidden border-border/80 shadow-sm">
+        <FioAcento />
         <CardContent className="flex flex-wrap items-center justify-end gap-2 p-3">
           {dirtyCount > 0 && (
             <span className="mr-auto text-xs font-medium text-partial">
@@ -134,7 +136,8 @@ export function OrcamentoSuperavit({ ano, itens }: Props) {
         const grupo = itens.filter((i) => i.acao === acaoDef.codigo);
         const totalGrupo = grupo.reduce((s, a) => s + Number(val(a, "valor_total") ?? 0), 0);
         return (
-          <Card key={acaoDef.codigo}>
+          <Card key={acaoDef.codigo} className="overflow-hidden border-border/80 shadow-sm">
+            <FioAcento />
             <CardContent className="p-0">
               <div className="flex items-center justify-between gap-2 border-b border-border bg-muted/30 p-3">
                 <p className="text-sm font-semibold">

@@ -6,6 +6,7 @@ import {
 } from "recharts";
 import { StatCard } from "@/components/StatCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FioAcento } from "@/components/admin/FioAcento";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -49,7 +50,8 @@ export function OrcamentoMacrodesafios({ itens }: Props) {
       </div>
 
       {/* Tabela consolidada por ação */}
-      <Card>
+      <Card className="overflow-hidden border-border/80 shadow-sm">
+        <FioAcento />
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Consolidado por Ação Orçamentária</CardTitle>
         </CardHeader>
@@ -99,7 +101,8 @@ export function OrcamentoMacrodesafios({ itens }: Props) {
 
       <div className="grid gap-5 lg:grid-cols-5">
         {/* Dotação x Empenho x Liquidado por ação */}
-        <Card className="lg:col-span-3">
+        <Card className="overflow-hidden lg:col-span-3 border-border/80 shadow-sm">
+          <FioAcento />
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Execução por Ação (R$)</CardTitle>
           </CardHeader>
@@ -122,7 +125,8 @@ export function OrcamentoMacrodesafios({ itens }: Props) {
         </Card>
 
         {/* Distribuição do saldo por ação */}
-        <Card className="lg:col-span-2">
+        <Card className="overflow-hidden lg:col-span-2 border-border/80 shadow-sm">
+          <FioAcento />
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Saldo da Dotação por Ação</CardTitle>
           </CardHeader>

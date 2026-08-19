@@ -24,6 +24,7 @@ import {
   useExcluirAcao,
 } from "@/data/planejamento";
 import { statusDotClass, prioridadeDotClass } from "./statusUtils";
+import { FioAcento } from "@/components/admin/FioAcento";
 
 const TODOS = "__todos__";
 
@@ -117,7 +118,8 @@ export function PlanejamentoSetor({ ano, setor, acoes }: Props) {
   return (
     <div className="space-y-4">
       {/* Barra de ações + filtros */}
-      <Card>
+      <Card className="overflow-hidden border-border/80 shadow-sm">
+        <FioAcento />
         <CardContent className="flex flex-col gap-3 p-3 lg:flex-row lg:items-end lg:justify-between">
           <div className="grid flex-1 grid-cols-2 gap-2 md:grid-cols-4">
             <FilterSelect label="Eixo" value={fEixo} onChange={setFEixo} options={eixos} />
@@ -146,7 +148,8 @@ export function PlanejamentoSetor({ ano, setor, acoes }: Props) {
       </Card>
 
       {/* Tabela */}
-      <Card>
+      <Card className="overflow-hidden border-border/80 shadow-sm">
+        <FioAcento />
         <CardContent className="p-0">
           {filtradas.length === 0 ? (
             <EmptyState

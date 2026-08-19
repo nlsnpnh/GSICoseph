@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { ShieldCheck } from "lucide-react";
+import { FioAcento } from "@/components/admin/FioAcento";
 
 export default function BootstrapAdminPage() {
   const [loading, setLoading] = useState(false);
@@ -26,7 +27,8 @@ export default function BootstrapAdminPage() {
 
   return (
     <div className="container mx-auto max-w-xl py-10">
-      <Card>
+      <Card className="overflow-hidden border-border/80 shadow-sm">
+        <FioAcento />
         <CardHeader>
           <div className="flex items-center gap-2">
             <ShieldCheck className="h-5 w-5 text-primary" />

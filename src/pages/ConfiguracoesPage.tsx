@@ -17,6 +17,7 @@ import {
 import { useAuth, AppRole } from "@/contexts/AuthContext";
 import { useUnidades } from "@/data/unidades";
 import { toast } from "@/hooks/use-toast";
+import { FioAcento } from "@/components/admin/FioAcento";
 
 type Row = {
   user_id: string;
@@ -138,7 +139,8 @@ export default function ConfiguracoesPage() {
     return (
       <div>
         <PageHeader eyebrow="Sistema" title="Configurações" description="Parâmetros do sistema, perfis e permissões." />
-        <Card>
+        <Card className="overflow-hidden border-border/80 shadow-sm">
+          <FioAcento />
           <CardContent className="p-12 text-center text-sm text-muted-foreground">
             Apenas administradores podem acessar esta área.
           </CardContent>
@@ -151,7 +153,8 @@ export default function ConfiguracoesPage() {
     <div>
       <PageHeader eyebrow="Sistema" title="Configurações" description="Parâmetros do sistema, perfis e permissões." />
 
-      <Card>
+      <Card className="overflow-hidden border-border/80 shadow-sm">
+        <FioAcento />
         <CardHeader>
           <CardTitle className="text-base">Usuários e papéis</CardTitle>
           <CardDescription>
@@ -277,7 +280,8 @@ export default function ConfiguracoesPage() {
         </CardContent>
       </Card>
 
-      <Card className="mt-4">
+      <Card className="overflow-hidden mt-4 border-border/80 shadow-sm">
+        <FioAcento />
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <ShieldCheck className="h-4 w-4" /> Política de acesso

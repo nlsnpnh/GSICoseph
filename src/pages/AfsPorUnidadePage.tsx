@@ -14,6 +14,7 @@ import { useUnidades } from "@/data/unidades";
 import { useTerceirizados } from "@/data/terceirizados";
 import { useAuth } from "@/contexts/AuthContext";
 import { comparaComarca, comparaTexto } from "@/lib/ordenacao";
+import { FioAcento } from "@/components/admin/FioAcento";
 
 export default function AfsPorUnidadePage() {
   const { isOperador } = useAuth();
@@ -64,7 +65,8 @@ export default function AfsPorUnidadePage() {
         }
       />
 
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden border-border/80 shadow-sm">
+        <FioAcento />
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border p-4">
           <h2 className="text-sm font-semibold text-foreground">Resumo</h2>
           <Badge variant="outline" className="text-xs">

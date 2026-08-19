@@ -18,6 +18,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { PlanejamentoPainel } from "@/components/planejamento/PlanejamentoPainel";
 import { PlanejamentoSetor } from "@/components/planejamento/PlanejamentoSetor";
+import { FioAcento } from "@/components/admin/FioAcento";
 import {
   SETORES,
   useAnosPlanejamento,
@@ -47,7 +48,8 @@ export default function PlanejamentoPage() {
     return (
       <div>
         <PageHeader eyebrow="Planejamento" title="Planejamento" description="Plano Anual de Atividades COSEPH." />
-        <Card>
+        <Card className="overflow-hidden border-border/80 shadow-sm">
+          <FioAcento />
           <CardContent className="flex flex-col items-center justify-center gap-2 p-12 text-center">
             <Lock className="h-8 w-8 text-muted-foreground" />
             <p className="text-sm text-muted-foreground">
