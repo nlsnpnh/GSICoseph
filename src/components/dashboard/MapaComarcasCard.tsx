@@ -1,6 +1,7 @@
 import { Suspense, lazy } from "react";
 import { Card } from "@/components/ui/card";
 import { TYPO } from "@/lib/design-tokens";
+import { FioAcento } from "@/components/admin/FioAcento";
 
 // O mapa carrega o geojson dos municipios de RO (~416 kB). Sob demanda ele sai
 // do chunk do Dashboard, que passa a pintar os indicadores sem esperar o mapa.
@@ -24,6 +25,7 @@ const MapSkeleton = () => (
 export function MapaComarcasCard() {
   return (
     <Card className="overflow-hidden border-border/80 shadow-sm">
+      <FioAcento />
       {/* A legenda vive no cabeçalho, não flutuando sobre o mapa: antes ela
           cobria o canto inferior e disputava atenção com o rótulo do estado. */}
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-border bg-muted/30 px-3 py-2">

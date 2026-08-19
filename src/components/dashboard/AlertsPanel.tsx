@@ -1,6 +1,7 @@
 import { AlertTriangle, AlertCircle, ChevronRight, Info } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FioAcento } from "@/components/admin/FioAcento";
 import { cn } from "@/lib/utils";
 import { useAlertas, type Alerta } from "@/hooks/useAlertas";
 
@@ -64,9 +65,10 @@ export function AlertsPanel() {
   const informativos = alertas.filter((a) => a.tipo === "info");
 
   return (
-    <Card className="flex h-full flex-col shadow-sm">
-      <CardHeader className="flex flex-row items-center justify-between border-b border-border pb-3">
-        <CardTitle className="text-sm font-semibold uppercase tracking-wide">
+    <Card className="flex h-full flex-col overflow-hidden border-border/80 shadow-sm">
+      <FioAcento />
+      <CardHeader className="flex flex-row items-center justify-between border-b border-border px-3 py-2">
+        <CardTitle className="text-[11px] font-medium uppercase tracking-[0.14em] text-foreground/70">
           Alertas e Pendências
         </CardTitle>
         <button

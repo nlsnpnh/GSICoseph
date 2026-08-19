@@ -3,6 +3,7 @@ import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { TYPO } from "@/lib/design-tokens";
+import { FioAcento } from "@/components/admin/FioAcento";
 
 interface Props {
   search: string;
@@ -21,6 +22,7 @@ interface Props {
 export function CrudTableLayout({ search, onSearchChange, placeholder, children, count, filters }: Props) {
   return (
     <Card className="overflow-hidden border-border/80 shadow-sm">
+      <FioAcento />
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-muted/30 px-3 py-2">
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative w-full max-w-sm sm:w-72">

@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { XAxis, YAxis, ResponsiveContainer, Tooltip,
   PieChart, Pie, Cell, LineChart, Line, CartesianGrid } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FioAcento } from "@/components/admin/FioAcento";
 import { useServidores } from "@/data/servidores";
 import { useUnidades } from "@/data/unidades";
 import { useEquipamentosCatalogo, useUnidadeEquipamentos } from "@/data/equipamentos";
@@ -55,9 +56,10 @@ export function ServidoresPorComarca() {
   }, [servidores, unidades]);
 
   return (
-    <Card className="shadow-sm">
-      <CardHeader className="border-b border-border pb-3">
-        <CardTitle className="text-sm font-semibold">Servidores por Comarca</CardTitle>
+    <Card className="overflow-hidden border-border/80 shadow-sm">
+      <FioAcento />
+      <CardHeader className="border-b border-border px-3 py-2">
+        <CardTitle className="text-[11px] font-medium uppercase tracking-[0.14em] text-foreground/70">Servidores por Comarca</CardTitle>
         <p className="text-[11px] text-muted-foreground">Top 5 — ativos · Total: {total.toLocaleString("pt-BR")}</p>
       </CardHeader>
       <CardContent className="grid grid-cols-[100px_1fr] items-center gap-3 p-3">
@@ -125,9 +127,10 @@ export function EquipamentosDonut() {
   const dataPie = data.filter((e) => e.total > 0);
 
   return (
-    <Card className="shadow-sm">
-      <CardHeader className="border-b border-border pb-3">
-        <CardTitle className="text-sm font-semibold">Principais Equipamentos</CardTitle>
+    <Card className="overflow-hidden border-border/80 shadow-sm">
+      <FioAcento />
+      <CardHeader className="border-b border-border px-3 py-2">
+        <CardTitle className="text-[11px] font-medium uppercase tracking-[0.14em] text-foreground/70">Principais Equipamentos</CardTitle>
         <p className="text-[11px] text-muted-foreground">Total: {total.toLocaleString("pt-BR")}</p>
       </CardHeader>
       <CardContent className="grid grid-cols-[110px_1fr] items-center gap-3 p-3">
@@ -175,9 +178,10 @@ export function ResultadosOperacionaisPie({
   const data = rows.filter((r) => r.total > 0);
 
   return (
-    <Card className="shadow-sm">
-      <CardHeader className="border-b border-border pb-3">
-        <CardTitle className="text-sm font-semibold">Resultados Operacionais</CardTitle>
+    <Card className="overflow-hidden border-border/80 shadow-sm">
+      <FioAcento />
+      <CardHeader className="border-b border-border px-3 py-2">
+        <CardTitle className="text-[11px] font-medium uppercase tracking-[0.14em] text-foreground/70">Resultados Operacionais</CardTitle>
         <p className="text-[11px] text-muted-foreground">
           {period === "mes" ? `Mês ${String(mes).padStart(2, "0")}/${ano}` : `Ano ${ano}`}
           {" · "}Total: {total.toLocaleString("pt-BR")}
@@ -236,9 +240,10 @@ export function OcorrenciasPorMes() {
   }, [ocorrencias]);
 
   return (
-    <Card className="shadow-sm">
-      <CardHeader className="border-b border-border pb-3">
-        <CardTitle className="text-sm font-semibold">Ocorrências por Mês</CardTitle>
+    <Card className="overflow-hidden border-border/80 shadow-sm">
+      <FioAcento />
+      <CardHeader className="border-b border-border px-3 py-2">
+        <CardTitle className="text-[11px] font-medium uppercase tracking-[0.14em] text-foreground/70">Ocorrências por Mês</CardTitle>
         <p className="text-[11px] text-muted-foreground">Últimos 6 meses</p>
       </CardHeader>
       <CardContent className="p-3">
@@ -281,9 +286,10 @@ export function ContratosVigencia() {
   const total = data.reduce((s, c) => s + c.total, 0);
 
   return (
-    <Card className="shadow-sm">
-      <CardHeader className="border-b border-border pb-3">
-        <CardTitle className="text-sm font-semibold">Contratos por Vigência</CardTitle>
+    <Card className="overflow-hidden border-border/80 shadow-sm">
+      <FioAcento />
+      <CardHeader className="border-b border-border px-3 py-2">
+        <CardTitle className="text-[11px] font-medium uppercase tracking-[0.14em] text-foreground/70">Contratos por Vigência</CardTitle>
         <p className="text-[11px] text-muted-foreground">Total: {total}</p>
       </CardHeader>
       <CardContent className="grid grid-cols-[100px_1fr] items-center gap-3 p-3">
