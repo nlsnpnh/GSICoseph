@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { getErrorMessage } from "@/lib/utils";
 import { Building2, Plus, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { CrudTableLayout } from "@/components/CrudTableLayout";
 import { AcoesLinha } from "@/components/admin/AcoesLinha";
 import { SinalSeguranca } from "@/components/admin/SinalSeguranca";
+import { comparaComarca, comparaTexto } from "@/lib/ordenacao";
 import { SUB } from "@/components/admin/estilos";
 import { ConfirmDelete } from "@/components/ConfirmDelete";
 import { EmptyState } from "@/components/EmptyState";
@@ -85,14 +86,23 @@ export default function UnidadesPage() {
 
   const form = useForm<FormData>({ resolver: zodResolver(schema), defaultValues: defaults });
 
+  // A coluna de ações só existe com permissão: a faixa de grupo acompanha.
+  const colunas = podeGravar || podeApagar ? 5 : 4;
+
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    return items.filter((u) =>
-      u.nome.toLowerCase().includes(q) ||
-      u.comarca_nome.toLowerCase().includes(q) ||
-      u.endereco.toLowerCase().includes(q) ||
-      u.responsavel_local.toLowerCase().includes(q),
-    );
+    return items
+      .filter((u) =>
+        u.nome.toLowerCase().includes(q) ||
+        u.comarca_nome.toLowerCase().includes(q) ||
+        u.endereco.toLowerCase().includes(q) ||
+        u.responsavel_local.toLowerCase().includes(q),
+      )
+      // Porto Velho abre a lista; demais comarcas em ordem alfabética e, dentro
+      // de cada uma, as unidades por nome.
+      .sort((a, b) =>
+        comparaComarca(a.comarca_nome, b.comarca_nome) || comparaTexto(a.nome, b.nome),
+      );
   }, [items, search]);
 
   const openCreate = () => {
@@ -169,7 +179,6 @@ export default function UnidadesPage() {
             <TableHeader>
               <TableRow className="border-b border-border hover:bg-transparent">
                 <TableHead>Unidade</TableHead>
-                <TableHead>Comarca</TableHead>
                 <TableHead>Responsável</TableHead>
                 <TableHead className="text-right">Telefone</TableHead>
                 <TableHead>Segurança</TableHead>
@@ -177,14 +186,29 @@ export default function UnidadesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((u) => (
-                <TableRow key={u.id}>
+              {filtered.map((u, i) => {
+                const abreGrupo = i === 0 || filtered[i - 1].comarca_nome !== u.comarca_nome;
+                const naComarca = filtered.filter((x) => x.comarca_nome === u.comarca_nome).length;
+                return (
+                <Fragment key={u.id}>
+                {abreGrupo && (
+                  <TableRow className="hover:bg-transparent">
+                    <TableCell colSpan={colunas} className="border-y border-border bg-muted/40 py-1">
+                      <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-foreground/70">
+                        {u.comarca_nome || "Sem comarca vinculada"}
+                      </span>
+                      <span className="ml-2 text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+                        {naComarca} {naComarca === 1 ? "unidade" : "unidades"}
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                )}
+                <TableRow>
                   {/* Nome é o protagonista da linha; o endereço vira apoio. */}
                   <TableCell>
                     <span className="font-medium text-foreground">{u.nome}</span>
                     {u.endereco && <p className={SUB}>{u.endereco}</p>}
                   </TableCell>
-                  <TableCell className="text-muted-foreground">{u.comarca_nome || "—"}</TableCell>
                   {/* Titular e substituto ocupavam duas colunas: viram uma, empilhados. */}
                   <TableCell>
                     <span className="text-foreground/90">{u.responsavel_local || "—"}</span>
@@ -210,7 +234,9 @@ export default function UnidadesPage() {
                     </TableCell>
                   )}
                 </TableRow>
-              ))}
+                </Fragment>
+                );
+              })}
             </TableBody>
           </Table>
         )}

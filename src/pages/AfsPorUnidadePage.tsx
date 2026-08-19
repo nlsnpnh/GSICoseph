@@ -13,11 +13,7 @@ import { UserCog } from "lucide-react";
 import { useUnidades } from "@/data/unidades";
 import { useTerceirizados } from "@/data/terceirizados";
 import { useAuth } from "@/contexts/AuthContext";
-
-/** Porto Velho abre a listagem. A comparação com sensitivity "base" ignora
- *  caixa e acento, então "PORTO VELHO" e "Pôrto Velho" também casam. */
-const ehCapital = (comarca: string) =>
-  comarca.trim().localeCompare("Porto Velho", "pt-BR", { sensitivity: "base" }) === 0;
+import { comparaComarca, comparaTexto } from "@/lib/ordenacao";
 
 export default function AfsPorUnidadePage() {
   const { isOperador } = useAuth();
@@ -44,15 +40,7 @@ export default function AfsPorUnidadePage() {
         const u = unidadeMap[unidadeId];
         return { unidadeId, nome: u?.nome ?? "—", comarca: u?.comarca_nome ?? "—", qtd };
       })
-      .sort((a, b) => {
-        // Porto Velho abre a lista (sede da capital); as demais comarcas vêm
-        // em ordem alfabética, e dentro de cada uma as unidades por nome.
-        const pa = ehCapital(a.comarca);
-        const pb = ehCapital(b.comarca);
-        if (pa !== pb) return pa ? -1 : 1;
-        const porComarca = a.comarca.localeCompare(b.comarca, "pt-BR");
-        return porComarca !== 0 ? porComarca : a.nome.localeCompare(b.nome, "pt-BR");
-      });
+      .sort((a, b) => comparaComarca(a.comarca, b.comarca) || comparaTexto(a.nome, b.nome));
   }, [items, unidadeMap]);
 
   const totalAfsAtivos = useMemo(
