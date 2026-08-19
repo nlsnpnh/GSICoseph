@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { SinalSeguranca } from "@/components/admin/SinalSeguranca";
 import { useUnidades, type UnidadePredial } from "@/data/unidades";
 import { useUnidadeEquipamentos, type UnidadeEquipamento } from "@/data/equipamentos";
 import { useServidores, type ServidorSeg } from "@/data/servidores";
@@ -124,12 +125,17 @@ export function ComarcaDetailDrawer({ comarca, onOpenChange }: Props) {
   return (
     <Sheet open={!!comarca} onOpenChange={onOpenChange}>
       <SheetContent className="w-full overflow-x-hidden p-0 sm:max-w-[560px] lg:max-w-[640px]">
-        <SheetHeader className="border-b border-border px-6 py-4">
+        <SheetHeader className="border-b border-border bg-muted/30 px-4 py-3">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <SheetTitle>Comarca de {comarca.nome}</SheetTitle>
-              <SheetDescription className="mt-1">
-                <span className="flex items-center gap-1 text-xs">
+              <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-accent">
+                Comarca
+              </span>
+              <SheetTitle className="text-[18px] font-light tracking-[-0.02em]">
+                {comarca.nome}
+              </SheetTitle>
+              <SheetDescription className="mt-0.5">
+                <span className="flex items-center gap-1 text-[11px]">
                   <MapPin className="h-3 w-3 shrink-0" />
                   {isOperador && unidadeId
                     ? "Exibindo somente sua unidade predial"
@@ -137,37 +143,45 @@ export function ComarcaDetailDrawer({ comarca, onOpenChange }: Props) {
                 </span>
               </SheetDescription>
             </div>
-            <Badge variant="outline" className={`shrink-0 ${nivelTone[comarca.nivel]}`}>
-              <ShieldCheck className="mr-1 h-3 w-3" />
+            <Badge variant="outline" className={`shrink-0 gap-1 px-1.5 py-0.5 text-[11px] font-normal ${nivelTone[comarca.nivel]}`}>
+              <ShieldCheck className="h-3 w-3 shrink-0" />
               {nivelLabel[comarca.nivel]}
             </Badge>
           </div>
         </SheetHeader>
 
         <ScrollArea className="h-[calc(100vh-110px)]">
-          <div className="space-y-6 px-5 py-6">
+          <div className="space-y-4 px-4 py-4">
 
             {/* Resumo geral da comarca (consolidado) */}
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               <Kpi icon={Building2} label="Unidades"      value={dados.unidadesComarca.length} />
               <Kpi icon={Users}     label="Servidores"    value={dados.servidoresTotal} />
               <Kpi icon={UserCog}   label="Terceirizados" value={dados.terceirizadosTotal} />
               <Kpi icon={KeyRound}  label="Kit RFID"      value={dados.kitRfidUnidades} />
             </div>
 
-            <div className="flex flex-wrap gap-2">
-              <Badge variant="outline" className={comarca.possuiDerso ? "border-adequate/40 bg-adequate/10 text-adequate" : "bg-muted text-muted-foreground"}>
-                <ShieldCheck className="mr-1 h-3 w-3" />
+            <div className="flex flex-wrap gap-1.5">
+              <Badge
+                variant="outline"
+                className={`gap-1 px-1.5 py-0.5 text-[11px] font-normal ${
+                  comarca.possuiDerso
+                    ? "border-adequate/40 bg-adequate/10 text-adequate"
+                    : "bg-muted text-muted-foreground"
+                }`}
+              >
+                <ShieldCheck className="h-3 w-3 shrink-0" />
                 DERSO: {comarca.possuiDerso ? "Sim" : "Não"}
               </Badge>
-              <Badge variant="outline" className="text-xs">
-                <RadioTower className="mr-1 h-3 w-3" />
-                {dados.totalEquip} equip. ({dados.itensVinculados} itens)
+              <Badge variant="outline" className="gap-1 px-1.5 py-0.5 text-[11px] font-normal">
+                <RadioTower className="h-3 w-3 shrink-0" />
+                <span className="tabular-nums">{dados.totalEquip}</span> equip.
+                <span className="text-muted-foreground">({dados.itensVinculados} itens)</span>
               </Badge>
               {!isOperador && (
-                <Badge variant="outline" className="text-xs">
-                  <ScanLine className="mr-1 h-3 w-3" />
-                  Valor: {fmtMoney(dados.valorEstimado)}/mês
+                <Badge variant="outline" className="gap-1 px-1.5 py-0.5 text-[11px] font-normal">
+                  <ScanLine className="h-3 w-3 shrink-0" />
+                  <span className="tabular-nums">{fmtMoney(dados.valorEstimado)}</span>/mês
                 </Badge>
               )}
             </div>
@@ -245,31 +259,27 @@ function UnidadeAccordionItem({
 
   return (
     <AccordionItem value={unidade.id} className="overflow-hidden rounded-md border border-border bg-card">
-      <AccordionTrigger className="px-3 py-2 hover:no-underline">
+      <AccordionTrigger className="px-2.5 py-1.5 hover:no-underline">
         <div className="flex min-w-0 flex-1 flex-col gap-1 pr-2 text-left">
-          <p className="break-words text-sm font-medium leading-tight">{unidade.nome}</p>
+          <p className="break-words text-[13px] font-medium leading-tight">{unidade.nome}</p>
           {unidade.endereco && (
-            <p className="break-words text-xs leading-snug text-muted-foreground">{unidade.endereco}</p>
+            <p className="break-words text-[11px] leading-snug text-muted-foreground">{unidade.endereco}</p>
           )}
+          {/* Mesmos sinais da listagem de unidades prediais: presente em verde,
+              ausente em cinza — a leitura é pela cor, não pelo texto. */}
           <div className="flex flex-wrap gap-1">
-            {unidade.possui_derso && (
-              <Badge variant="outline" className="border-adequate/40 text-[10px] text-adequate">DERSO</Badge>
-            )}
-            {unidade.controle_acesso && (
-              <Badge variant="outline" className="text-[10px]">Controle acesso</Badge>
-            )}
-            {unidade.vigilancia_eletronica && (
-              <Badge variant="outline" className="text-[10px]">CFTV</Badge>
-            )}
+            <SinalSeguranca label="DERSO" ativo={unidade.possui_derso} />
+            <SinalSeguranca label="Acesso" ativo={unidade.controle_acesso} tituloInativo="Sem controle de acesso" />
+            <SinalSeguranca label="CFTV" ativo={unidade.vigilancia_eletronica} tituloInativo="Sem vigilância eletrônica" />
           </div>
         </div>
       </AccordionTrigger>
 
-      <AccordionContent className="border-t border-border bg-muted/20 px-3 pt-3">
+      <AccordionContent className="border-t border-border bg-muted/20 px-2.5 pt-2.5">
         {semDados ? (
           <Empty text="Nenhum item cadastrado para esta unidade." />
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {/* Mini KPIs da unidade */}
             <div className="grid grid-cols-4 gap-2">
               <KpiMini icon={Cpu}      label="Equip."   value={totalEquip} />
@@ -354,11 +364,11 @@ function UnidadeAccordionItem({
 
 function Kpi({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: number }) {
   return (
-    <div className="rounded-md border border-border bg-card p-3">
-      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-        <Icon className="h-3.5 w-3.5" />{label}
+    <div className="rounded-md border border-border bg-card px-2.5 py-2">
+      <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+        <Icon className="h-3 w-3 shrink-0" />{label}
       </div>
-      <p className="mt-1 text-2xl font-semibold">{value}</p>
+      <p className="mt-1 text-[22px] font-light tabular-nums leading-none tracking-[-0.03em]">{value}</p>
     </div>
   );
 }
@@ -366,10 +376,10 @@ function Kpi({ icon: Icon, label, value }: { icon: React.ElementType; label: str
 function KpiMini({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: number }) {
   return (
     <div className="rounded-md border border-border bg-card px-2 py-1.5">
-      <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-        <Icon className="h-3 w-3" />{label}
+      <div className="flex items-center gap-1 text-[9px] uppercase tracking-[0.1em] text-muted-foreground">
+        <Icon className="h-3 w-3 shrink-0" />{label}
       </div>
-      <p className="mt-0.5 text-base font-semibold leading-none">{value}</p>
+      <p className="mt-0.5 text-[15px] font-light tabular-nums leading-none">{value}</p>
     </div>
   );
 }
@@ -377,8 +387,8 @@ function KpiMini({ icon: Icon, label, value }: { icon: React.ElementType; label:
 function Section({ title, icon: Icon, children }: { title: string; icon: React.ElementType; children: React.ReactNode }) {
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-2 text-sm font-semibold">
-        <Icon className="h-4 w-4 text-muted-foreground" />{title}
+      <div className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.16em] text-foreground/70">
+        <Icon className="h-3.5 w-3.5 shrink-0 text-accent" />{title}
       </div>
       {children}
     </div>
@@ -388,8 +398,8 @@ function Section({ title, icon: Icon, children }: { title: string; icon: React.E
 function SubSection({ title, icon: Icon, children }: { title: string; icon: React.ElementType; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-        <Icon className="h-3 w-3" />{title}
+      <div className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+        <Icon className="h-3 w-3 shrink-0" />{title}
       </div>
       {children}
     </div>
@@ -398,7 +408,7 @@ function SubSection({ title, icon: Icon, children }: { title: string; icon: Reac
 
 function PendItem({ label }: { label: string }) {
   return (
-    <li className="rounded-md border bg-partial/15 px-3 py-2 text-sm text-partial border-partial/30">
+    <li className="rounded border border-partial/30 bg-partial/15 px-2.5 py-1.5 text-[12px] text-partial">
       {label}
     </li>
   );

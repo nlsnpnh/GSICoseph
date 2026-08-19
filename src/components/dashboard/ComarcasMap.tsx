@@ -74,7 +74,8 @@ export function ComarcasMap() {
 
   return (
     <>
-      <div className="w-full overflow-hidden rounded-md border border-border bg-card p-2">
+      {/* Sem borda propria: o card ao redor ja emoldura o mapa. */}
+      <div className="w-full overflow-hidden">
         <svg
           viewBox={`0 0 ${vbW} ${vbH}`}
           preserveAspectRatio="xMidYMid meet"
