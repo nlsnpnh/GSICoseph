@@ -28,20 +28,9 @@ export default defineConfig(({ mode }) => ({
     },
     dedupe: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "@tanstack/react-query", "@tanstack/query-core"],
   },
-  build: {
-    rollupOptions: {
-      output: {
-        // Bibliotecas pesadas em chunks proprios: sao usadas por poucas rotas
-        // e mudam pouco, entao ficam em cache do navegador entre deploys.
-        manualChunks(id) {
-          const p = id.split(path.sep).join("/");
-          if (!p.includes("/node_modules/")) return;
-          const pkg = p.split("/node_modules/").pop() ?? "";
-          if (/^(react|react-dom|react-router|react-router-dom|scheduler)\//.test(pkg)) return "react-vendor";
-          if (/^(recharts|d3-|victory-)/.test(pkg)) return "charts";
-          if (/^@supabase\//.test(pkg)) return "supabase";
-        },
-      },
-    },
-  },
+  // Sem manualChunks: separar recharts/d3 num chunk proprio criava dependencia
+  // circular entre chunks, e o navegador quebrava com "Cannot access 'S' before
+  // initialization". O Rollup resolve a ordem sozinho respeitando os ciclos.
+  // A carga inicial ja e enxuta pelas rotas em React.lazy e pelos imports
+  // dinamicos de xlsx/jspdf — o ganho nao vinha daqui.
 }));
