@@ -11,6 +11,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { useConsultas } from "@/components/consultas/queries";
+import { FioAcento } from "@/components/admin/FioAcento";
 
 const CATEGORY_TONE: Record<string, string> = {
   Equipamentos: "bg-blue-500/10 text-blue-700 border-blue-400/30 dark:text-blue-400",
@@ -79,18 +80,18 @@ export default function ConsultasPage() {
         description="Relatórios e buscas cruzadas sobre equipamentos, pessoal, contratos e ocorrências."
         actions={
           totalAlertas > 0 ? (
-            <div className="flex items-center gap-1.5 rounded-md border border-critical/30 bg-critical/10 px-3 py-1.5 text-xs font-medium text-critical">
-              <AlertTriangle className="h-3.5 w-3.5" />
+            <div className="flex items-center gap-1.5 rounded border border-critical/30 bg-critical/10 px-2 py-1 text-[11px] font-medium text-critical">
+              <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
               {totalAlertas} itens requerem atenção
             </div>
           ) : undefined
         }
       />
 
-      <div className="relative mb-6 max-w-md">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+      <div className="relative mb-4 max-w-md">
+        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
         <Input
-          className="pl-9"
+          className="h-8 border-border/70 pl-8 text-[13px]"
           placeholder="Filtrar por título, categoria ou descrição..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -101,13 +102,14 @@ export default function ConsultasPage() {
         <p className="text-sm text-muted-foreground">Nenhuma consulta encontrada para "{search}".</p>
       )}
 
-      <div className="space-y-8">
+      <div className="space-y-5">
         {categories.map((cat) => (
           <section key={cat}>
-            <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-              {cat}
-            </h2>
-            <div className="space-y-2">
+            <div className="mb-2 flex items-center gap-2">
+              <span className="h-px w-5 bg-accent" aria-hidden="true" />
+              <h2 className="text-[10px] font-medium uppercase tracking-[0.18em] text-accent">{cat}</h2>
+            </div>
+            <div className="space-y-1.5">
               {filtered
                 .filter((q) => q.category === cat)
                 .map((q) => {
@@ -117,34 +119,35 @@ export default function ConsultasPage() {
                     <div
                       key={q.id}
                       ref={(el) => { rowRefs.current[q.id] = el; }}
-                      className={`overflow-hidden rounded-lg border bg-card transition-shadow ${queryId === q.id ? "border-primary/60 shadow-lg ring-1 ring-primary/30" : "border-border"}`}
+                      className={`overflow-hidden rounded-lg border bg-card shadow-sm ${queryId === q.id ? "border-primary/60 ring-1 ring-primary/30" : "border-border/80"}`}
                     >
+                      <FioAcento />
                       <button
                         type="button"
-                        className="flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/40"
+                        className="flex w-full items-start gap-2.5 px-3 py-2 text-left transition-colors hover:bg-primary/[0.025]"
                         onClick={() => toggle(q.id)}
                       >
-                        <q.icon className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                        <q.icon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium leading-tight">{q.title}</p>
-                          <p className="mt-0.5 text-xs text-muted-foreground">{q.description}</p>
+                          <p className="text-[13px] font-medium leading-tight">{q.title}</p>
+                          <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">{q.description}</p>
                         </div>
-                        <Badge variant="outline" className={`shrink-0 text-xs tabular-nums ${tone}`}>
+                        <Badge variant="outline" className={`shrink-0 px-1.5 py-0 text-[11px] font-normal tabular-nums ${tone}`}>
                           {q.rows.length}
                         </Badge>
                         {isOpen
-                          ? <ChevronUp className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                          : <ChevronDown className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />}
+                          ? <ChevronUp className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                          : <ChevronDown className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
                       </button>
 
                       {isOpen && (
                         <div className="border-t border-border">
                           {q.rows.length === 0 ? (
-                            <p className="px-4 py-6 text-center text-sm italic text-muted-foreground">
+                            <p className="px-3 py-5 text-center text-[12px] italic text-muted-foreground">
                               Nenhum resultado encontrado.
                             </p>
                           ) : (
-                            <div className="overflow-x-auto">
+                            <div className="overflow-x-auto scrollbar-hide">
                               <Table>
                                 <TableHeader>
                                   <TableRow>
