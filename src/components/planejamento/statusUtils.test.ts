@@ -1,39 +1,40 @@
 import { describe, expect, it } from "vitest";
-import { prioridadeBadgeClass, statusBadgeClass } from "./statusUtils";
+import { prioridadeDotClass, statusDotClass } from "./statusUtils";
 
-describe("statusBadgeClass", () => {
-  it("usa a cor de adequado para concluida e a de critico para atrasada", () => {
-    expect(statusBadgeClass("Concluída")).toContain("text-adequate");
-    expect(statusBadgeClass("Atrasada")).toContain("text-critical");
+describe("statusDotClass", () => {
+  it("usa a cor de adequado para concluída e a de crítico para atrasada", () => {
+    expect(statusDotClass("Concluída")).toBe("bg-adequate");
+    expect(statusDotClass("Atrasada")).toBe("bg-critical");
   });
 
   it("diferencia em andamento e suspensa", () => {
-    expect(statusBadgeClass("Em andamento")).toContain("text-blue-600");
-    expect(statusBadgeClass("Suspensa")).toContain("text-partial");
+    expect(statusDotClass("Em andamento")).toBe("bg-blue-500");
+    expect(statusDotClass("Suspensa")).toBe("bg-partial");
   });
 
-  it("cai no neutro para nao iniciada", () => {
-    expect(statusBadgeClass("Não iniciada")).toContain("text-muted-foreground");
+  it("cai no neutro para não iniciada", () => {
+    expect(statusDotClass("Não iniciada")).toBe("bg-muted-foreground/40");
   });
 
-  it("nunca devolve string vazia", () => {
+  it("dá uma cor distinta a cada status", () => {
     const todos = ["Concluída", "Em andamento", "Atrasada", "Suspensa", "Não iniciada"] as const;
-    for (const s of todos) expect(statusBadgeClass(s).length).toBeGreaterThan(0);
+    const cores = todos.map(statusDotClass);
+    expect(new Set(cores).size).toBe(todos.length);
   });
 });
 
-describe("prioridadeBadgeClass", () => {
-  it("mapeia alta, media e baixa em cores distintas", () => {
-    const classes = [
-      prioridadeBadgeClass("Alta"),
-      prioridadeBadgeClass("Média"),
-      prioridadeBadgeClass("Baixa"),
+describe("prioridadeDotClass", () => {
+  it("mapeia alta, média e baixa em cores distintas", () => {
+    const cores = [
+      prioridadeDotClass("Alta"),
+      prioridadeDotClass("Média"),
+      prioridadeDotClass("Baixa"),
     ];
-    expect(new Set(classes).size).toBe(3);
-    expect(classes[0]).toContain("text-critical");
+    expect(new Set(cores).size).toBe(3);
+    expect(cores[0]).toBe("bg-critical");
   });
 
-  it("usa o neutro quando a prioridade e nula", () => {
-    expect(prioridadeBadgeClass(null)).toContain("text-muted-foreground");
+  it("usa o neutro quando a prioridade é nula", () => {
+    expect(prioridadeDotClass(null)).toBe("bg-muted-foreground/40");
   });
 });

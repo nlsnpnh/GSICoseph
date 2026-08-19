@@ -3,7 +3,7 @@ import { Plus, Save, RotateCcw, Trash2, Loader2, PiggyBank } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { CampoTexto } from "@/components/admin/CampoTexto";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -172,17 +172,20 @@ export function OrcamentoSuperavit({ ano, itens }: Props) {
                         return (
                           <TableRow key={a.id} className={isDirty ? "bg-partial/5" : undefined}>
                             <TableCell className="align-top">
-                              <Textarea className="min-h-[34px] text-xs" rows={2}
+                              <CampoTexto
+                                aria-label="Especificação"
                                 value={(val(a, "especificacao") as string | null) ?? ""}
-                                onChange={(e) => setField(a.id, { especificacao: e.target.value })} />
+                                onChange={(v) => setField(a.id, { especificacao: v })} />
                             </TableCell>
                             <TableCell className="align-top">
                               <Input className="h-9 text-sm" value={(val(a, "elemento_despesa") as string | null) ?? ""}
                                 onChange={(e) => setField(a.id, { elemento_despesa: e.target.value })} />
                             </TableCell>
                             <TableCell className="align-top">
-                              <Textarea className="min-h-[36px] text-sm" rows={2} value={(val(a, "subelemento") as string | null) ?? ""}
-                                onChange={(e) => setField(a.id, { subelemento: e.target.value })} />
+                              <CampoTexto
+                                aria-label="Subelemento"
+                                value={(val(a, "subelemento") as string | null) ?? ""}
+                                onChange={(v) => setField(a.id, { subelemento: v })} />
                             </TableCell>
                             <TableCell className="align-top">
                               <Input className="h-9 text-sm" value={(val(a, "unidade_medida") as string | null) ?? ""}
@@ -205,9 +208,10 @@ export function OrcamentoSuperavit({ ano, itens }: Props) {
                                 onChange={(e) => setField(a.id, { data_maxima: e.target.value || null })} />
                             </TableCell>
                             <TableCell className="align-top">
-                              <Textarea className="min-h-[34px] text-xs" rows={2}
+                              <CampoTexto
+                                aria-label="Justificativa"
                                 value={(val(a, "justificativa") as string | null) ?? ""}
-                                onChange={(e) => setField(a.id, { justificativa: e.target.value })} />
+                                onChange={(v) => setField(a.id, { justificativa: v })} />
                             </TableCell>
                             <TableCell className="align-top">
                               <Button variant="ghost" size="icon" className="h-8 w-8 text-critical"

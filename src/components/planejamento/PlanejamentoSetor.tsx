@@ -2,9 +2,8 @@ import { useMemo, useState } from "react";
 import { Plus, Save, RotateCcw, Trash2, Loader2, ClipboardList } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { CampoTexto } from "@/components/admin/CampoTexto";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -24,7 +23,7 @@ import {
   useCriarAcao,
   useExcluirAcao,
 } from "@/data/planejamento";
-import { statusBadgeClass, prioridadeBadgeClass } from "./statusUtils";
+import { statusDotClass, prioridadeDotClass } from "./statusUtils";
 
 const TODOS = "__todos__";
 
@@ -189,11 +188,10 @@ export function PlanejamentoSetor({ ano, setor, acoes }: Props) {
                           )}
                         </TableCell>
                         <TableCell className="align-top">
-                          <Textarea
-                            className="min-h-[34px] text-xs"
-                            rows={1}
+                          <CampoTexto
+                            aria-label="Público-alvo"
                             value={(val(a, "publico_alvo") as string | null) ?? ""}
-                            onChange={(e) => setField(a.id, { publico_alvo: e.target.value })}
+                            onChange={(v) => setField(a.id, { publico_alvo: v })}
                           />
                         </TableCell>
                         <TableCell className="align-top text-sm">
@@ -228,13 +226,16 @@ export function PlanejamentoSetor({ ano, setor, acoes }: Props) {
                             value={(val(a, "prioridade") as string | null) ?? ""}
                             onValueChange={(v) => setField(a.id, { prioridade: v as PlanejamentoAcao["prioridade"] })}
                           >
-                            <SelectTrigger className="h-8 text-xs">
+                            <SelectTrigger className="h-7 border-input/70 px-2 text-[12px]">
                               <SelectValue placeholder="—" />
                             </SelectTrigger>
                             <SelectContent>
                               {PRIORIDADE_OPCOES.map((p) => (
                                 <SelectItem key={p} value={p}>
-                                  <Badge variant="outline" className={prioridadeBadgeClass(p)}>{p}</Badge>
+                                  <span className="flex items-center gap-1.5">
+                                    <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${prioridadeDotClass(p)}`} />
+                                    {p}
+                                  </span>
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -245,13 +246,16 @@ export function PlanejamentoSetor({ ano, setor, acoes }: Props) {
                             value={val(a, "status") as string}
                             onValueChange={(v) => setField(a.id, { status: v as PlanejamentoAcao["status"] })}
                           >
-                            <SelectTrigger className="h-8 text-xs">
+                            <SelectTrigger className="h-7 border-input/70 px-2 text-[12px]">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
                               {STATUS_OPCOES.map((s) => (
                                 <SelectItem key={s} value={s}>
-                                  <Badge variant="outline" className={statusBadgeClass(s)}>{s}</Badge>
+                                  <span className="flex items-center gap-1.5">
+                                    <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${statusDotClass(s)}`} />
+                                    {s}
+                                  </span>
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -296,11 +300,10 @@ export function PlanejamentoSetor({ ano, setor, acoes }: Props) {
                           />
                         </TableCell>
                         <TableCell className="align-top">
-                          <Textarea
-                            className="min-h-[34px] text-xs"
-                            rows={1}
+                          <CampoTexto
+                            aria-label="Indicador / entrega"
                             value={(val(a, "indicador") as string | null) ?? ""}
-                            onChange={(e) => setField(a.id, { indicador: e.target.value })}
+                            onChange={(v) => setField(a.id, { indicador: v })}
                           />
                         </TableCell>
                         <TableCell className="align-top">
@@ -311,11 +314,10 @@ export function PlanejamentoSetor({ ano, setor, acoes }: Props) {
                           />
                         </TableCell>
                         <TableCell className="align-top">
-                          <Textarea
-                            className="min-h-[34px] text-xs"
-                            rows={1}
+                          <CampoTexto
+                            aria-label="Observações"
                             value={(val(a, "observacoes") as string | null) ?? ""}
-                            onChange={(e) => setField(a.id, { observacoes: e.target.value })}
+                            onChange={(v) => setField(a.id, { observacoes: v })}
                           />
                         </TableCell>
                         <TableCell className="align-top">

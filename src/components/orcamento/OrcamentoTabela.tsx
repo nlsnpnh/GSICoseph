@@ -3,7 +3,7 @@ import { Plus, Save, RotateCcw, Trash2, Loader2, Wallet } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { CampoTexto } from "@/components/admin/CampoTexto";
 import {
   Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -168,9 +168,10 @@ export function OrcamentoTabela({ ano, acao, itens }: Props) {
                             onChange={(e) => setField(a.id, { fonte: e.target.value })} />
                         </TableCell>
                         <TableCell className="align-top">
-                          <Textarea className="min-h-[34px] text-xs" rows={2}
+                          <CampoTexto
+                            aria-label="Objeto"
                             value={(val(a, "objeto") as string | null) ?? ""}
-                            onChange={(e) => setField(a.id, { objeto: e.target.value })} />
+                            onChange={(v) => setField(a.id, { objeto: v })} />
                         </TableCell>
                         {COLS_NUM.map((c) => (
                           <TableCell key={c.key as string} className="align-top">
@@ -190,9 +191,10 @@ export function OrcamentoTabela({ ano, acao, itens }: Props) {
                             onChange={(e) => setField(a.id, { nota_empenho: e.target.value })} />
                         </TableCell>
                         <TableCell className="align-top">
-                          <Textarea className="min-h-[34px] text-xs" rows={2}
+                          <CampoTexto
+                            aria-label="Observação"
                             value={(val(a, "observacao") as string | null) ?? ""}
-                            onChange={(e) => setField(a.id, { observacao: e.target.value })} />
+                            onChange={(v) => setField(a.id, { observacao: v })} />
                         </TableCell>
                         <TableCell className="align-top">
                           <Button variant="ghost" size="icon" className="h-8 w-8 text-critical"
