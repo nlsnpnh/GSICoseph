@@ -11,6 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { SinalSeguranca } from "@/components/admin/SinalSeguranca";
+import { FioAcento } from "@/components/admin/FioAcento";
 import { useUnidades, type UnidadePredial } from "@/data/unidades";
 import { useUnidadeEquipamentos, type UnidadeEquipamento } from "@/data/equipamentos";
 import { useServidores, type ServidorSeg } from "@/data/servidores";
@@ -258,7 +259,8 @@ function UnidadeAccordionItem({
   }, [equipamentos]);
 
   return (
-    <AccordionItem value={unidade.id} className="overflow-hidden rounded-md border border-border bg-card">
+    <AccordionItem value={unidade.id} className="overflow-hidden rounded-md border border-border/80 bg-card">
+      <FioAcento />
       <AccordionTrigger className="px-2.5 py-1.5 hover:no-underline">
         <div className="flex min-w-0 flex-1 flex-col gap-1 pr-2 text-left">
           <p className="break-words text-[13px] font-medium leading-tight">{unidade.nome}</p>
@@ -364,11 +366,12 @@ function UnidadeAccordionItem({
 
 function Kpi({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: number }) {
   return (
-    <div className="rounded-md border border-border bg-card px-2.5 py-2">
-      <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+    <div className="overflow-hidden rounded-md border border-border/80 bg-card">
+      <FioAcento />
+      <div className="flex items-center gap-1.5 px-2.5 pt-2 text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
         <Icon className="h-3 w-3 shrink-0" />{label}
       </div>
-      <p className="mt-1 text-[22px] font-light tabular-nums leading-none tracking-[-0.03em]">{value}</p>
+      <p className="mt-1 px-2.5 pb-2 text-[22px] font-light tabular-nums leading-none tracking-[-0.03em]">{value}</p>
     </div>
   );
 }
