@@ -9,6 +9,7 @@ import {
 import { StatCard } from "@/components/StatCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FioAcento } from "@/components/admin/FioAcento";
+import { CHART } from "@/lib/design-tokens";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -139,7 +140,7 @@ export function PlanejamentoPainel({ acoes }: Props) {
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
                   <XAxis dataKey="setor" tick={{ fontSize: 11 }} interval={0} />
                   <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
-                  <Tooltip formatter={(v: number) => [`${v}%`, "% médio"]} />
+                  <Tooltip {...CHART.tooltip} cursor={{ fill: "hsl(var(--muted))" }} formatter={(v: number) => [`${v}%`, "% médio"]} />
                   <Bar dataKey="pct" radius={[4, 4, 0, 0]}>
                     {execData.map((d) => (
                       <Cell key={d.key} fill={SETOR_COR[d.key] ?? "hsl(217 91% 55%)"} />
@@ -165,7 +166,7 @@ export function PlanejamentoPainel({ acoes }: Props) {
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
                 <XAxis dataKey="setor" tick={{ fontSize: 11 }} interval={0} />
                 <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
-                <Tooltip />
+                <Tooltip {...CHART.tooltip} cursor={{ fill: "hsl(var(--muted))" }} />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
                 {STATUS_DEFS.map((s) => (
                   <Bar key={s.key} dataKey={s.key} stackId="st" fill={s.cor} radius={[2, 2, 0, 0]} />
@@ -234,7 +235,7 @@ function SetorDonut({ resumo: r }: { resumo: ResumoSetor }) {
                   <Cell key={i} fill={d.cor} />
                 ))}
               </Pie>
-              <Tooltip formatter={(v: number, n: string) => [v, n]} />
+              <Tooltip {...CHART.tooltip} formatter={(v: number, n: string) => [v, n]} />
             </PieChart>
           </ResponsiveContainer>
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">

@@ -293,7 +293,7 @@ function BarH({ data }: { data: { name: string; value: number }[] }) {
         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
         <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={11} allowDecimals={false} />
         <YAxis type="category" dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={11} width={150} />
-        <Tooltip contentStyle={tooltipStyle} />
+        <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "hsl(var(--muted))" }} />
         <Bar dataKey="value" fill="hsl(217 91% 55%)" radius={[0, 4, 4, 0]} />
       </BarChart>
     </ResponsiveContainer>
@@ -308,7 +308,7 @@ function BarV({ data }: { data: { name: string; value: number }[] }) {
         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
         <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={11} />
         <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} allowDecimals={false} />
-        <Tooltip contentStyle={tooltipStyle} />
+        <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "hsl(var(--muted))" }} />
         <Bar dataKey="value" fill="hsl(142 65% 45%)" radius={[4, 4, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>

@@ -278,6 +278,7 @@ export function RelatorioGeralTab({
                     />
                     <Tooltip
                       contentStyle={CHART_TOOLTIP}
+                      cursor={{ fill: "hsl(var(--muted))" }}
                       formatter={(value) => [value, "Total"]}
                       labelFormatter={(item) => {
                         const r = ranking.find((x) => x.item === item);
