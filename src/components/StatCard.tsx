@@ -12,7 +12,24 @@ interface StatCardProps {
   hrefLabel?: string;
   tone?: "default" | "success" | "warning" | "destructive" | "accent" | "primary" | "info";
   onClick?: () => void;
+  /**
+   * Cor do ícone. Identifica o domínio do indicador (patrimônio, pessoal,
+   * contratos) sem mexer no número — a cor do número segue reservada ao que
+   * pede providência.
+   */
+  iconeTom?: keyof typeof iconeClasses;
 }
+
+// Tons de ícone: suaves de propósito. Em 14px, cor cheia vira ruído.
+const iconeClasses = {
+  neutro:   "text-muted-foreground/60",
+  primary:  "text-primary/70",
+  info:     "text-blue-600/70",
+  success:  "text-adequate/70",
+  warning:  "text-partial/80",
+  critical: "text-critical/80",
+  accent:   "text-accent/80",
+};
 
 // A cor do número é reservada para o que exige atenção. Indicadores de
 // inventário ficam neutros — quando tudo é colorido, nada se destaca.
@@ -27,7 +44,7 @@ const toneClasses: Record<NonNullable<StatCardProps["tone"]>, { icon: string; va
 };
 
 export function StatCard({
-  label, value, icon: Icon, href, hrefLabel, tone = "default", onClick,
+  label, value, icon: Icon, href, hrefLabel, tone = "default", onClick, iconeTom,
 }: StatCardProps) {
   const t = toneClasses[tone];
   const clicavel = !!href || !!onClick;
@@ -49,7 +66,10 @@ export function StatCard({
           <p className="min-w-0 text-[9px] font-medium uppercase leading-[1.3] tracking-[0.12em] text-muted-foreground">
             {label}
           </p>
-          <Icon className={cn("h-3.5 w-3.5 shrink-0", t.icon)} aria-hidden="true" />
+          <Icon
+            className={cn("h-3.5 w-3.5 shrink-0", iconeTom ? iconeClasses[iconeTom] : t.icon)}
+            aria-hidden="true"
+          />
         </div>
 
         <p

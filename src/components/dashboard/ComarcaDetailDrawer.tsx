@@ -156,10 +156,10 @@ export function ComarcaDetailDrawer({ comarca, onOpenChange }: Props) {
 
             {/* Resumo geral da comarca (consolidado) */}
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <Kpi icon={Building2} label="Unidades"      value={dados.unidadesComarca.length} />
-              <Kpi icon={Users}     label="Servidores"    value={dados.servidoresTotal} />
-              <Kpi icon={UserCog}   label="Terceirizados" value={dados.terceirizadosTotal} />
-              <Kpi icon={KeyRound}  label="Kit RFID"      value={dados.kitRfidUnidades} />
+              <Kpi icon={Building2} label="Unidades"      value={dados.unidadesComarca.length} tom="text-primary/70" />
+              <Kpi icon={Users}     label="Servidores"    value={dados.servidoresTotal}        tom="text-accent/80" />
+              <Kpi icon={UserCog}   label="Terceirizados" value={dados.terceirizadosTotal}     tom="text-accent/80" />
+              <Kpi icon={KeyRound}  label="Kit RFID"      value={dados.kitRfidUnidades}        tom="text-primary/70" />
             </div>
 
             <div className="flex flex-wrap gap-1.5">
@@ -284,10 +284,10 @@ function UnidadeAccordionItem({
           <div className="space-y-3">
             {/* Mini KPIs da unidade */}
             <div className="grid grid-cols-4 gap-2">
-              <KpiMini icon={Cpu}      label="Equip."   value={totalEquip} />
-              <KpiMini icon={Users}    label="Serv."    value={servidores.length} />
-              <KpiMini icon={UserCog}  label="Terc."    value={terceirizados.length} />
-              <KpiMini icon={KeyRound} label="Kit RFID" value={kitRfid} />
+              <KpiMini icon={Cpu}      label="Equip."   value={totalEquip}          tom="text-primary/70" />
+              <KpiMini icon={Users}    label="Serv."    value={servidores.length}   tom="text-accent/80" />
+              <KpiMini icon={UserCog}  label="Terc."    value={terceirizados.length} tom="text-accent/80" />
+              <KpiMini icon={KeyRound} label="Kit RFID" value={kitRfid}             tom="text-primary/70" />
             </div>
 
             {/* Equipamentos por categoria, com itens individuais e quantidades */}
@@ -364,23 +364,23 @@ function UnidadeAccordionItem({
   );
 }
 
-function Kpi({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: number }) {
+function Kpi({ icon: Icon, label, value, tom = "text-muted-foreground/60" }: { icon: React.ElementType; label: string; value: number; tom?: string }) {
   return (
     <div className="overflow-hidden rounded-md border border-border/80 bg-card">
       <FioAcento />
       <div className="flex items-center gap-1.5 px-2.5 pt-2 text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-        <Icon className="h-3 w-3 shrink-0" />{label}
+        <Icon className={`h-3 w-3 shrink-0 ${tom}`} />{label}
       </div>
       <p className="mt-1 px-2.5 pb-2 text-[22px] font-light tabular-nums leading-none tracking-[-0.03em]">{value}</p>
     </div>
   );
 }
 
-function KpiMini({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: number }) {
+function KpiMini({ icon: Icon, label, value, tom = "text-muted-foreground/60" }: { icon: React.ElementType; label: string; value: number; tom?: string }) {
   return (
     <div className="rounded-md border border-border bg-card px-2 py-1.5">
       <div className="flex items-center gap-1 text-[9px] uppercase tracking-[0.1em] text-muted-foreground">
-        <Icon className="h-3 w-3 shrink-0" />{label}
+        <Icon className={`h-3 w-3 shrink-0 ${tom}`} />{label}
       </div>
       <p className="mt-0.5 text-[15px] font-light tabular-nums leading-none">{value}</p>
     </div>

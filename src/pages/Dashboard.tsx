@@ -213,12 +213,12 @@ export default function Dashboard() {
       {/* Linha unica de oito. O inventario fica neutro; a cor e reservada ao
           que pede providencia, e so acende quando ha algo pendente. */}
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
-        <StatCard label="Unidades monitoradas"    value={stats.unidadesMonitoradas}     icon={Building2} />
-        <StatCard label="Equipamentos instalados" value={stats.equipamentosInstalados}  icon={Cpu} />
-        <StatCard label="Câmeras"                 value={stats.cameras}                 icon={Camera} />
-        <StatCard label="Servidores ativos"       value={stats.servidoresAtivos}        icon={Users} />
-        <StatCard label="Terceirizados ativos"    value={stats.terceirizadosAtivos}     icon={UserCog} />
-        <StatCard label="Contratos continuados"   value={stats.contratosVigentes}       icon={FileCheck} />
+        <StatCard label="Unidades monitoradas"    value={stats.unidadesMonitoradas}     icon={Building2} iconeTom="primary" />
+        <StatCard label="Equipamentos instalados" value={stats.equipamentosInstalados}  icon={Cpu}       iconeTom="primary" />
+        <StatCard label="Câmeras"                 value={stats.cameras}                 icon={Camera}    iconeTom="primary" />
+        <StatCard label="Servidores ativos"       value={stats.servidoresAtivos}        icon={Users}     iconeTom="accent" />
+        <StatCard label="Terceirizados ativos"    value={stats.terceirizadosAtivos}     icon={UserCog}   iconeTom="accent" />
+        <StatCard label="Contratos continuados"   value={stats.contratosVigentes}       icon={FileCheck} iconeTom="success" />
         <StatCard
           label="Alertas críticos"
           value={stats.alertasCriticos}
