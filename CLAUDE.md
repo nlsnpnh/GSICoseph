@@ -84,6 +84,21 @@ não em hora local — assim independem do fuso da máquina.
 A cobertura hoje é de funções puras (SLA, vigência, orçamento, idade, datas,
 permissões). Componentes ainda não têm teste.
 
+## Documentação
+
+- `CHANGELOG.md` — o que mudou em cada versão. Atualize junto com o commit,
+  não depois.
+- `docs/ESTRUTURA.md` — como o sistema é organizado e por quê: camada de
+  dados, permissões, datas, padrões de apresentação e pendências conhecidas.
+
+## Versionamento
+
+Semântico, com a versão só no `package.json` (o Vite injeta via `__APP_VERSION__`).
+
+- `1.1.1` — correção de defeito, sem tela nova
+- `1.2.0` — funcionalidade ou mudança visível
+- `2.0.0` — apenas se quebrar compatibilidade
+
 ## Idioma
 
 Código, comentários, commits e interface em português. Comentários explicam

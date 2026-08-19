@@ -39,10 +39,18 @@ padronização visual das telas.
 - **Coluna Segurança em Unidades Prediais**, com os indicadores de DERSO,
   controle de acesso e vigilância eletrônica — dados que já existiam no banco e
   não apareciam na listagem.
-- **Ordenação de Terceirizados por unidade predial** e, dentro dela, por nome,
-  para admin e gestor. Operador segue em ordem alfabética.
-- **Ordenação de Usuários por papel** em Configurações: administradores,
-  gestores, operadores e, por último, quem aguarda atribuição.
+- **Listagens separadas por grupo**, com faixa nomeada onde o grupo troca:
+
+  | Tela | Separada por |
+  |---|---|
+  | Unidades Prediais | comarca — Porto Velho primeiro, demais alfabéticas |
+  | AFS por unidade predial | comarca — Porto Velho primeiro, com subtotal de AFS |
+  | Servidores | unidade predial |
+  | Terceirizados | unidade predial |
+  | Configurações | papel — admin, gestor, operador |
+
+  Operador, que enxerga uma unidade só, continua vendo a lista em ordem
+  alfabética simples.
 - **Suíte de testes**: 89 testes cobrindo SLA, vigência de contratos, orçamento,
   idade e tempo de serviço, cálculo de datas e permissões.
 - **Versão do sistema** exibida no rodapé do menu lateral.
@@ -54,17 +62,33 @@ padronização visual das telas.
   Cabe aproximadamente o dobro de registros por tela.
 - **Editar e excluir lado a lado** na mesma célula, com a lixeira sempre
   vermelha.
+- **Menos colunas, com hierarquia.** Servidores saiu de 9 para 6 colunas e
+  Terceirizados de 8 para 7, juntando o que se repetia (matrícula sob o nome,
+  regime junto do cargo, tempo e idade numa coluna só) e tirando da linha o
+  dado que passou a ser título da faixa de grupo.
+- **Campos de texto das grades não têm mais a caixa expansível.** Em
+  Planejamento e Orçamento, o `textarea` exibia a alça de redimensionamento do
+  navegador em cada linha; agora o campo cresce com o conteúdo.
+- **Prioridade e status sem a bolha.** Nos seletores do Planejamento o valor
+  escolhido aparecia dentro de uma cápsula no meio do campo; passou a ponto
+  colorido ao lado do rótulo.
 - **Cabeçalhos de página** com rótulo de seção (Cadastro, Pessoal, Patrimônio,
   Operação, Análise) e título em peso leve.
 - **Carga inicial 75% menor**: de 818 kB para cerca de 208 kB compactados. As
   rotas passam a carregar sob demanda, e as bibliotecas de exportação (Excel e
   PDF) só são baixadas quando o usuário clica em exportar.
 - **Tipos do banco regenerados**: 11 para 17 tabelas.
+- **Páginas extensas divididas em componentes.** Manutenção saiu de 980 para 61
+  linhas, Boletim de 783 para 61 e Consultas de 613 para 210, com as partes
+  movidas para `components/ocorrencias`, `components/boletim` e
+  `components/consultas`.
 
 ### Removido
 
 - Dependências sem uso: `leaflet`, `react-leaflet` e `@types/leaflet`.
 - 13 funções de acesso a dados que não eram chamadas por nenhuma tela.
+- Arquivo de dados fictícios do painel (`mockDashboard.ts`), do qual só o tipo
+  `Criticidade` seguia em uso.
 
 ---
 
