@@ -262,12 +262,15 @@ export default function Dashboard() {
               <button
                 key={to}
                 onClick={() => navigate(to)}
-                className="group flex items-center gap-2.5 rounded-md border border-border bg-card px-3 py-2.5 text-left shadow-sm transition-colors hover:border-primary/40 hover:bg-primary/[0.025] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                className="group flex flex-col overflow-hidden rounded-md border border-border bg-card text-left shadow-sm transition-colors hover:border-primary/40 hover:bg-primary/[0.025] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
               >
-                <span className={`rounded p-1.5 ${bg}`}>
-                  <Icon className={`h-4 w-4 ${color}`} />
+                <FioAcento />
+                <span className="flex w-full items-center gap-2.5 px-3 py-2.5">
+                  <span className={`rounded p-1.5 ${bg}`}>
+                    <Icon className={`h-4 w-4 ${color}`} />
+                  </span>
+                  <span className="text-[13px] text-foreground transition-colors group-hover:text-primary">{label}</span>
                 </span>
-                <span className="text-[13px] text-foreground transition-colors group-hover:text-primary">{label}</span>
               </button>
             ))}
           </div>
