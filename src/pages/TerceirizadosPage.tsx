@@ -11,6 +11,7 @@ import { ConfirmDelete } from "@/components/ConfirmDelete";
 import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
 import { AcoesLinha } from "@/components/admin/AcoesLinha";
+import { SUB } from "@/components/admin/estilos";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
@@ -252,14 +253,13 @@ export default function TerceirizadosPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Nome</TableHead>
+                <TableHead>Terceirizado</TableHead>
                 <TableHead>Empresa / Contrato</TableHead>
-                <TableHead>Função</TableHead>
-                <TableHead>Posto / Unidade</TableHead>
+                <TableHead>Função / Posto</TableHead>
                 <TableHead>Escala / Turno</TableHead>
                 <TableHead>Certificação</TableHead>
                 <TableHead>Situação</TableHead>
-                <TableHead className="w-[100px] text-right">Ações</TableHead>
+                <TableHead className="w-[80px] text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -275,7 +275,7 @@ export default function TerceirizadosPage() {
                   <Fragment key={t.id}>
                   {abreGrupo && (
                     <TableRow className="hover:bg-transparent">
-                      <TableCell colSpan={8} className="border-y border-border bg-muted/40 py-1">
+                      <TableCell colSpan={7} className="border-y border-border bg-muted/40 py-1">
                         <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-foreground/70">
                           {unid?.nome ?? "Sem unidade vinculada"}
                         </span>
@@ -288,24 +288,26 @@ export default function TerceirizadosPage() {
                     </TableRow>
                   )}
                   <TableRow>
-                    <TableCell className="font-medium">
-                      <div>{t.nome}</div>
-                      <div className="text-xs text-muted-foreground">CPF {t.cpf}</div>
+                    <TableCell>
+                      <span className="font-medium text-foreground">{t.nome}</span>
+                      <p className={`${SUB} tabular-nums`}>CPF {t.cpf}</p>
                     </TableCell>
                     <TableCell>
-                      <div>{t.empresa}</div>
-                      <div className="text-xs text-muted-foreground">Contrato {t.contrato}</div>
+                      <span className="text-foreground/90">{t.empresa}</span>
+                      <p className={SUB}>Contrato {t.contrato}</p>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{t.funcao}</TableCell>
+                    {/* Função e posto viram uma coluna só. A unidade sai daqui:
+                        já é o título da faixa de grupo logo acima. */}
                     <TableCell>
-                      <div>{t.posto_trabalho}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {unid?.nome ?? "—"}{unid?.comarca_nome ? ` • ${unid.comarca_nome}` : ""}
-                      </div>
+                      <span className="text-foreground/90">{t.funcao}</span>
+                      <p className={SUB}>
+                        {t.posto_trabalho}
+                        {isOperador && unid?.nome ? ` · ${unid.nome}` : ""}
+                      </p>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      <div>{t.escala}</div>
-                      <div className="text-xs">{t.turno}</div>
+                    <TableCell>
+                      <span className="text-muted-foreground">{t.escala}</span>
+                      <p className={SUB}>{t.turno}</p>
                     </TableCell>
                     <TableCell>
                       {cert ? (

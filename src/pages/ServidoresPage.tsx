@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { getErrorMessage } from "@/lib/utils";
 import { Plus, Users, Building2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -11,6 +11,7 @@ import { ConfirmDelete } from "@/components/ConfirmDelete";
 import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
 import { AcoesLinha } from "@/components/admin/AcoesLinha";
+import { SUB } from "@/components/admin/estilos";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
@@ -106,7 +107,7 @@ export default function ServidoresPage() {
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    return items.filter((s) => {
+    const encontrados = items.filter((s) => {
       if (situacaoFilter !== "all" && s.situacao !== situacaoFilter) return false;
       if (abonoFilter === "sim" && !s.abono_permanencia) return false;
       if (abonoFilter === "nao" && s.abono_permanencia) return false;
@@ -122,7 +123,24 @@ export default function ServidoresPage() {
         (s.unidade_id ? (unidadeMap[s.unidade_id]?.nome ?? "").toLowerCase().includes(q) : false)
       );
     });
-  }, [items, search, comarcaFilter, situacaoFilter, abonoFilter, unidadeMap]);
+
+    // Operador ve uma unidade so, entao agrupar nao diz nada: ordem alfabetica.
+    // Admin e gestor veem a rede inteira e leem melhor separado por unidade.
+    const nomeLotacao = (x: ServidorSeg) =>
+      x.unidade_id ? (unidadeMap[x.unidade_id]?.nome ?? "") : "";
+    const porNome = (a: ServidorSeg, b: ServidorSeg) => a.nome.localeCompare(b.nome, "pt-BR");
+
+    if (isOperador) return encontrados.sort(porNome);
+
+    return encontrados.sort((a, b) => {
+      const la = nomeLotacao(a);
+      const lb = nomeLotacao(b);
+      // Sem unidade vinculada vai para o fim da lista.
+      if (!la !== !lb) return la ? -1 : 1;
+      const porLotacao = la.localeCompare(lb, "pt-BR");
+      return porLotacao !== 0 ? porLotacao : porNome(a, b);
+    });
+  }, [items, search, comarcaFilter, situacaoFilter, abonoFilter, unidadeMap, isOperador]);
 
   const openCreate = () => {
     setEditing(null);
@@ -242,40 +260,61 @@ export default function ServidoresPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Matrícula</TableHead>
+                <TableHead>Servidor</TableHead>
                 <TableHead>Cargo / Função</TableHead>
-                <TableHead>Unidade / Comarca</TableHead>
-                <TableHead>Regime</TableHead>
-                <TableHead>Tempo</TableHead>
-                <TableHead>Idade</TableHead>
+                <TableHead>Contato</TableHead>
+                <TableHead className="text-right">Tempo · Idade</TableHead>
                 <TableHead>Situação</TableHead>
-                <TableHead className="w-[100px] text-right">Ações</TableHead>
+                <TableHead className="w-[80px] text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((s) => {
+              {filtered.map((s, i) => {
                 const idade = calcIdade(s.data_nascimento);
                 const tempo = tempoServicoAnos(s.data_ingresso);
                 const unid = s.unidade_id ? unidadeMap[s.unidade_id] : null;
+                // A lista sai separada por unidade predial para admin/gestor.
+                const anterior = i > 0 ? filtered[i - 1] : null;
+                const abreGrupo =
+                  !isOperador && (!anterior || anterior.unidade_id !== s.unidade_id);
                 return (
-                  <TableRow key={s.id}>
-                    <TableCell className="font-medium">
-                      <div>{s.nome}</div>
-                      <div className="text-xs text-muted-foreground">{s.email}{s.telefone ? ` • ${s.telefone}` : ""}</div>
-                    </TableCell>
-                    <TableCell className="font-mono text-xs">{s.matricula}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      <div>{s.cargo}</div>
-                      {s.funcao_atual && <div className="text-xs">{s.funcao_atual}</div>}
+                  <Fragment key={s.id}>
+                  {abreGrupo && (
+                    <TableRow className="hover:bg-transparent">
+                      <TableCell colSpan={6} className="border-y border-border bg-muted/40 py-1">
+                        <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-foreground/70">
+                          {unid?.nome ?? "Sem unidade predial vinculada"}
+                        </span>
+                        {unid?.comarca_nome && (
+                          <span className="ml-2 text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+                            {unid.comarca_nome}
+                          </span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  <TableRow>
+                    {/* Nome é o protagonista; matrícula identifica e vem logo abaixo. */}
+                    <TableCell>
+                      <span className="font-medium text-foreground">{s.nome}</span>
+                      <p className={`${SUB} font-mono`}>{s.matricula}</p>
                     </TableCell>
                     <TableCell>
-                      <div>{unid?.nome ?? "—"}</div>
-                      <div className="text-xs text-muted-foreground">{unid?.comarca_nome ?? "—"}</div>
+                      <span className="text-foreground/90">{s.cargo}</span>
+                      <p className={SUB}>
+                        {s.funcao_atual ? `${s.funcao_atual} · ` : ""}{s.regime}
+                        {isOperador && unid?.nome ? ` · ${unid.nome}` : ""}
+                      </p>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{s.regime}</TableCell>
-                    <TableCell className="text-muted-foreground text-xs">{tempo != null ? `${tempo} anos` : "—"}</TableCell>
-                    <TableCell className="text-muted-foreground text-xs">{idade != null ? `${idade}` : "—"}</TableCell>
+                    <TableCell>
+                      <span className="text-muted-foreground">{s.email || "—"}</span>
+                      {s.telefone && <p className={`${SUB} tabular-nums`}>{s.telefone}</p>}
+                    </TableCell>
+                    {/* Tempo de serviço e idade eram duas colunas de um número só. */}
+                    <TableCell className="text-right tabular-nums text-muted-foreground">
+                      {tempo != null ? `${tempo} anos` : "—"}
+                      <p className={`${SUB} tabular-nums`}>{idade != null ? `${idade} anos de idade` : "—"}</p>
+                    </TableCell>
                     <TableCell>
                       <div className="flex flex-col gap-1">
                         <Badge variant="outline" className={situacaoTone[s.situacao]}>{s.situacao}</Badge>
@@ -294,6 +333,7 @@ export default function ServidoresPage() {
                       />
                     </TableCell>
                   </TableRow>
+                  </Fragment>
                 );
               })}
             </TableBody>
