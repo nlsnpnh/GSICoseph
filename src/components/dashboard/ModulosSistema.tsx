@@ -2,6 +2,7 @@ import { Search, Building2, CheckCircle2, XCircle } from "lucide-react";
 import { ReactNode, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FioAcento } from "@/components/admin/FioAcento";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,9 +15,10 @@ import { useContratos, statusFromVigencia } from "@/data/contratos";
 function ModuleCard({ title, children, footer, to }: { title: string; children: ReactNode; footer: string; to: string }) {
   const navigate = useNavigate();
   return (
-    <Card className="flex flex-col shadow-sm">
-      <CardHeader className="border-b border-border bg-muted/40 py-2 text-center">
-        <CardTitle className="text-xs font-bold uppercase tracking-wider text-foreground">{title}</CardTitle>
+    <Card className="flex flex-col overflow-hidden border-border/80 shadow-sm">
+      <FioAcento />
+      <CardHeader className="border-b border-border bg-muted/30 px-3 py-2">
+        <CardTitle className="text-[11px] font-medium uppercase tracking-[0.14em] text-foreground/70">{title}</CardTitle>
       </CardHeader>
       <CardContent className="flex-1 p-3 text-xs">{children}</CardContent>
       <div className="border-t border-border p-2">
