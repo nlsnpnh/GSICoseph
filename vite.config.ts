@@ -12,7 +12,9 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
     hmr: {
-      overlay: false,
+      // Overlay ligado: com ele desligado, um erro de runtime aparece como
+      // pagina em branco sem nenhuma mensagem.
+      overlay: true,
     },
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),

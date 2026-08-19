@@ -30,6 +30,16 @@ padronização visual das telas.
   contratos, e operador via botões de escrita em equipamentos e contratos, sem
   ter permissão para nenhum dos dois.
 
+- **Erro em uma tela derrubava o sistema inteiro.** Sem limite de erro, qualquer
+  falha ao desenhar uma página apagava tudo, menu incluído, sem nenhuma
+  mensagem. Agora a falha fica contida na área de conteúdo.
+- **Gráficos ilegíveis no modo escuro.** A grade tracejada usava cor fixa clara
+  e aparecia como um pontilhado forte sobre os gráficos.
+- **Caixa branca sobre os gráficos.** Em "Execução por Ação" e no Planejamento,
+  as dicas de valor e o realce ao passar o mouse usavam o cinza-claro padrão da
+  biblioteca, em vez das cores do tema.
+- **Barra de rolagem à vista** no relatório cadastral de servidores.
+
 ### Adicionado
 
 - **Datas ancoradas no fuso de Rondônia** (`src/lib/dates.ts`). O "hoje" do
@@ -53,6 +63,7 @@ padronização visual das telas.
   alfabética simples.
 - **Suíte de testes**: 89 testes cobrindo SLA, vigência de contratos, orçamento,
   idade e tempo de serviço, cálculo de datas e permissões.
+- **Fio de acento** no topo de cada card — o único ornamento do sistema.
 - **Versão do sistema** exibida no rodapé do menu lateral.
 
 ### Alterado
@@ -77,6 +88,12 @@ padronização visual das telas.
 - **Carga inicial 75% menor**: de 818 kB para cerca de 208 kB compactados. As
   rotas passam a carregar sob demanda, e as bibliotecas de exportação (Excel e
   PDF) só são baixadas quando o usuário clica em exportar.
+- **Painel executivo revisado.** Cabeçalho mais baixo, indicadores com um matiz
+  próprio por assunto e cor no número reservada ao que pede providência —
+  alertas e manutenções só acendem quando há algo pendente. Os atalhos de ações
+  rápidas deixaram de reagir ao mouse.
+- **Cards deixaram de saltar ao passar o mouse.** O efeito estava no componente
+  base e valia até para cards que não são clicáveis.
 - **Tipos do banco regenerados**: 11 para 17 tabelas.
 - **Páginas extensas divididas em componentes.** Manutenção saiu de 980 para 61
   linhas, Boletim de 783 para 61 e Consultas de 613 para 210, com as partes
