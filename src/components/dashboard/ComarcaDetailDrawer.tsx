@@ -81,7 +81,7 @@ export function ComarcaDetailDrawer({ comarca, onOpenChange }: Props) {
     const totalEquip    = distComarca.reduce((s, d) => s + d.quantidade, 0);
     const valorEstimado = distComarca.reduce((s, d) => s + d.quantidade * d.valor_unitario, 0);
 
-    const semDerso     = unidadesComarca.filter((u) => !u.possui_derso);
+    const semDerso     = unidadesComarca.filter((u) => u.possui_derso === false);
     const unidadesComKit = new Set(kitRfidComarca.map((d) => d.unidade_id));
     const semKitRfid   = unidadesComarca.filter((u) => !unidadesComKit.has(u.id));
     const totalKitRfid = kitRfidComarca.reduce((s, d) => s + d.quantidade, 0);

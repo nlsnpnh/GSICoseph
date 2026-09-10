@@ -6,6 +6,12 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { queryClient } from "@/lib/queryClient";
 
+/**
+ * Indicador de seguranca da unidade. `null` significa "nao informado" — nao
+ * e o mesmo que `false` ("nao possui"), e o mapa trata os dois diferente.
+ */
+export type IndicadorSeguranca = boolean | null;
+
 export type UnidadePredial = {
   id: string;
   nome: string;
@@ -15,9 +21,9 @@ export type UnidadePredial = {
   telefone: string;
   responsavel_local: string;
   responsavel_substituto: string;
-  possui_derso: boolean;
-  controle_acesso: boolean;
-  vigilancia_eletronica: boolean;
+  possui_derso: IndicadorSeguranca;
+  controle_acesso: IndicadorSeguranca;
+  vigilancia_eletronica: IndicadorSeguranca;
   observacoes: string;
   lat?: number | null;
   lng?: number | null;
@@ -34,9 +40,10 @@ const mapRow = (r: any): UnidadePredial => ({
   telefone: r.telefone ?? "",
   responsavel_local: r.responsavel_local ?? "",
   responsavel_substituto: r.responsavel_substituto ?? "",
-  possui_derso: !!r.possui_derso,
-  controle_acesso: !!r.controle_acesso,
-  vigilancia_eletronica: !!r.vigilancia_eletronica,
+  // `?? null` e nao `!!`: o coerce para booleano apagaria o "nao informado".
+  possui_derso: r.possui_derso ?? null,
+  controle_acesso: r.controle_acesso ?? null,
+  vigilancia_eletronica: r.vigilancia_eletronica ?? null,
   observacoes: r.observacoes ?? "",
   lat: r.lat ?? null,
   lng: r.lng ?? null,
