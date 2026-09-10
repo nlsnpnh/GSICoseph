@@ -1,9 +1,11 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, LayoutDashboard, Building2, Map, Users, UserCog, Cpu, DoorOpen, FileText, AlertTriangle, BarChart3, Settings } from "lucide-react";
+import { ArrowLeft, LayoutDashboard, Building2, Map, Users, UserCog, Cpu, DoorOpen, FileText, Ticket, BarChart3, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FioAcento } from "@/components/admin/FioAcento";
+import { CoberturaSegurancaCard } from "@/components/ajuda/CoberturaSegurancaCard";
+import { useAuth } from "@/contexts/AuthContext";
 
 const passos = [
   {
@@ -14,8 +16,9 @@ const passos = [
       "Acesse o Painel Executivo no menu lateral.",
       "Use os filtros de Período, Comarca, Unidade e Status para refinar os dados exibidos.",
       "Os cards superiores mostram totais de unidades, servidores, equipamentos e alertas.",
-      "O mapa exibe o nível de estrutura de segurança por comarca (Adequado, Parcial, Crítico).",
-      "O painel de Alertas lista pendências críticas, de atenção e informativas.",
+      "O mapa exibe o nível de estrutura de segurança por comarca: Adequado, Parcial, Crítico e Sem dados. A regra de cada cor está na seção Mapa das Comarcas, mais adiante neste Guia.",
+      "O painel de Alertas lista pendências críticas, de atenção e informativas. Chamados com prazo vencido e contratos a vencer aparecem por lá.",
+      "O atalho 'Abrir Chamado', em Ações rápidas, leva direto ao formulário de novo chamado.",
     ],
   },
   {
@@ -26,7 +29,9 @@ const passos = [
       "Acesse Unidades Prediais no menu.",
       "Clique em 'Nova Unidade' para cadastrar uma unidade.",
       "Preencha nome, comarca, endereço, tipo, responsável e criticidade.",
-      "Informe se a unidade possui DERSO, controle de acesso e vigilância eletrônica.",
+      "Na seção 'Segurança', responda DERSO, controle de acesso e vigilância eletrônica. Cada um tem três respostas: Sim, Não e Não informado — e unidade nova começa em 'Não informado'.",
+      "A diferença entre 'Não' e 'Não informado' importa: 'Não' é uma afirmação e conta como cobertura zero no mapa; 'Não informado' fica de fora da conta, e a comarca aparece em cinza em vez de vermelho. Responder 'Não' por engano é o que pinta uma comarca de vermelho sem motivo.",
+      "Na listagem, os selos DERSO, Acesso e CFTV mostram o estado de cada um: preenchido em verde quando é Sim, apagado quando é Não, e tracejado com '?' quando ainda não foi informado.",
       "Latitude e longitude são opcionais — usadas para exibir a unidade no mapa.",
     ],
   },
@@ -37,8 +42,11 @@ const passos = [
     steps: [
       "Acesse Mapa das Comarcas no menu.",
       "Cadastre ou edite uma comarca e preencha os campos de Latitude e Longitude para que ela apareça no mapa interativo.",
-      "A cor do pin indica o nível de segurança: verde (Adequado), amarelo (Parcial), vermelho (Crítico).",
-      "Clique em um pin para ver o resumo da comarca.",
+      "A cor da comarca indica o nível: verde (Adequado), amarelo (Parcial), vermelho (Crítico) e cinza (Sem dados).",
+      "Como a cor é calculada: cada unidade responde três indicadores no próprio cadastro — DERSO, controle de acesso e vigilância eletrônica. A cobertura é quantos 'Sim' a comarca tem sobre o total de respostas dadas. Quem não respondeu fica fora da conta, nos dois lados.",
+      "Os limites: 90% ou mais, com equipamentos vinculados e no máximo 1 chamado aberto, é Adequado; abaixo de 50%, ou sem equipamento vinculado, ou com 4 ou mais chamados abertos, é Crítico; o restante é Parcial.",
+      "Cinza (Sem dados) significa que nenhuma unidade da comarca respondeu os indicadores — o sistema não afirma que está bem nem que está mal, apenas que não sabe. Preencher o cadastro é o que transforma o cinza numa leitura real. Administradores encontram no topo deste Guia quais unidades estão sem resposta.",
+      "Clique em uma comarca para ver o resumo.",
     ],
   },
   {
@@ -66,11 +74,10 @@ const passos = [
     titulo: "Equipamentos",
     descricao: "Inventário de câmeras, catracas, sensores e demais equipamentos.",
     steps: [
-      "Acesse Equipamentos no menu.",
-      "Cadastre cada equipamento com tipo, fabricante, modelo e número de série.",
-      "Vincule o equipamento a uma unidade predial.",
-      "Atualize o status (Operacional, Em manutenção, Inoperante) conforme necessário.",
-      "Informe a data de garantia para receber alertas de vencimento.",
+      "Acesse Equipamentos no menu. A aba 'Catálogo do contrato' lista os itens contratados; a aba 'Distribuição por unidade' mostra onde cada item está.",
+      "Clique em 'Vincular equipamento' para registrar quantos itens do catálogo uma unidade recebeu.",
+      "Ao editar um vínculo existente, unidade e item ficam travados — a seção aparece como 'Vínculo (não editável)'. Só a quantidade e as observações mudam; trocar a unidade ou o item seria outro registro, não uma correção deste.",
+      "Unidade sem nenhum item vinculado entra como Crítico no mapa das comarcas, mesmo que os indicadores de segurança estejam bem respondidos.",
     ],
   },
   {
@@ -90,19 +97,25 @@ const passos = [
     steps: [
       "Acesse Contratos no menu.",
       "Cadastre contratos com empresa, objeto, vigência e valores.",
+      "Em 'Unidades atendidas', marque quais unidades o contrato cobre. É essa lista que decide quais contratos aparecem ao abrir um chamado para cada unidade.",
+      "Em 'Gestão e SLA', o campo 'Prazo de atendimento (dias)' é o que calcula o vencimento dos chamados: abertura mais esse número de dias. O campo 'SLA' logo acima é a cláusula em texto e não calcula nada — contrato sem o prazo em dias gera chamado sem vencimento, e nada aparece como vencido.",
       "O sistema alerta automaticamente para contratos vencidos ou a vencer em 90 dias.",
       "Registre aditivos e apostilamentos diretamente no contrato.",
     ],
   },
   {
-    icon: AlertTriangle,
-    titulo: "Ocorrências e Manutenções",
-    descricao: "Registro e acompanhamento de chamados e manutenções.",
+    icon: Ticket,
+    titulo: "Chamados",
+    descricao: "Ciclo completo dos chamados de prestação de serviços.",
     steps: [
-      "Acesse Ocorrências e Manutenções no menu.",
-      "Crie ocorrências com título, tipo, prioridade e unidade afetada.",
-      "Defina um prazo e acompanhe a evolução do status (Aberto, Em andamento, Concluído).",
-      "Ocorrências com prazo vencido geram alertas no Painel Executivo.",
+      "Acesse Chamados no menu. A central tem as abas Pendentes, Fechados, Todos, Personalizado, Painel e Relatórios.",
+      "Clique em '+ Novo chamado'. Escolha primeiro a Unidade Predial: os contratos aplicáveis àquela unidade aparecem em seguida.",
+      "Todo chamado nasce vinculado a uma unidade e a um contrato — sem os dois, o sistema não permite abrir.",
+      "Informe solicitante, serviço, categoria, assunto e descrição. O número é gerado automaticamente, mas pode ser digitado quando o chamado veio de outro sistema.",
+      "O prazo de vencimento vem do contrato: é a data de abertura mais o 'Prazo de atendimento (dias)' cadastrado em Contratos. Contrato sem esse prazo gera chamado sem vencimento.",
+      "Dentro do chamado, use 'Nova mensagem / atualização' para registrar o andamento e mudar o status. Tudo entra na Linha do tempo, que não pode ser apagada.",
+      "Para encerrar, informe a solução adotada. Chamado fechado ou cancelado pode ser reaberto mediante justificativa.",
+      "Chamados com prazo vencido geram alertas no Painel Executivo.",
     ],
   },
   {
@@ -110,10 +123,11 @@ const passos = [
     titulo: "Relatórios",
     descricao: "Geração de relatórios gerenciais.",
     steps: [
-      "Acesse Relatórios no menu.",
-      "Selecione o tipo de relatório desejado.",
-      "Aplique filtros de período e comarca conforme necessário.",
-      "Exporte os dados para impressão ou compartilhamento.",
+      "Acesse Relatórios no menu para a visão consolidada de todos os módulos; os relatórios só de chamados ficam na aba Relatórios dentro de Chamados.",
+      "Os cards do topo trazem os totais. Abaixo vêm os gráficos, e mais embaixo as pendências que exigem providência.",
+      "Nos gráficos de barras, quando há muitas categorias aparecem as 10 maiores e uma barra final 'Outras N' — ela soma o restante, então o total continua correto.",
+      "Um gráfico vazio nem sempre é defeito: quando o vazio tem motivo, o próprio gráfico explica. 'Nenhuma divergência', por exemplo, significa que as quantidades distribuídas batem com as do contrato.",
+      "Use os botões do topo para exportar cada conjunto de dados em CSV.",
     ],
   },
   {
@@ -122,8 +136,8 @@ const passos = [
     descricao: "Gerenciamento de usuários e permissões.",
     steps: [
       "Acesse Configurações no menu (disponível apenas para administradores).",
-      "Gerencie os usuários do sistema e seus papéis (admin, operador).",
-      "Restrinja o acesso de operadores a comarcas e unidades específicas.",
+      "Gerencie os usuários do sistema e seus papéis: admin (acesso total), gestor (escrita nos cadastros operacionais, sem planejamento nem orçamento) e operador (apenas a própria unidade predial).",
+      "O operador só enxerga e edita registros da unidade à qual está vinculado — a restrição é aplicada pelo banco, não apenas pela tela.",
     ],
   },
 ];
@@ -131,6 +145,7 @@ const passos = [
 export default function AjudaPage() {
   useEffect(() => { document.title = "Guia do Sistema | COSEPH TJRO"; }, []);
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
 
   return (
     <div className="space-y-6">
@@ -143,6 +158,10 @@ export default function AjudaPage() {
           <p className="text-sm text-muted-foreground">Passo a passo de como utilizar o COSEPH TJRO</p>
         </div>
       </div>
+
+      {/* Diagnóstico do cadastro: fica no manual, e só para admin — é
+          informação de manutenção do sistema, não de operação diária. */}
+      {isAdmin && <CoberturaSegurancaCard />}
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {passos.map(({ icon: Icon, titulo, descricao, steps }) => (

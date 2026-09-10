@@ -11,14 +11,15 @@ de trabalho no repositório, ver `CLAUDE.md`.
 Sistema Integrado de Gestão da Segurança Patrimonial e Humana — COSEPH / TJRO.
 Controla as edificações do Tribunal de Justiça de Rondônia e tudo que orbita a
 segurança delas: pessoal próprio e terceirizado, equipamentos, portões,
-contratos, manutenções, boletim operacional, planejamento e orçamento.
+contratos, chamados de prestação de serviços, boletim operacional, planejamento
+e orçamento.
 
 **Stack.** Vite 5 · React 18 · TypeScript · Tailwind + shadcn/ui (Radix) ·
 React Router 6 · TanStack Query 5 · Supabase (autenticação, Postgres com RLS,
 storage e edge functions). Publicado na Vercel.
 
-**Escala.** 23 rotas, 17 tabelas, 35 migrations, 101 arquivos de código
-(fora os 49 primitivos de `components/ui`), 89 testes.
+**Escala.** 25 rotas, 18 tabelas, 38 migrations, 111 arquivos de código
+(fora os 49 primitivos de `components/ui`), 123 testes.
 
 ---
 
@@ -33,7 +34,8 @@ src/
 │   ├── boletim/      abas do Boletim Operacional
 │   ├── consultas/    catálogo de consultas prontas
 │   ├── dashboard/    mapa, gráficos e painéis do painel executivo
-│   ├── ocorrencias/  abas da Manutenção
+│   ├── chamados/     Central de Chamados (filtros, tabela, painel, relatórios)
+│   ├── ajuda/        diagnóstico de cadastro exibido no Guia do Sistema
 │   ├── orcamento/    tabelas do Orçamento
 │   ├── planejamento/ painel e grade do Planejamento
 │   ├── relatorios/   blocos de apresentação dos relatórios
@@ -62,9 +64,9 @@ Cada entidade tem um arquivo em `src/data/` que exporta seus próprios hooks:
 
 ```
 unidades.ts · servidores.ts · terceirizados.ts · contratos.ts
-ocorrencias.ts · portoes.ts · equipamentos.ts · boletim.ts
+chamados.ts · chamadoEventos.ts · portoes.ts · equipamentos.ts · boletim.ts
 planejamento.ts · orcamento.ts · mapa.ts
-api.ts   → só comarcas e anexos de ocorrência
+api.ts   → só comarcas e anexos de chamado
 ```
 
 Esses arquivos se chamavam `*Mock.ts` por herança do protótipo, mas já
@@ -79,8 +81,82 @@ SUPABASE_ACCESS_TOKEN=sbp_xxx npx supabase gen types typescript \
   --project-id biihefnojkwqvidcfbhn > src/integrations/supabase/types.ts
 ```
 
-**Migrations.** Aplicadas pelo SQL Editor do painel do Supabase — a conexão
-direta ao Postgres é bloqueada pela rede interna.
+**Migrations.** Aplicadas pelo SQL Editor do painel do Supabase.
+
+### O que a rede do TJ bloqueia
+
+Vale saber antes de tentar automatizar qualquer coisa contra o Supabase daqui:
+
+| Caminho | Estado |
+|---|---|
+| HTTPS para `*.supabase.co` e `api.supabase.com` | **bloqueado** — o TLS é interceptado e o handshake morre (curl sai com 35) |
+| Postgres direto na 5432 (pooler), **com** TLS | bloqueado, `ECONNRESET` |
+| Postgres direto na 5432, **sem** TLS | funciona — é o único caminho de leitura |
+| `supabase gen types --db-url` | conecta, mas exige Docker para subir o `pg-meta`; não há Docker nas máquinas daqui |
+
+Consequências práticas: a migration vai pelo SQL Editor, e a regeneração de
+tipos precisa de uma máquina com Docker e sem a interceptação de TLS. A senha
+do banco trafega em claro no caminho sem TLS — use só para leitura pontual, e
+prefira o SQL Editor.
+
+O histórico de migrations do CLI (`supabase_migrations.schema_migrations`) tem
+só 3 registros, com versões que não batem com os arquivos do repositório
+(resquício do Lovable). **Não rode `supabase db push`**: ele leria as outras 30+
+migrations como pendentes e tentaria recriar tabelas que já existem.
+
+### Indicadores de segurança da unidade
+
+`unidades.possui_derso`, `.controle_acesso` e `.vigilancia_eletronica` são
+**tri-estado**: `true` possui, `false` não possui, **`NULL` não informado**.
+
+Eram `BOOLEAN NOT NULL DEFAULT false`, e por isso "esta unidade não tem CFTV" e
+"ninguém respondeu se tem CFTV" ficavam gravados exatamente igual. A função do
+mapa lia os dois como cobertura zero, então **8 comarcas apareciam em vermelho
+por falta de cadastro** — nenhuma delas por deficiência declarada.
+
+A regra que vale em todo lugar: **quem não respondeu fica fora da conta**, nem
+no numerador nem no denominador. `src/lib/seguranca.ts` concentra isso
+(`calcCobertura`, `coberturaDoCampo`, `semResposta`) e é onde estão os testes;
+a função `mapa_comarcas_resumo()` aplica a mesma regra no banco. Comarca sem
+nenhuma resposta vira `sem_dados` (cinza), não `critico`.
+
+Ao ler qualquer um desses campos, **nunca use truthiness**: `!u.possui_derso`
+captura o `NULL` junto e volta a misturar as duas coisas. Compare explicitamente
+com `=== false` ou `== null`.
+
+### Central de Chamados
+
+O módulo substituiu a antiga tela de Manutenção. A tabela `ocorrencias` foi
+**renomeada** para `chamados` (estava vazia), preservando a sequence do número,
+a FK dos anexos e as policies de storage.
+
+**A regra que sustenta o módulo:** nenhum chamado existe sem `unidade_id` **e**
+`contrato_id`. As duas colunas são `NOT NULL` com `ON DELETE RESTRICT` — apagar
+uma unidade ou um contrato que tenha chamado é recusado pelo banco, porque o
+chamado perderia a resposta de *onde ocorreu* e *qual contrato responde*.
+
+O fluxo da tela reflete isso: escolher a unidade filtra os contratos aplicáveis
+(`contratos.unidade_ids`), e o contrato escolhido carrega empresa, fiscal e o
+prazo de atendimento.
+
+**SLA.** `contratos.sla` é a cláusula em texto corrido e não serve para
+calcular nada. Quem define o vencimento é `contratos.sla_dias` (inteiro):
+`prazo = dia da abertura + sla_dias`. Contrato sem `sla_dias` gera chamado
+**sem prazo** — melhor que herdar um número inventado.
+
+**Vínculo unidade↔contrato.** `contratos.unidade_ids` é `uuid[]`. Antes era
+`unidades_atendidas text[]` com os **nomes** das unidades: renomear uma unidade
+desvinculava seus contratos em silêncio.
+
+**Histórico.** Toda movimentação vira uma linha em `chamado_eventos`. A tabela
+não tem policy de UPDATE nem de DELETE — o histórico não se reescreve, nem por
+admin. Um trigger em cada INSERT empurra `chamados.ultima_movimentacao`, que é
+o que alimenta "data da última ação" e a busca por chamados parados.
+
+**Status.** Oito estados no enum `status_chamado`. As transições válidas estão
+em `TRANSICOES` (`src/data/chamados.ts`) — impedem saltos incoerentes, como ir
+de "Novo" direto para "Fechado". "Pendente" é tudo que não é `Fechado` nem
+`Cancelado`.
 
 ---
 
@@ -109,7 +185,8 @@ Matriz vigente:
 | Recurso | Escrita | Exclusão |
 |---|---|---|
 | comarcas, unidades, contratos | admin, gestor | admin |
-| ocorrências, equipamentos | admin, gestor | admin, gestor |
+| equipamentos | admin, gestor | admin, gestor |
+| chamados | admin, gestor, operador (própria unidade) | admin, gestor |
 | portões, boletim | admin, gestor, operador (própria unidade) | admin |
 | servidores, terceirizados | admin, gestor, operador (própria unidade) | admin, gestor, operador (própria unidade) |
 | planejamento, orçamento | admin | admin |
@@ -145,6 +222,14 @@ Misturar isso com `new Date()` do navegador causou cinco defeitos distintos.
 | `diffDiasISO(de, ate)` | diferença em dias inteiros |
 | `anosCompletosISO(de, ate)` | idade, tempo de serviço |
 | `addAnosISO(iso, n)` | 29/02 vira 28/02 em ano não bissexto |
+| `formatarDataHora(instante)` | instante ISO → `09/09/2026 07:54` em Rondônia |
+
+**A exceção à regra "só data" são os chamados.** A abertura e cada movimentação
+de um chamado são *instantes*, não dias — o histórico precisa dizer 07:54, não
+apenas "dia 9". Esses campos (`aberto_em`, `ultima_movimentacao`,
+`resolvido_em`, `fechado_em`, `chamado_eventos.criado_em`) são `timestamptz` no
+banco e só são lidos por `formatarDataHora`, que os projeta em Rondônia. O
+**prazo** do chamado continua `DATE`: vencimento é um dia, não um instante.
 
 **Nunca** `new Date()` direto para calcular data do domínio, e **nunca**
 `toISOString().slice(0,10)` sobre uma data local — converte para UTC e pode
@@ -233,7 +318,9 @@ Vitest + jsdom. **89 testes**, todos sobre funções puras:
 | `lib/dates.test.ts` | fuso de Rondônia, bissexto, viradas de mês e ano |
 | `lib/permissoes.test.ts` | a matriz de papéis inteira |
 | `lib/utils.test.ts` | mensagens de erro, composição de classes |
-| `data/ocorrencias.test.ts` | SLA por categoria, atrasado, em risco, no prazo |
+| `data/chamados.test.ts` | prazo pelo SLA do contrato, vencimento, fluxo de status |
+| `components/chamados/filtros.test.ts` | presets de período e filtros combinados |
+| `lib/seguranca.test.ts` | cobertura tri-estado: "não" conta zero, "não informado" fica fora |
 | `data/contratos.test.ts` | vencido, a vencer, vigente |
 | `data/servidores.test.ts` | idade, faixa etária, tempo de serviço |
 | `data/orcamento.test.ts` | consolidação e formatadores |
@@ -269,12 +356,24 @@ Os quatro precisam passar.
 
 | Pendência | Onde | Peso |
 |---|---|---|
-| Nenhum teste de componente — nove telas tiveram estrutura ou layout reescritos apoiados só em `tsc` e `build` | — | alto |
-| Ano do exercício vem do relógio do navegador, não do fuso de Rondônia | `data/orcamento.ts:96`, `data/planejamento.ts:109` | baixo |
+| **Nenhum teste de componente** — a Central de Chamados inteira (6 componentes, 3 páginas, ~2.000 linhas) foi construída apoiada só em `tsc`, `lint` e `build`. Os testes cobrem apenas funções puras | `components/chamados/`, `pages/Chamado*.tsx` | alto |
+| **O mapa codifica nível só por cor**, e verde/vermelho é o par que daltonismo vermelho-verde não separa (~8% dos homens). Precisa de um segundo canal: textura, intensidade ou rótulo | `components/dashboard/ComarcasMap.tsx:7` | médio |
+| **`types.ts` foi editado à mão** para as tabelas de chamados — `supabase gen types` exige Docker, ausente nas máquinas daqui. Regenerar quando houver ambiente | `integrations/supabase/types.ts` | médio |
 | `equipamentos_catalogo` existe no banco sem migration no repositório | `supabase/migrations/` | baixo |
-| `RelatoriosPage` com 495 linhas — o miolo é um bloco de `useMemo` que renderia um hook de ~15 retornos | `pages/RelatoriosPage.tsx` | baixo |
+| `RelatoriosPage` com 504 linhas — o miolo é um bloco de `useMemo` que renderia um hook de ~15 retornos | `pages/RelatoriosPage.tsx` | baixo |
 | Gráficos "unidades por comarca" e "servidores por comarca" seguem separados; fundir num só permitiria o cruzamento | `pages/RelatoriosPage.tsx` | a decidir |
 
+Pendências de **dado**, não de código — dependem da COSEPH, não do repositório:
+
+- `contratos.sla_dias` está nulo nos 4 contratos. Sem ele, chamado nasce sem
+  prazo e nada aparece como vencido.
+- 9 unidades estão sem nenhum dos três indicadores de segurança. O Guia do
+  Sistema aponta quais, para administradores.
+
 Resolvido e removido desta lista: revisão de apresentação do mapa das comarcas
-e do painel lateral (feita), e o `manualChunks` que quebrava os gráficos em
-produção (removido — ver CHANGELOG).
+e do painel lateral (feita), o `manualChunks` que quebrava os gráficos em
+produção (removido), a substituição do módulo de Manutenção pela Central de
+Chamados, e o ano do exercício que vinha do relógio do navegador (agora
+`anoAtual()` de `lib/dates.ts`),
+e os indicadores de segurança que não distinguiam "não possui" de "não
+respondido" (agora tri-estado, com `NULL` = não informado) — ver CHANGELOG.
