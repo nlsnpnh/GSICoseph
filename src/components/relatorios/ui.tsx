@@ -1,7 +1,7 @@
 // Blocos de apresentação dos relatórios consolidados.
 import { Building2 } from "lucide-react";
 import {
-  Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart,
+  Bar, BarChart, CartesianGrid, Cell, LabelList, Legend, Pie, PieChart,
   ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -67,23 +67,65 @@ export function ChartCard({ title, children }: { title: string; children: React.
   );
 }
 
-export function BarHorizontal({ data }: { data: { name: string; value: number }[] }) {
-  if (data.length === 0) return <Empty />;
+/**
+ * Barra horizontal para comparar magnitude. Uma cor só: o comprimento já
+ * codifica o valor, e mais matizes só atrapalhariam.
+ *
+ * `max` dobra a cauda em "Outras (n)". Sem isso, "unidades por comarca" viria
+ * com 31 barras e mais de 800px de altura — uma lista disfarçada de gráfico.
+ */
+export function BarHorizontal({
+  data, max = 10, vazio, ordenar = true,
+}: {
+  data: { name: string; value: number }[];
+  max?: number;
+  vazio?: string;
+  /**
+   * Ordena do maior para o menor — é o que faz "as N maiores" significar algo.
+   * Desligue quando a categoria já tem ordem própria (faixa etária, meses):
+   * ali reordenar por valor embaralha a leitura.
+   */
+  ordenar?: boolean;
+}) {
+  if (data.length === 0) return <Empty>{vazio}</Empty>;
+
+  const ordenados = ordenar ? [...data].sort((a, b) => b.value - a.value) : data;
+  const cabem = ordenados.slice(0, max);
+  const cauda = ordenados.slice(max);
+  const linhas = cauda.length
+    ? [...cabem, {
+        name: `Outras ${cauda.length}`,
+        value: cauda.reduce((s, d) => s + d.value, 0),
+      }]
+    : cabem;
+
   return (
-    <ResponsiveContainer width="100%" height={Math.max(200, data.length * 26 + 32)}>
-      <BarChart data={data} layout="vertical" margin={{ left: 8, right: 16 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke={CHART.grid} />
+    <ResponsiveContainer width="100%" height={Math.max(200, linhas.length * 26 + 32)}>
+      {/* Margem à direita reserva espaço para o rótulo no fim da barra. */}
+      <BarChart data={linhas} layout="vertical" margin={{ left: 8, right: 40 }}>
+        <CartesianGrid stroke={CHART.grid} horizontal={false} />
         <XAxis type="number" allowDecimals={false} {...CHART.axisStyle} />
         <YAxis type="category" dataKey="name" width={140} {...CHART.axisStyle} />
         <Tooltip {...CHART.tooltip} cursor={{ fill: "hsl(var(--muted))" }} />
-        <Bar dataKey="value" fill={CHART.primary} radius={[0, 3, 3, 0]} />
+        <Bar dataKey="value" fill={CHART.primary} radius={[0, 3, 3, 0]}>
+          {/* Rótulo direto: dispensa perseguir o eixo para ler o número. */}
+          <LabelList
+            dataKey="value" position="right"
+            fill="hsl(var(--muted-foreground))" fontSize={11}
+          />
+        </Bar>
       </BarChart>
     </ResponsiveContainer>
   );
 }
 
-export function Donut({ data }: { data: { name: string; value: number }[] }) {
-  if (data.length === 0) return <Empty />;
+export function Donut({
+  data, vazio,
+}: {
+  data: { name: string; value: number }[];
+  vazio?: string;
+}) {
+  if (data.length === 0) return <Empty>{vazio}</Empty>;
   return (
     <ResponsiveContainer width="100%" height={240}>
       <PieChart>
@@ -97,8 +139,17 @@ export function Donut({ data }: { data: { name: string; value: number }[] }) {
   );
 }
 
-export function Empty() {
-  return <p className="py-10 text-center text-[11px] text-muted-foreground">Sem dados</p>;
+/**
+ * Estado vazio. O texto padrão é deliberadamente genérico; quando o vazio tem
+ * um motivo — não há divergência, ainda não há chamados — passe a explicação,
+ * senão o gráfico parece quebrado.
+ */
+export function Empty({ children }: { children?: React.ReactNode }) {
+  return (
+    <p className="px-4 py-10 text-center text-[11px] leading-relaxed text-muted-foreground">
+      {children ?? "Sem dados"}
+    </p>
+  );
 }
 
 export function PendRow({ tone, count, label }: { tone: "critical" | "partial"; count: number; label: string }) {
