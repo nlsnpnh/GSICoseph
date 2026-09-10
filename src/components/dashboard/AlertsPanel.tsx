@@ -72,7 +72,7 @@ export function AlertsPanel() {
           Alertas e Pendências
         </CardTitle>
         <button
-          onClick={() => navigate("/ocorrencias")}
+          onClick={() => navigate("/chamados")}
           className="text-xs font-medium text-primary hover:underline"
         >
           Ver todos

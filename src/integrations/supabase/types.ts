@@ -111,6 +111,194 @@ export type Database = {
           },
         ]
       }
+      chamado_anexos: {
+        Row: {
+          chamado_id: string
+          created_at: string
+          id: string
+          mime_type: string | null
+          nome_arquivo: string
+          storage_path: string
+          tamanho: number | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          chamado_id: string
+          created_at?: string
+          id?: string
+          mime_type?: string | null
+          nome_arquivo: string
+          storage_path: string
+          tamanho?: number | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          chamado_id?: string
+          created_at?: string
+          id?: string
+          mime_type?: string | null
+          nome_arquivo?: string
+          storage_path?: string
+          tamanho?: number | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ocorrencia_anexos_ocorrencia_id_fkey"
+            columns: ["chamado_id"]
+            isOneToOne: false
+            referencedRelation: "chamados"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chamado_eventos: {
+        Row: {
+          autor_id: string | null
+          autor_nome: string
+          chamado_id: string
+          criado_em: string
+          id: string
+          mensagem: string | null
+          status_anterior: Database["public"]["Enums"]["status_chamado"] | null
+          status_novo: Database["public"]["Enums"]["status_chamado"] | null
+          tipo: Database["public"]["Enums"]["tipo_evento_chamado"]
+        }
+        Insert: {
+          autor_id?: string | null
+          autor_nome: string
+          chamado_id: string
+          criado_em?: string
+          id?: string
+          mensagem?: string | null
+          status_anterior?: Database["public"]["Enums"]["status_chamado"] | null
+          status_novo?: Database["public"]["Enums"]["status_chamado"] | null
+          tipo: Database["public"]["Enums"]["tipo_evento_chamado"]
+        }
+        Update: {
+          autor_id?: string | null
+          autor_nome?: string
+          chamado_id?: string
+          criado_em?: string
+          id?: string
+          mensagem?: string | null
+          status_anterior?: Database["public"]["Enums"]["status_chamado"] | null
+          status_novo?: Database["public"]["Enums"]["status_chamado"] | null
+          tipo?: Database["public"]["Enums"]["tipo_evento_chamado"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chamado_eventos_chamado_id_fkey"
+            columns: ["chamado_id"]
+            isOneToOne: false
+            referencedRelation: "chamados"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chamados: {
+        Row: {
+          aberto_em: string
+          assunto: string
+          categoria: string
+          cc: string[]
+          contrato_id: string
+          created_at: string
+          criado_por: string | null
+          descricao: string
+          fechado_em: string | null
+          id: string
+          numero: string
+          prazo: string | null
+          prioridade: Database["public"]["Enums"]["prioridade_chamado"]
+          resolvido_em: string | null
+          responsavel_nome: string | null
+          servico: string
+          solicitante_id: string | null
+          solicitante_nome: string | null
+          solucao: string | null
+          status: Database["public"]["Enums"]["status_chamado"]
+          tags: string[]
+          ultima_movimentacao: string
+          unidade_id: string
+          updated_at: string
+        }
+        Insert: {
+          aberto_em?: string
+          assunto: string
+          categoria: string
+          cc?: string[]
+          contrato_id: string
+          created_at?: string
+          criado_por?: string | null
+          descricao: string
+          fechado_em?: string | null
+          id?: string
+          numero?: string
+          prazo?: string | null
+          prioridade?: Database["public"]["Enums"]["prioridade_chamado"]
+          resolvido_em?: string | null
+          responsavel_nome?: string | null
+          servico: string
+          solicitante_id?: string | null
+          solicitante_nome?: string | null
+          solucao?: string | null
+          status?: Database["public"]["Enums"]["status_chamado"]
+          tags?: string[]
+          ultima_movimentacao?: string
+          unidade_id: string
+          updated_at?: string
+        }
+        Update: {
+          aberto_em?: string
+          assunto?: string
+          categoria?: string
+          cc?: string[]
+          contrato_id?: string
+          created_at?: string
+          criado_por?: string | null
+          descricao?: string
+          fechado_em?: string | null
+          id?: string
+          numero?: string
+          prazo?: string | null
+          prioridade?: Database["public"]["Enums"]["prioridade_chamado"]
+          resolvido_em?: string | null
+          responsavel_nome?: string | null
+          servico?: string
+          solicitante_id?: string | null
+          solicitante_nome?: string | null
+          solucao?: string | null
+          status?: Database["public"]["Enums"]["status_chamado"]
+          tags?: string[]
+          ultima_movimentacao?: string
+          unidade_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chamados_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chamados_solicitante_id_fkey"
+            columns: ["solicitante_id"]
+            isOneToOne: false
+            referencedRelation: "servidores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chamados_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comarcas: {
         Row: {
           created_at: string
@@ -147,7 +335,8 @@ export type Database = {
           objeto: string | null
           observacoes: string | null
           sla: string | null
-          unidades_atendidas: string[] | null
+          sla_dias: number | null
+          unidade_ids: string[]
           updated_at: string
           valor_mensal: number | null
           valor_total: number | null
@@ -166,7 +355,8 @@ export type Database = {
           objeto?: string | null
           observacoes?: string | null
           sla?: string | null
-          unidades_atendidas?: string[] | null
+          sla_dias?: number | null
+          unidade_ids?: string[]
           updated_at?: string
           valor_mensal?: number | null
           valor_total?: number | null
@@ -185,7 +375,8 @@ export type Database = {
           objeto?: string | null
           observacoes?: string | null
           sla?: string | null
-          unidades_atendidas?: string[] | null
+          sla_dias?: number | null
+          unidade_ids?: string[]
           updated_at?: string
           valor_mensal?: number | null
           valor_total?: number | null
@@ -230,124 +421,6 @@ export type Database = {
           valor_unitario?: number
         }
         Relationships: []
-      }
-      ocorrencia_anexos: {
-        Row: {
-          created_at: string
-          id: string
-          mime_type: string | null
-          nome_arquivo: string
-          ocorrencia_id: string
-          storage_path: string
-          tamanho: number | null
-          uploaded_by: string | null
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          mime_type?: string | null
-          nome_arquivo: string
-          ocorrencia_id: string
-          storage_path: string
-          tamanho?: number | null
-          uploaded_by?: string | null
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          mime_type?: string | null
-          nome_arquivo?: string
-          ocorrencia_id?: string
-          storage_path?: string
-          tamanho?: number | null
-          uploaded_by?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "ocorrencia_anexos_ocorrencia_id_fkey"
-            columns: ["ocorrencia_id"]
-            isOneToOne: false
-            referencedRelation: "ocorrencias"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      ocorrencias: {
-        Row: {
-          categoria: string | null
-          created_at: string
-          data_abertura: string
-          data_conclusao: string | null
-          descricao: string | null
-          empresa_responsavel: string | null
-          equipamento: string | null
-          id: string
-          observacoes: string | null
-          prazo: string | null
-          prioridade: Database["public"]["Enums"]["prioridade_oco"]
-          protocolo: string
-          responsavel_nome: string | null
-          servico: string | null
-          servidor_solicitante: string | null
-          status: Database["public"]["Enums"]["status_oco"]
-          tipo: Database["public"]["Enums"]["tipo_ocorrencia"] | null
-          titulo: string | null
-          unidade_id: string | null
-          updated_at: string
-        }
-        Insert: {
-          categoria?: string | null
-          created_at?: string
-          data_abertura?: string
-          data_conclusao?: string | null
-          descricao?: string | null
-          empresa_responsavel?: string | null
-          equipamento?: string | null
-          id?: string
-          observacoes?: string | null
-          prazo?: string | null
-          prioridade?: Database["public"]["Enums"]["prioridade_oco"]
-          protocolo?: string
-          responsavel_nome?: string | null
-          servico?: string | null
-          servidor_solicitante?: string | null
-          status?: Database["public"]["Enums"]["status_oco"]
-          tipo?: Database["public"]["Enums"]["tipo_ocorrencia"] | null
-          titulo?: string | null
-          unidade_id?: string | null
-          updated_at?: string
-        }
-        Update: {
-          categoria?: string | null
-          created_at?: string
-          data_abertura?: string
-          data_conclusao?: string | null
-          descricao?: string | null
-          empresa_responsavel?: string | null
-          equipamento?: string | null
-          id?: string
-          observacoes?: string | null
-          prazo?: string | null
-          prioridade?: Database["public"]["Enums"]["prioridade_oco"]
-          protocolo?: string
-          responsavel_nome?: string | null
-          servico?: string | null
-          servidor_solicitante?: string | null
-          status?: Database["public"]["Enums"]["status_oco"]
-          tipo?: Database["public"]["Enums"]["tipo_ocorrencia"] | null
-          titulo?: string | null
-          unidade_id?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "ocorrencias_unidade_id_fkey"
-            columns: ["unidade_id"]
-            isOneToOne: false
-            referencedRelation: "unidades"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       orcamento_acoes: {
         Row: {
@@ -989,8 +1062,8 @@ export type Database = {
     Enums: {
       app_role: "admin" | "gestor" | "operador"
       criticidade: "Baixo" | "Médio" | "Alto" | "Crítico"
+      prioridade_chamado: "Baixa" | "Média" | "Alta" | "Urgente"
       prioridade_manut: "Nenhuma" | "Baixa" | "Média" | "Alta" | "Urgente"
-      prioridade_oco: "Baixa" | "Média" | "Alta" | "Urgente"
       situacao_op:
         | "Operacional"
         | "Operacional com restrição"
@@ -1010,19 +1083,25 @@ export type Database = {
         | "Em manutenção"
         | "Inoperante"
         | "Desativado"
-      status_oco:
+      status_chamado:
+        | "Novo"
         | "Aberto"
-        | "Em andamento"
-        | "Aguardando peça"
-        | "Concluído"
+        | "Encaminhado"
+        | "Em atendimento"
+        | "Aguardando prestador"
+        | "Resolvido"
+        | "Fechado"
         | "Cancelado"
-      tipo_ocorrencia:
-        | "Chamado"
-        | "Falha"
-        | "Pendência"
-        | "Manutenção preventiva"
-        | "Manutenção corretiva"
-        | "Vistoria"
+      tipo_evento_chamado:
+        | "Abertura"
+        | "Mensagem"
+        | "Status"
+        | "Contrato"
+        | "Anexo"
+        | "Atendimento"
+        | "Conclusão"
+        | "Fechamento"
+        | "Reabertura"
       tipo_unidade:
         | "Fórum"
         | "Sede Administrativa"
@@ -1162,8 +1241,8 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "gestor", "operador"],
       criticidade: ["Baixo", "Médio", "Alto", "Crítico"],
+      prioridade_chamado: ["Baixa", "Média", "Alta", "Urgente"],
       prioridade_manut: ["Nenhuma", "Baixa", "Média", "Alta", "Urgente"],
-      prioridade_oco: ["Baixa", "Média", "Alta", "Urgente"],
       situacao_op: [
         "Operacional",
         "Operacional com restrição",
@@ -1186,20 +1265,26 @@ export const Constants = {
         "Inoperante",
         "Desativado",
       ],
-      status_oco: [
+      status_chamado: [
+        "Novo",
         "Aberto",
-        "Em andamento",
-        "Aguardando peça",
-        "Concluído",
+        "Encaminhado",
+        "Em atendimento",
+        "Aguardando prestador",
+        "Resolvido",
+        "Fechado",
         "Cancelado",
       ],
-      tipo_ocorrencia: [
-        "Chamado",
-        "Falha",
-        "Pendência",
-        "Manutenção preventiva",
-        "Manutenção corretiva",
-        "Vistoria",
+      tipo_evento_chamado: [
+        "Abertura",
+        "Mensagem",
+        "Status",
+        "Contrato",
+        "Anexo",
+        "Atendimento",
+        "Conclusão",
+        "Fechamento",
+        "Reabertura",
       ],
       tipo_unidade: [
         "Fórum",

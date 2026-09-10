@@ -9,7 +9,7 @@ import { useEquipamentosCatalogo, useUnidadeEquipamentos } from "@/data/equipame
 import { useServidores } from "@/data/servidores";
 import { useTerceirizados } from "@/data/terceirizados";
 import { useContratos } from "@/data/contratos";
-import { useOcorrencias } from "@/data/ocorrencias";
+import { useChamados, isPendente } from "@/data/chamados";
 import { addDiasISO, diffDiasISO, hojeISO } from "@/lib/dates";
 
 export type Row = Record<string, unknown>;
@@ -42,7 +42,7 @@ export function useConsultas(): QueryDef[] {
   const servidores    = useServidores();
   const terceirizados = useTerceirizados();
   const contratos     = useContratos();
-  const ocorrencias   = useOcorrencias();
+  const chamados      = useChamados();
 
   // Datas como texto YYYY-MM-DD no fuso de Rondônia: comparar como string é
   // exato e evita o desvio de fuso que o Date local introduzia aqui.
@@ -100,7 +100,7 @@ export function useConsultas(): QueryDef[] {
         const comVinculo = new Set(distribuicao.map((d) => d.unidade_id));
         return unidades
           .filter((u) => !comVinculo.has(u.id))
-          .map((u) => ({ unidade: u.nome, comarca: u.comarca_nome, derso: u.possui_derso ? "Sim" : "Não" }))
+          .map((u) => ({ unidade: u.nome, comarca: u.comarca_nome, derso: u.possui_derso == null ? "Não informado" : u.possui_derso ? "Sim" : "Não" }))
           .sort((a, b) => a.comarca.localeCompare(b.comarca));
       })(),
     },
@@ -358,56 +358,56 @@ export function useConsultas(): QueryDef[] {
         .sort((a, b) => (a.dias as number) - (b.dias as number)),
     },
 
-    // ── Ocorrências ───────────────────────────────────────────────
+    // ── Chamados ──────────────────────────────────────────────────
     {
-      id: "ocorrencias-prazo-vencido",
-      title: "Ocorrências com prazo vencido",
-      description: "Ocorrências em aberto cujo prazo de atendimento já passou.",
-      category: "Ocorrências",
+      id: "chamados-prazo-vencido",
+      title: "Chamados com prazo vencido",
+      description: "Chamados pendentes cujo prazo de atendimento já passou.",
+      category: "Chamados",
       icon: AlertTriangle,
       columns: [
-        { key: "protocolo",  label: "Protocolo", className: "font-mono text-xs" },
-        { key: "titulo",     label: "Título" },
+        { key: "numero",     label: "Número", className: "font-mono text-xs" },
+        { key: "assunto",    label: "Assunto" },
         { key: "unidade",    label: "Unidade" },
         { key: "prazo",      label: "Prazo" },
         { key: "atraso",     label: "Atraso (dias)", className: "text-right" },
         { key: "prioridade", label: "Prioridade" },
       ],
-      rows: ocorrencias
-        .filter((o) => o.prazo && o.status !== "Concluído" && o.status !== "Cancelado" && o.prazo < hoje)
-        .map((o) => {
-          const u = uMap.get(o.unidade_id);
-          return { protocolo: o.protocolo, titulo: o.titulo, unidade: u?.nome ?? "—", prazo: fmtDate(o.prazo), atraso: Math.abs(diffDiasISO(hoje, o.prazo)), prioridade: o.prioridade };
+      rows: chamados
+        .filter((c) => c.prazo && isPendente(c.status) && c.prazo < hoje)
+        .map((c) => {
+          const u = uMap.get(c.unidade_id);
+          return { numero: c.numero, assunto: c.assunto, unidade: u?.nome ?? "—", prazo: fmtDate(c.prazo), atraso: Math.abs(diffDiasISO(hoje, c.prazo)), prioridade: c.prioridade };
         })
         .sort((a, b) => (b.atraso as number) - (a.atraso as number)),
     },
 
     {
-      id: "ocorrencias-por-unidade",
-      title: "Ocorrências abertas por unidade",
-      description: "Ocorrências não concluídas agrupadas por unidade.",
-      category: "Ocorrências",
+      id: "chamados-por-unidade",
+      title: "Chamados pendentes por unidade",
+      description: "Chamados ainda não fechados agrupados por unidade.",
+      category: "Chamados",
       icon: Wrench,
       columns: [
         { key: "unidade",  label: "Unidade" },
         { key: "comarca",  label: "Comarca" },
-        { key: "abertas",  label: "Abertas",  className: "text-right" },
+        { key: "abertos",  label: "Abertos",  className: "text-right" },
         { key: "urgentes", label: "Urgentes", className: "text-right" },
       ],
       rows: (() => {
-        const map = new Map<string, { unidade: string; comarca: string; abertas: number; urgentes: number }>();
-        ocorrencias
-          .filter((o) => o.status !== "Concluído" && o.status !== "Cancelado")
-          .forEach((o) => {
-            const u = uMap.get(o.unidade_id);
-            const cur = map.get(o.unidade_id) ?? { unidade: u?.nome ?? "—", comarca: u?.comarca_nome ?? "—", abertas: 0, urgentes: 0 };
-            cur.abertas++;
-            if (o.prioridade === "Urgente") cur.urgentes++;
-            map.set(o.unidade_id, cur);
+        const map = new Map<string, { unidade: string; comarca: string; abertos: number; urgentes: number }>();
+        chamados
+          .filter((c) => isPendente(c.status))
+          .forEach((c) => {
+            const u = uMap.get(c.unidade_id);
+            const cur = map.get(c.unidade_id) ?? { unidade: u?.nome ?? "—", comarca: u?.comarca_nome ?? "—", abertos: 0, urgentes: 0 };
+            cur.abertos++;
+            if (c.prioridade === "Urgente") cur.urgentes++;
+            map.set(c.unidade_id, cur);
           });
-        return [...map.values()].sort((a, b) => (b.urgentes as number) - (a.urgentes as number) || (b.abertas as number) - (a.abertas as number));
+        return [...map.values()].sort((a, b) => (b.urgentes as number) - (a.urgentes as number) || (b.abertos as number) - (a.abertos as number));
       })(),
     },
 
-  ], [unidades, catalogo, distribuicao, servidores, terceirizados, contratos, ocorrencias, hoje, em90, uMap]);
+  ], [unidades, catalogo, distribuicao, servidores, terceirizados, contratos, chamados, hoje, em90, uMap]);
 }

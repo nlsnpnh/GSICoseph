@@ -35,6 +35,36 @@ export function hojeISO(): string {
   return toISODate();
 }
 
+/**
+ * Ano corrente em Rondonia. `new Date().getFullYear()` le o relogio do
+ * navegador: em 31/12 a noite, quem acessa de Brasilia ja virou o ano
+ * enquanto Rondonia (UTC-4) ainda nao — e o exercicio orcamentario mudaria
+ * de ano dependendo de onde o usuario esta.
+ */
+export function anoAtual(): number {
+  return Number(hojeISO().slice(0, 4));
+}
+
+// Chamados sao a excecao a regra "date-only" do dominio: a abertura e cada
+// movimentacao sao instantes (07:54 de 09/09), nao dias. Ficam em timestamptz
+// no banco e sao lidos aqui no fuso de Rondonia, nunca no do navegador.
+const fmtDataHora = new Intl.DateTimeFormat("pt-BR", {
+  timeZone: TZ_RONDONIA,
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+});
+
+/** Instante ISO -> "09/09/2026 07:54" em Rondonia. Vazio vira "—". */
+export function formatarDataHora(instanteISO: string | null | undefined): string {
+  if (!instanteISO) return "—";
+  const d = new Date(instanteISO);
+  if (Number.isNaN(d.getTime())) return "—";
+  return fmtDataHora.format(d).replace(", ", " ");
+}
+
 /** Ancora YYYY-MM-DD em UTC: aritmetica de dias sem desvio de fuso. */
 function parseISO(iso: string): Date {
   return new Date(`${iso}T00:00:00Z`);

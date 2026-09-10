@@ -2,6 +2,10 @@
 .env
 .env.local
 .env.production
+# Qualquer variante de .env (backups, .env.dev, .env.old) carrega credencial:
+# ignora todas por padrao, menos um exemplo sem segredo.
+.env*
+!.env.example
 
 # Logs
 logs

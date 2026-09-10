@@ -6,7 +6,6 @@ import { useQuery } from "@tanstack/react-query";
 import { diffDiasISO, hojeISO } from "@/lib/dates";
 import { supabase } from "@/integrations/supabase/client";
 import { queryClient } from "@/lib/queryClient";
-import { EMPRESAS } from "./terceirizados";
 
 export const STATUS_CONTRATO = ["Vigente", "A vencer", "Vencido", "Encerrado", "Suspenso"] as const;
 export type StatusContrato = (typeof STATUS_CONTRATO)[number];
@@ -17,16 +16,21 @@ export type Apostilamento  = { numero: string; data: string; descricao: string }
 export type Contrato = {
   id: string;
   numero: string;
-  empresa: (typeof EMPRESAS)[number];
+  // Texto livre: o banco ja tem empresas fora da lista de terceirizados
+  // (V2 INTEGRADORA, TECHSCAN), que so cobre a contratada de mao de obra.
+  empresa: string;
   objeto: string;
   data_inicio: string;
   data_fim: string;
   valor_mensal: number;
   valor_total: number;
-  unidades_atendidas: string[];
+  unidade_ids: string[];
   fiscal: string;
   gestor: string;
   sla: string;
+  // Prazo de atendimento em dias, usado para calcular o vencimento dos
+  // chamados. `sla` acima e a clausula contratual em texto corrido.
+  sla_dias: number | null;
   aditivos: Aditivo[];
   apostilamentos: Apostilamento[];
   observacoes: string;
@@ -43,10 +47,11 @@ const mapRow = (r: any): Contrato => ({
   data_fim: r.data_fim ?? "",
   valor_mensal: Number(r.valor_mensal ?? 0),
   valor_total: Number(r.valor_total ?? 0),
-  unidades_atendidas: r.unidades_atendidas ?? [],
+  unidade_ids: r.unidade_ids ?? [],
   fiscal: r.fiscal ?? "",
   gestor: r.gestor ?? "",
   sla: r.sla ?? "",
+  sla_dias: r.sla_dias ?? null,
   aditivos: Array.isArray(r.aditivos) ? r.aditivos : [],
   apostilamentos: Array.isArray(r.apostilamentos) ? r.apostilamentos : [],
   observacoes: r.observacoes ?? "",
@@ -70,6 +75,7 @@ const toPayload = (d: Omit<Contrato, "id">) => ({
   ...d,
   data_inicio: d.data_inicio || null,
   data_fim: d.data_fim || null,
+  sla_dias: d.sla_dias || null,
   aditivos: d.aditivos as any,
   apostilamentos: d.apostilamentos as any,
 });

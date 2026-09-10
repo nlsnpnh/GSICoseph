@@ -1,4 +1,4 @@
-import { Search, Building2, CheckCircle2, XCircle } from "lucide-react";
+import { Search, Building2, CheckCircle2, HelpCircle, XCircle } from "lucide-react";
 import { ReactNode, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -140,9 +140,12 @@ export function ModulosSistema() {
                       <p className="truncate text-muted-foreground">{u.endereco}</p>
                       <p className="truncate text-muted-foreground">Resp.: {u.responsavel_local}</p>
                       <span className="flex items-center gap-1 text-[10px]">
-                        {u.possui_derso
-                          ? <><CheckCircle2 className="h-3 w-3 text-adequate" /><span className="text-adequate">DERSO</span></>
-                          : <><XCircle className="h-3 w-3 text-muted-foreground" /><span className="text-muted-foreground">Sem DERSO</span></>
+                        {/* Três estados: "não informado" não é "sem DERSO". */}
+                        {u.possui_derso == null
+                          ? <><HelpCircle className="h-3 w-3 text-muted-foreground/60" /><span className="text-muted-foreground/60">DERSO não informado</span></>
+                          : u.possui_derso
+                            ? <><CheckCircle2 className="h-3 w-3 text-adequate" /><span className="text-adequate">DERSO</span></>
+                            : <><XCircle className="h-3 w-3 text-muted-foreground" /><span className="text-muted-foreground">Sem DERSO</span></>
                         }
                       </span>
                     </div>

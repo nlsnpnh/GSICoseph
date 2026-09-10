@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useContratos } from "@/data/contratos";
 import { useEquipamentosCatalogo, useUnidadeEquipamentos } from "@/data/equipamentos";
 import { useUnidades } from "@/data/unidades";
-import { useOcorrencias, calcSla } from "@/data/ocorrencias";
+import { useChamados, calcVencimento, isPendente } from "@/data/chamados";
 import { useAuth } from "@/contexts/AuthContext";
 
 export type Alerta = {
@@ -19,7 +19,7 @@ export function useAlertas(): Alerta[] {
   const catalogo     = useEquipamentosCatalogo();
   const distribuicao = useUnidadeEquipamentos();
   const unidades     = useUnidades();
-  const ocorrencias  = useOcorrencias();
+  const chamados     = useChamados();
 
   return useMemo(() => {
     const hoje = new Date();
@@ -32,7 +32,7 @@ export function useAlertas(): Alerta[] {
       return fim >= hoje && fim <= em90dias;
     }).length;
 
-    const manutVencidas = ocorrencias.filter((o) => calcSla(o).indicador === "Atrasado").length;
+    const chamadosVencidos = chamados.filter((c) => isPendente(c.status) && calcVencimento(c).vencido).length;
 
     // Unidades sem nenhum equipamento do contrato vinculado
     const comVinculo = new Set(distribuicao.map((d) => d.unidade_id));
@@ -67,13 +67,13 @@ export function useAlertas(): Alerta[] {
         unidade: contratosVencendo === 1 ? "contrato" : "contratos",
         href: "/consultas?q=contratos-vencendo",
       },
-      manutVencidas > 0 && {
+      chamadosVencidos > 0 && {
         tipo: "warning" as const,
-        label: "Manutenções com prazo vencido",
-        count: manutVencidas,
-        unidade: manutVencidas === 1 ? "registro" : "registros",
-        // Operador não acessa Consultas — direciona para a tela de Manutenção.
-        href: isOperador ? "/ocorrencias" : "/consultas?q=ocorrencias-prazo-vencido",
+        label: "Chamados com prazo vencido",
+        count: chamadosVencidos,
+        unidade: chamadosVencidos === 1 ? "chamado" : "chamados",
+        // Operador não acessa Consultas — direciona para a Central de Chamados.
+        href: isOperador ? "/chamados" : "/consultas?q=chamados-prazo-vencido",
       },
       // Alertas de escopo global (catálogo/contrato/todas as unidades):
       // só fazem sentido para admin/gestor. O operador só enxerga a própria
@@ -100,5 +100,5 @@ export function useAlertas(): Alerta[] {
         href: "/consultas?q=divergencia-contrato",
       },
     ].filter(Boolean) as Alerta[];
-  }, [contratos, catalogo, distribuicao, unidades, ocorrencias, isOperador]);
+  }, [contratos, catalogo, distribuicao, unidades, chamados, isOperador]);
 }

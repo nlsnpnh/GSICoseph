@@ -18,7 +18,7 @@ const CATEGORY_TONE: Record<string, string> = {
   Portões:      "bg-orange-500/10 text-orange-700 border-orange-400/30 dark:text-orange-400",
   Pessoal:      "bg-purple-500/10 text-purple-700 border-purple-400/30 dark:text-purple-400",
   Contratos:    "bg-teal-500/10 text-teal-700 border-teal-400/30 dark:text-teal-400",
-  Ocorrências:  "bg-red-500/10 text-red-700 border-red-400/30 dark:text-red-400",
+  Chamados:     "bg-red-500/10 text-red-700 border-red-400/30 dark:text-red-400",
 };
 
 export default function ConsultasPage() {
@@ -65,7 +65,7 @@ export default function ConsultasPage() {
   }, [filtered]);
 
   const totalAlertas = useMemo(() =>
-    queries.filter((q) => ["unidades-sem-equipamentos", "itens-nao-distribuidos", "divergencia-contrato", "contratos-vencidos", "ocorrencias-prazo-vencido"].includes(q.id) && q.rows.length > 0).reduce((s, q) => s + q.rows.length, 0),
+    queries.filter((q) => ["unidades-sem-equipamentos", "itens-nao-distribuidos", "divergencia-contrato", "contratos-vencidos", "chamados-prazo-vencido"].includes(q.id) && q.rows.length > 0).reduce((s, q) => s + q.rows.length, 0),
     [queries],
   );
 

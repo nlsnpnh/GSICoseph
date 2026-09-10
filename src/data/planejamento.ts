@@ -3,6 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { anoAtual } from "@/lib/dates";
 
 const sb = supabase as unknown as { from: (t: string) => any };
 
@@ -106,7 +107,7 @@ export function useAnosPlanejamento() {
         sb.from("planejamento_acoes").select("ano").order("ano", { ascending: false }),
       );
       const set = new Set<number>((data ?? []).map((r: any) => Number(r.ano)));
-      set.add(new Date().getFullYear());
+      set.add(anoAtual());
       set.add(2026);
       return Array.from(set).sort((a, b) => b - a);
     },

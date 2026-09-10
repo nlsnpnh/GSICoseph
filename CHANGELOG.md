@@ -5,6 +5,111 @@ Versionamento semântico: `MAIOR.MENOR.CORREÇÃO`.
 
 ---
 
+## [1.2.0] — 2026-09-09
+
+Substitui o módulo de Manutenção por uma Central de Chamados de prestação de
+serviços, que controla o ciclo inteiro do atendimento em vez de apenas cadastrar
+uma manutenção.
+
+> **Requer as migrations `20260909120000_central_chamados.sql` e
+> `20260909130000_chamados_limpeza.sql`**, aplicadas pelo SQL Editor do
+> Supabase.
+>
+> `src/integrations/supabase/types.ts` foi atualizado **à mão**, contra a regra
+> usual, porque `supabase gen types` precisa de Docker e a rede do TJ bloqueia
+> o HTTPS do Supabase. Ao rodar o gerador de uma máquina com Docker, o arquivo
+> volta a ser gerado e a edição manual é descartada sem perda.
+
+### Adicionado
+
+- **Central de Chamados** (`/chamados`), com as visualizações Pendentes,
+  Fechados, Todos, Personalizado, Painel e Relatórios. Busca, ordenação,
+  paginação e filtros combináveis por unidade, contrato, categoria, serviço,
+  status, prioridade, responsável e período.
+- **Tela de abertura** (`/chamados/novo`) e **tela do chamado**
+  (`/chamados/:id`), com ficha lateral, mensagens e linha do tempo.
+- **Histórico do chamado** (`chamado_eventos`): abertura, mensagens, mudanças
+  de status, conclusão, fechamento e reabertura, cada evento com data, hora e
+  autor. A tabela não tem policy de UPDATE nem DELETE — o histórico não se
+  reescreve.
+- **Encerramento** com solução adotada e justificativa; `resolvido_em` e
+  `fechado_em` são registrados automaticamente. Chamado fechado ou cancelado
+  pode ser **reaberto** mediante justificativa.
+- **Prazo pelo contrato**: novo campo `sla_dias` em contratos define o
+  vencimento do chamado (`abertura + sla_dias`). Contrato sem SLA gera chamado
+  sem prazo, em vez de herdar um número inventado.
+- **Painel do módulo** com abertos, em atendimento, aguardando, vencidos e
+  resolvidos no mês, mais o recorte por unidade predial.
+- **Relatórios dos chamados**: indicadores por status, gráficos (status,
+  categoria, unidade, abertos × resolvidos por mês), chamados pendentes há mais
+  tempo, chamados sem movimentação e exportação em Excel e PDF.
+- **Indicadores de segurança da unidade em três estados**: Sim, Não e **Não
+  informado**. Eram booleanos `NOT NULL DEFAULT false`, então "não possui" e
+  "ninguém respondeu" ficavam gravados igual — e o mapa lia os dois como
+  cobertura zero. Comarca sem nenhuma resposta agora aparece em cinza (Sem
+  dados), não em vermelho: das 8 comarcas que constavam como críticas, todas
+  eram falta de cadastro, nenhuma era deficiência declarada.
+- **Diagnóstico da cobertura de segurança** no Guia do Sistema, para
+  administradores: explica de onde vem a cor do mapa e aponta quais unidades
+  ainda não responderam os indicadores.
+- `lib/seguranca.ts` com a regra de cobertura tri-estado, antes duplicada em
+  dois componentes, e `lib/dates.ts` ganhou `formatarDataHora` (instante no
+  fuso de Rondônia) e `anoAtual()`.
+- `components/admin/SecaoFormulario.tsx` — o bloco de seção dos formulários de
+  cadastro, que existia copiado byte a byte em cinco páginas.
+- 36 testes novos, cobrindo prazo, vencimento, fluxo de status e filtros.
+
+### Alterado
+
+- **O operador passa a abrir e movimentar chamados da própria unidade.** Antes
+  só conseguia visualizar. Excluir continua com admin e gestor — o histórico do
+  atendimento não some por decisão da unidade.
+- **`contratos.unidades_atendidas` virou `contratos.unidade_ids`** (`uuid[]`).
+  A coluna guardava os *nomes* das unidades, então renomear uma unidade
+  desvinculava seus contratos em silêncio.
+- O tipo de `Contrato.empresa` deixou de ser a lista fechada de terceirizados,
+  que não cobria as empresas já cadastradas (V2 INTEGRADORA, TECHSCAN).
+- **O ano do exercício vinha do relógio do navegador.** `new Date().getFullYear()`
+  lê o fuso de quem acessa: em 31/12 à noite, um acesso de Brasília já veria o
+  ano seguinte enquanto Rondônia (UTC−4) ainda não virou — e a lista de
+  exercícios do Orçamento e do Planejamento mudava conforme a localização do
+  usuário. Passou a usar `anoAtual()` de `lib/dates.ts`.
+- **A policy de leitura de contratos passou a casar por id.** Comparava
+  `get_user_unidade_nome()` contra o array de nomes, então renomear uma unidade
+  escondia os contratos dela do operador, sem aviso.
+- O enum `prioridade_oco` virou `prioridade_chamado`, e os índices e o trigger
+  da tabela renomeada deixaram de falar em "ocorrências".
+- Painel executivo, Consultas, Relatórios e Alertas passaram a falar em
+  chamados; `/ocorrencias` redireciona para `/chamados`.
+- **O fio de acento passou a marcar também as superfícies suspensas** —
+  diálogos de cadastro, confirmação de exclusão, painel lateral da comarca — e
+  cada seção dos formulários. Aplicado nos primitivos, para que um diálogo novo
+  já nasça no padrão.
+- **Gráficos de barras dobram a cauda em "Outras N"** em vez de listar tudo:
+  "unidades por comarca" vinha com 31 barras e mais de 800px de altura. Ganharam
+  também rótulo no fim de cada barra, e a grade perdeu o tracejado.
+- **Gráfico vazio agora explica o motivo** quando há um: "nenhuma divergência"
+  e "nenhum chamado registrado ainda" no lugar de um "Sem dados" que parecia
+  defeito.
+- O Guia do Sistema foi reescrito nas seções que descreviam telas que mudaram
+  ou campos que não existem.
+
+### Removido
+
+- Módulo de Manutenção (`OcorrenciasPage`, `components/ocorrencias/`,
+  `data/ocorrencias.ts`) e a lista de 15 categorias com SLA fixo embutida no
+  código, substituída pelos catálogos de serviço e categoria do novo módulo.
+- Colunas do modelo antigo de ocorrência sem uso no novo fluxo (`titulo`,
+  `tipo`, `equipamento`, `empresa_responsavel`, `observacoes`) e os tipos
+  `status_oco` e `tipo_ocorrencia`.
+- `chamados.data_abertura`, que sobrevivia ao lado de `aberto_em`. Além de
+  redundante, seu default `CURRENT_DATE` era lido no fuso do servidor (UTC):
+  chamado aberto após as 20h em Rondônia nasceria com a data do dia seguinte.
+- Policy de exclusão de anexos duplicada, que era somada por OR à de
+  admin/gestor e não tinha efeito.
+
+---
+
 ## [1.1.0] — 2026-08-19
 
 Primeira atualização versionada. Reúne a revisão técnica do sistema e a

@@ -17,11 +17,12 @@ import { useEquipamentosCatalogo, useUnidadeEquipamentos } from "@/data/equipame
 import { useServidores, calcIdade, faixaEtaria, tempoServicoAnos } from "@/data/servidores";
 import { useTerceirizados } from "@/data/terceirizados";
 import { useContratos, statusFromVigencia } from "@/data/contratos";
-import { useOcorrencias, calcSla } from "@/data/ocorrencias";
+import { useChamados, calcVencimento, isPendente } from "@/data/chamados";
 import {
   BarHorizontal, ChartCard, CoverageBar, Donut, Kpi, PendRow,
 } from "@/components/relatorios/ui";
 import { FioAcento } from "@/components/admin/FioAcento";
+import { coberturaDoCampo } from "@/lib/seguranca";
 
 const COLORS = [
   "hsl(217 91% 55%)",
@@ -68,6 +69,9 @@ const CATEGORIAS_CONTRATO: { nome: string; itens: number[] }[] = [
   { nome: "Acessórios câmera",    itens: [16, 17, 18] },
 ];
 
+// Vazio esperado enquanto o módulo é novo — e não um defeito do gráfico.
+const SEM_CHAMADOS = "Nenhum chamado registrado ainda. Os gráficos se preenchem conforme a Central de Chamados for usada.";
+
 function categoriaDoItem(itemNum: number): string {
   return CATEGORIAS_CONTRATO.find((c) => c.itens.includes(itemNum))?.nome ?? "Outros";
 }
@@ -79,7 +83,7 @@ export default function RelatoriosPage() {
   const servidores = useServidores();
   const terceirizados = useTerceirizados();
   const contratos = useContratos();
-  const ocorrencias = useOcorrencias();
+  const chamados = useChamados();
 
   useEffect(() => { document.title = "Relatórios | COSEPH TJRO"; }, []);
 
@@ -117,18 +121,18 @@ export default function RelatoriosPage() {
     terceirizados: terceirizados.length,
     kitRfid: kitRfidStats.unidades,
     contratos: contratos.length,
-    ocorrencias: ocorrencias.length,
+    chamados: chamados.length,
   };
 
   // Cobertura de segurança
-  const cobertura = useMemo(() => {
-    const total = unidades.length || 1;
-    return {
-      derso: Math.round((unidades.filter((u) => u.possui_derso).length / total) * 100),
-      acesso: Math.round((unidades.filter((u) => u.controle_acesso).length / total) * 100),
-      vigilancia: Math.round((unidades.filter((u) => u.vigilancia_eletronica).length / total) * 100),
-    };
-  }, [unidades]);
+  // Percentual sobre quem RESPONDEU o campo, não sobre todas as unidades:
+  // contar "não informado" no denominador afundaria a cobertura só porque
+  // falta cadastro, misturando lacuna com deficiência. Ver `lib/seguranca.ts`.
+  const cobertura = useMemo(() => ({
+    derso: coberturaDoCampo(unidades, "possui_derso") ?? 0,
+    acesso: coberturaDoCampo(unidades, "controle_acesso") ?? 0,
+    vigilancia: coberturaDoCampo(unidades, "vigilancia_eletronica") ?? 0,
+  }), [unidades]);
 
   // Equipamentos por categoria do contrato (soma quantidades)
   const equipPorCategoria = useMemo(() => {
@@ -201,12 +205,12 @@ export default function RelatoriosPage() {
     [contratos],
   );
 
-  // Manutenções
-  const ocoPorTipo = useMemo(() => groupBy(ocorrencias, (o) => o.categoria || "Sem categoria"), [ocorrencias]);
-  const ocoPorStatus = useMemo(() => groupBy(ocorrencias, (o) => o.status), [ocorrencias]);
-  const ocoAtrasadas = useMemo(
-    () => ocorrencias.filter((o) => calcSla(o).indicador === "Atrasado"),
-    [ocorrencias],
+  // Chamados
+  const chamadosPorCategoria = useMemo(() => groupBy(chamados, (c) => c.categoria || "Sem categoria"), [chamados]);
+  const chamadosPorStatus = useMemo(() => groupBy(chamados, (c) => c.status), [chamados]);
+  const chamadosVencidos = useMemo(
+    () => chamados.filter((c) => isPendente(c.status) && calcVencimento(c).vencido),
+    [chamados],
   );
 
   // Datasets exportáveis (com nomes de unidade resolvidos)
@@ -232,9 +236,9 @@ export default function RelatoriosPage() {
     })),
     [kitRfidStats],
   );
-  const ocoExport = useMemo(
-    () => ocorrencias.map((o) => ({ ...o, unidade: unidadeNome[o.unidade_id] ?? "" })),
-    [ocorrencias, unidadeNome],
+  const chamadosExport = useMemo(
+    () => chamados.map((c) => ({ ...c, unidade: unidadeNome[c.unidade_id] ?? "" })),
+    [chamados, unidadeNome],
   );
 
   // Relatório cadastral de servidores (Número, Cadastro, Nome, Localidade, Unidade Predial, Região, Grupo Unidade, Status Cadastro)
@@ -278,7 +282,7 @@ export default function RelatoriosPage() {
             <Button variant="outline" size="sm" onClick={() => exportCsv(terceirizados, "terceirizados")}><Download className="mr-1 h-4 w-4" />Terceirizados</Button>
             <Button variant="outline" size="sm" onClick={() => exportCsv(kitRfidExport, "kit-rfid")}><Download className="mr-1 h-4 w-4" />Kit RFID</Button>
             <Button variant="outline" size="sm" onClick={() => exportCsv(contratos, "contratos")}><Download className="mr-1 h-4 w-4" />Contratos</Button>
-            <Button variant="outline" size="sm" onClick={() => exportCsv(ocoExport, "manutencoes")}><Download className="mr-1 h-4 w-4" />Manutenções</Button>
+            <Button variant="outline" size="sm" onClick={() => exportCsv(chamadosExport, "chamados")}><Download className="mr-1 h-4 w-4" />Chamados</Button>
           </div>
         }
       />
@@ -291,7 +295,7 @@ export default function RelatoriosPage() {
         <Kpi icon={UserCog}       label="Terceirizados" value={totals.terceirizados} />
         <Kpi icon={KeyRound}      label="Kit RFID"      value={totals.kitRfid} />
         <Kpi icon={FileText}      label="Contratos"     value={totals.contratos} />
-        <Kpi icon={AlertTriangle} label="Manutenções"   value={totals.ocorrencias} />
+        <Kpi icon={AlertTriangle} label="Chamados"      value={totals.chamados} />
       </div>
 
       {/* Cobertura de segurança */}
@@ -309,29 +313,34 @@ export default function RelatoriosPage() {
 
       {/* Gráficos */}
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        <ChartCard title="Unidades por comarca">
+        {/* São 31 comarcas com unidade e 21 com servidor: as 10 maiores
+            respondem a pergunta, e a cauda vira uma barra só. */}
+        <ChartCard title="Unidades por comarca (10 maiores)">
           <BarHorizontal data={unidadesPorComarca} />
         </ChartCard>
-        <ChartCard title="Servidores por comarca">
+        <ChartCard title="Servidores por comarca (10 maiores)">
           <BarHorizontal data={servidoresPorComarca} />
         </ChartCard>
 
         <ChartCard title="Equipamentos por categoria do contrato">
-          <BarHorizontal data={equipPorCategoria} />
+          <BarHorizontal data={equipPorCategoria} max={11} />
         </ChartCard>
-        <ChartCard title="Divergência contrato × distribuição (top 10)">
-          <BarHorizontal data={divergenciaContrato} />
+        <ChartCard title="Divergência contrato × distribuição">
+          <BarHorizontal
+            data={divergenciaContrato}
+            vazio="Nenhuma divergência: as quantidades distribuídas batem com as do contrato em todos os itens do catálogo."
+          />
         </ChartCard>
 
         <ChartCard title="Contratos por situação">
           <Donut data={contratosPorStatus} />
         </ChartCard>
 
-        <ChartCard title="Manutenções por categoria">
-          <BarHorizontal data={ocoPorTipo} />
+        <ChartCard title="Chamados por categoria">
+          <BarHorizontal data={chamadosPorCategoria} vazio={SEM_CHAMADOS} />
         </ChartCard>
-        <ChartCard title="Manutenções por status">
-          <Donut data={ocoPorStatus} />
+        <ChartCard title="Chamados por status">
+          <Donut data={chamadosPorStatus} vazio={SEM_CHAMADOS} />
         </ChartCard>
       </div>
 
@@ -351,7 +360,8 @@ export default function RelatoriosPage() {
           </div>
           <div className="grid gap-4 lg:grid-cols-2">
             <ChartCard title="Servidores por faixa etária">
-              <BarHorizontal data={servidoresPorFaixa} />
+              {/* Faixa etária é ordinal: 25-34 antes de 35-44, não a mais populosa primeiro. */}
+              <BarHorizontal data={servidoresPorFaixa} ordenar={false} max={99} />
             </ChartCard>
             <ChartCard title="Servidores por regime de trabalho">
               <Donut data={servidoresPorRegime} />
@@ -448,8 +458,8 @@ export default function RelatoriosPage() {
         <CardContent className="space-y-3">
           <PendRow
             tone="critical"
-            count={ocoAtrasadas.length}
-            label="Manutenções com SLA atrasado"
+            count={chamadosVencidos.length}
+            label="Chamados com prazo vencido"
           />
           <PendRow
             tone="partial"
@@ -484,7 +494,7 @@ export default function RelatoriosPage() {
           />
           <PendRow
             tone="partial"
-            count={unidades.filter((u) => !u.possui_derso).length}
+            count={unidades.filter((u) => u.possui_derso === false).length}
             label="Unidades sem DERSO"
           />
         </CardContent>
