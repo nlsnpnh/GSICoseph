@@ -30,6 +30,7 @@ import {
   useContratos, addContrato, updateContrato, removeContrato, statusFromVigencia,
 } from "@/data/contratos";
 import { toast } from "@/hooks/use-toast";
+import { SecaoFormulario as Section } from "@/components/admin/SecaoFormulario";
 
 const aditivoSchema = z.object({
   numero: z.string().trim().min(1).max(40),
@@ -50,10 +51,11 @@ const schema = z.object({
   data_fim: z.string().min(1, "Informe a data final"),
   valor_mensal: z.coerce.number().nonnegative(),
   valor_total: z.coerce.number().nonnegative(),
-  unidades_atendidas: z.array(z.string()).min(1, "Selecione ao menos uma unidade"),
+  unidade_ids: z.array(z.string()).min(1, "Selecione ao menos uma unidade"),
   fiscal: z.string().trim().min(2, "Informe o fiscal").max(120),
   gestor: z.string().trim().min(2, "Informe o gestor").max(120),
   sla: z.string().trim().max(500).optional().or(z.literal("")),
+  sla_dias: z.coerce.number().int().positive().nullable(),
   aditivos: z.array(aditivoSchema),
   apostilamentos: z.array(apostilamentoSchema),
   observacoes: z.string().max(2000).optional().or(z.literal("")),
@@ -70,8 +72,8 @@ const statusTone: Record<StatusContrato, string> = {
 
 const defaults: FormData = {
   numero: "", empresa: "", objeto: "", data_inicio: "", data_fim: "",
-  valor_mensal: 0, valor_total: 0, unidades_atendidas: [],
-  fiscal: "", gestor: "", sla: "", aditivos: [], apostilamentos: [], observacoes: "",
+  valor_mensal: 0, valor_total: 0, unidade_ids: [],
+  fiscal: "", gestor: "", sla: "", sla_dias: null, aditivos: [], apostilamentos: [], observacoes: "",
 };
 
 const fmtDate = (d: string) => (d ? new Date(d + "T00:00:00").toLocaleDateString("pt-BR") : "—");
@@ -144,16 +146,16 @@ export default function ContratosPage() {
     }
   };
 
-  const toggleUnidade = (nome: string) => {
-    const cur = form.getValues("unidades_atendidas");
+  const toggleUnidade = (id: string) => {
+    const cur = form.getValues("unidade_ids");
     form.setValue(
-      "unidades_atendidas",
-      cur.includes(nome) ? cur.filter((u) => u !== nome) : [...cur, nome],
+      "unidade_ids",
+      cur.includes(id) ? cur.filter((u) => u !== id) : [...cur, id],
       { shouldValidate: true },
     );
   };
 
-  const selectedUnidades = form.watch("unidades_atendidas");
+  const selectedUnidades = form.watch("unidade_ids");
 
   return (
     <div>
@@ -218,7 +220,7 @@ export default function ContratosPage() {
                       <div className="text-muted-foreground">{fmtMoney(c.valor_total)} total</div>
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">
-                      {c.unidades_atendidas.length} unidade(s)
+                      {c.unidade_ids.length} unidade(s)
                     </TableCell>
                     <TableCell className="text-xs">
                       <div>{c.fiscal}</div>
@@ -296,18 +298,18 @@ export default function ContratosPage() {
               ) : (
                 <div className="grid gap-2 sm:grid-cols-2">
                   {unidades.map((u) => {
-                    const checked = selectedUnidades.includes(u.nome);
+                    const checked = selectedUnidades.includes(u.id);
                     return (
                       <label key={u.id} className="flex cursor-pointer items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-xs">
-                        <input type="checkbox" checked={checked} onChange={() => toggleUnidade(u.nome)} className="h-3.5 w-3.5" />
+                        <input type="checkbox" checked={checked} onChange={() => toggleUnidade(u.id)} className="h-3.5 w-3.5" />
                         <span>{u.nome}</span>
                       </label>
                     );
                   })}
                 </div>
               )}
-              {form.formState.errors.unidades_atendidas && (
-                <p className="text-xs text-destructive">{form.formState.errors.unidades_atendidas.message}</p>
+              {form.formState.errors.unidade_ids && (
+                <p className="text-xs text-destructive">{form.formState.errors.unidade_ids.message}</p>
               )}
             </Section>
 
@@ -322,6 +324,23 @@ export default function ContratosPage() {
               </div>
               <Field label="SLA / Acordo de nível de serviço">
                 <Textarea rows={2} {...form.register("sla")} placeholder="Prazos de atendimento, multas, indicadores..." />
+              </Field>
+              {/* O texto acima é a cláusula; este número é o que a Central de
+                  Chamados usa para calcular o vencimento de cada chamado. */}
+              <Field
+                label="Prazo de atendimento (dias)"
+                error={form.formState.errors.sla_dias?.message}
+              >
+                <Input
+                  type="number" min={1} className="max-w-[160px]"
+                  {...form.register("sla_dias", {
+                    setValueAs: (v) => (v === "" || v == null ? null : Number(v)),
+                  })}
+                  placeholder="Em branco: sem prazo"
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  Chamados deste contrato vencem em {"{abertura + dias}"}. Sem valor, ficam sem prazo a cobrar.
+                </p>
               </Field>
             </Section>
 
@@ -390,15 +409,6 @@ export default function ContratosPage() {
         }}
         description={deleting ? `Excluir o contrato "${deleting.numero}"?` : undefined}
       />
-    </div>
-  );
-}
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="space-y-3 rounded-md border border-border bg-muted/20 p-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</p>
-      {children}
     </div>
   );
 }

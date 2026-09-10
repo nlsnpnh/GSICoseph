@@ -1,7 +1,7 @@
 import { Suspense, lazy } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
@@ -24,7 +24,9 @@ const ComarcasPage = lazy(() => import("./pages/ComarcasPage"));
 const ServidoresPage = lazy(() => import("./pages/ServidoresPage"));
 const ServidoresPorUnidadePage = lazy(() => import("./pages/ServidoresPorUnidadePage"));
 const ConfiguracoesPage = lazy(() => import("./pages/ConfiguracoesPage"));
-const OcorrenciasPage = lazy(() => import("./pages/OcorrenciasPage"));
+const ChamadosPage = lazy(() => import("./pages/ChamadosPage"));
+const ChamadoNovoPage = lazy(() => import("./pages/ChamadoNovoPage"));
+const ChamadoDetalhePage = lazy(() => import("./pages/ChamadoDetalhePage"));
 const BoletimPage = lazy(() => import("./pages/BoletimPage"));
 const RelatoriosPage = lazy(() => import("./pages/RelatoriosPage"));
 const EquipamentosPage = lazy(() => import("./pages/EquipamentosPage"));
@@ -85,7 +87,11 @@ const App = () => (
                   <Route path="/planejamento" element={<PlanejamentoPage />} />
                   <Route path="/orcamento" element={<OrcamentoPage />} />
                 </Route>
-                <Route path="/ocorrencias" element={<OcorrenciasPage />} />
+                <Route path="/chamados" element={<ChamadosPage />} />
+                <Route path="/chamados/novo" element={<ChamadoNovoPage />} />
+                <Route path="/chamados/:id" element={<ChamadoDetalhePage />} />
+                {/* Links e favoritos antigos do módulo de Manutenção. */}
+                <Route path="/ocorrencias" element={<Navigate to="/chamados" replace />} />
                 <Route path="/boletim" element={<BoletimPage />} />
                 <Route path="/consultas" element={<ConsultasPage />} />
                 <Route path="/relatorios" element={<RelatoriosPage />} />

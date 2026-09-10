@@ -19,7 +19,7 @@ import { useTerceirizados } from "@/data/terceirizados";
 import { useComarcas } from "@/data/api";
 import { useUnidadeEquipamentos } from "@/data/equipamentos";
 import { useContratos, statusFromVigencia } from "@/data/contratos";
-import { useOcorrencias } from "@/data/ocorrencias";
+import { useChamados, isPendente } from "@/data/chamados";
 import { useAlertas } from "@/hooks/useAlertas";
 import { usePeriod, applyPeriod, type Period } from "@/contexts/PeriodContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -32,7 +32,7 @@ const ROLE_LABEL: Record<string, string> = {
 
 const ACOES_RAPIDAS = [
   { label: "Registrar Unidade",    icon: Building2,      to: "/unidades",   color: "text-blue-600",   bg: "bg-blue-50 dark:bg-blue-950/40"   },
-  { label: "Registrar Manutenção", icon: AlertOctagon,   to: "/ocorrencias", color: "text-red-600",    bg: "bg-red-50 dark:bg-red-950/40"     },
+  { label: "Abrir Chamado",       icon: AlertOctagon,   to: "/chamados/novo", color: "text-red-600",  bg: "bg-red-50 dark:bg-red-950/40"     },
   { label: "Consultar Contrato",   icon: FileSearch,     to: "/contratos",  color: "text-amber-600",  bg: "bg-amber-50 dark:bg-amber-950/40" },
   { label: "Gerar Relatório",      icon: FileBarChart2,  to: "/relatorios", color: "text-green-600",  bg: "bg-green-50 dark:bg-green-950/40" },
 ];
@@ -58,7 +58,7 @@ export default function Dashboard() {
   const terceirizadosRaw = useTerceirizados();
   const distribuicaoRaw = useUnidadeEquipamentos();
   const contratosRaw    = useContratos();
-  const ocorrenciasRaw  = useOcorrencias();
+  const chamadosRaw     = useChamados();
   const alertas         = useAlertas();
   const { period, setPeriod, factor } = usePeriod();
 
@@ -93,19 +93,19 @@ export default function Dashboard() {
     if (filterComarca !== "todas") return unidadeIdsParaComarca.has(d.unidade_id);
     return true;
   }), [distribuicaoRaw, filterUnidade, filterComarca, unidadeIdsParaComarca]);
-  const ocorrencias = useMemo(() => ocorrenciasRaw.filter((o) =>
+  const chamados = useMemo(() => chamadosRaw.filter((c) =>
     filterUnidade !== "todas"
-      ? o.unidade_id === filterUnidade
-      : filterComarca === "todas" || (o.unidade_id != null && unidadeIdsParaComarca.has(o.unidade_id))),
-    [ocorrenciasRaw, filterUnidade, filterComarca, unidadeIdsParaComarca]);
+      ? c.unidade_id === filterUnidade
+      : filterComarca === "todas" || (c.unidade_id != null && unidadeIdsParaComarca.has(c.unidade_id))),
+    [chamadosRaw, filterUnidade, filterComarca, unidadeIdsParaComarca]);
 
   const handleRefresh = () => setUpdated(format(new Date(), "dd/MM/yyyy HH:mm"));
 
   const stats = useMemo(() => {
     const f = (n: number) => applyPeriod(n, factor);
     const equipamentosInstalados = distribuicao.reduce((s, d) => s + d.quantidade, 0);
-    const statusAbertos = new Set(["Aberto", "Em andamento", "Aguardando peça"]);
-    const ocorrenciasAbertas = ocorrencias.filter((o) => statusAbertos.has(o.status)).length;
+
+    const chamadosAbertos = chamados.filter((c) => isPendente(c.status)).length;
     const contratosVigentes = contratosRaw.filter((c) => statusFromVigencia(c.data_fim) === "Vigente").length;
 
     // Total de câmeras instaladas (item 1=Dome, 2=Bullet, 3=Fisheye, 4=PTZ) —
@@ -129,9 +129,9 @@ export default function Dashboard() {
       contratosVigentes:      f(contratosVigentes),
       terceirizadosAtivos:    f(terceirizados.filter((t) => t.situacao === "Ativo").length),
       servidoresAtivos:       f(servidores.filter((s) => s.situacao === "Ativo").length),
-      ocorrenciasAbertas:     f(ocorrenciasAbertas),
+      chamadosAbertos:        f(chamadosAbertos),
     };
-  }, [unidades, servidores, terceirizados, distribuicao, contratosRaw, ocorrencias, alertas, factor]);
+  }, [unidades, servidores, terceirizados, distribuicao, contratosRaw, chamados, alertas, factor]);
 
   return (
     <div className="space-y-4">
@@ -227,11 +227,11 @@ export default function Dashboard() {
           tone={stats.alertasCriticos > 0 ? "destructive" : "default"}
         />
         <StatCard
-          label="Manutenções abertas"
-          value={stats.ocorrenciasAbertas}
+          label="Chamados abertos"
+          value={stats.chamadosAbertos}
           icon={ClipboardList}
           iconeTom="laranja"
-          tone={stats.ocorrenciasAbertas > 0 ? "warning" : "default"}
+          tone={stats.chamadosAbertos > 0 ? "warning" : "default"}
         />
       </div>
 

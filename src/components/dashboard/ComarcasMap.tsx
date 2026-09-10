@@ -100,7 +100,7 @@ export function ComarcasMap() {
               >
                 <title>
                   {c
-                    ? `${p.name} — ${c.nivel} • ${c.unidades} unid. • ${c.quantidadeTotal} equip. • ${c.itensVinculados} itens • cobertura ${c.cobertura}% • ${c.ocorrenciasAbertas} ocorrência(s)`
+                    ? `${p.name} — ${c.nivel} • ${c.unidades} unid. • ${c.quantidadeTotal} equip. • ${c.itensVinculados} itens • cobertura ${c.cobertura}% • ${c.chamadosAbertos} chamado(s)`
                     : p.name}
                 </title>
               </path>

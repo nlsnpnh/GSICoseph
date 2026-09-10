@@ -8,7 +8,7 @@ const semPapel: PerfilAcesso = { isAdmin: false, isGestor: false, isOperador: fa
 const operadorSemUnidade: PerfilAcesso = { ...operador, unidadeId: null };
 
 const RECURSOS: Recurso[] = [
-  "comarcas", "unidades", "contratos", "ocorrencias", "equipamentos",
+  "comarcas", "unidades", "contratos", "chamados", "equipamentos",
   "portoes", "servidores", "terceirizados", "boletim", "planejamento", "orcamento",
 ];
 
@@ -24,7 +24,7 @@ describe("admin", () => {
 
 describe("gestor", () => {
   it("escreve nos cadastros operacionais", () => {
-    for (const r of ["comarcas", "unidades", "contratos", "ocorrencias", "equipamentos", "servidores"] as Recurso[]) {
+    for (const r of ["comarcas", "unidades", "contratos", "chamados", "equipamentos", "servidores"] as Recurso[]) {
       expect(podeEditar(gestor, r)).toBe(true);
     }
   });
@@ -43,15 +43,15 @@ describe("gestor", () => {
     expect(podeExcluir(gestor, "boletim")).toBe(false);
   });
 
-  it("exclui ocorrencias e equipamentos", () => {
-    expect(podeExcluir(gestor, "ocorrencias")).toBe(true);
+  it("exclui chamados e equipamentos", () => {
+    expect(podeExcluir(gestor, "chamados")).toBe(true);
     expect(podeExcluir(gestor, "equipamentos")).toBe(true);
   });
 });
 
 describe("operador", () => {
   it("escreve nos recursos por unidade, na propria unidade", () => {
-    for (const r of ["servidores", "terceirizados", "portoes", "boletim"] as Recurso[]) {
+    for (const r of ["servidores", "terceirizados", "portoes", "boletim", "chamados"] as Recurso[]) {
       expect(podeEditar(operador, r, "u1")).toBe(true);
     }
   });
@@ -62,16 +62,22 @@ describe("operador", () => {
   });
 
   it("nao escreve nos cadastros de alcance sistemico", () => {
-    for (const r of ["comarcas", "unidades", "contratos", "ocorrencias", "equipamentos"] as Recurso[]) {
+    for (const r of ["comarcas", "unidades", "contratos", "equipamentos"] as Recurso[]) {
       expect(podeEditar(operador, r, "u1")).toBe(false);
     }
   });
 
-  it("exclui servidor e terceirizado da propria unidade, mas nao portao nem boletim", () => {
+  it("abre chamado na propria unidade, mas nao na de outro", () => {
+    expect(podeEditar(operador, "chamados", "u1")).toBe(true);
+    expect(podeEditar(operador, "chamados", "u2")).toBe(false);
+  });
+
+  it("exclui servidor e terceirizado da propria unidade, mas nao portao, boletim nem chamado", () => {
     expect(podeExcluir(operador, "servidores", "u1")).toBe(true);
     expect(podeExcluir(operador, "terceirizados", "u1")).toBe(true);
     expect(podeExcluir(operador, "portoes", "u1")).toBe(false);
     expect(podeExcluir(operador, "boletim", "u1")).toBe(false);
+    expect(podeExcluir(operador, "chamados", "u1")).toBe(false);
   });
 
   it("pode criar (sem unidade de registro) porque tem unidade vinculada", () => {

@@ -1,7 +1,7 @@
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Building2, Map, Users, UserCog, Cpu, DoorOpen,
-  FileText, AlertTriangle, BarChart3, Settings, Search, HelpCircle, ClipboardList,
+  FileText, Ticket, BarChart3, Settings, Search, HelpCircle, ClipboardList,
   CalendarCheck, Wallet,
   type LucideIcon,
 } from "lucide-react";
@@ -26,7 +26,7 @@ const items: NavItem[] = [
   { title: "Planejamento",              url: "/planejamento",  icon: CalendarCheck, adminOnly: true },
   { title: "Orçamento",                 url: "/orcamento",     icon: Wallet,        adminOnly: true },
   { title: "Boletim Operacional",       url: "/boletim",       icon: ClipboardList },
-  { title: "Manutenção",                url: "/ocorrencias",   icon: AlertTriangle },
+  { title: "Chamados",                  url: "/chamados",      icon: Ticket },
   { title: "Consultas",                 url: "/consultas",     icon: Search,        adminOnly: true },
   { title: "Relatórios",                url: "/relatorios",    icon: BarChart3,     adminOnly: true },
   { title: "Configurações",             url: "/configuracoes", icon: Settings,      adminOnly: true },

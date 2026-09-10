@@ -6,7 +6,7 @@ import { FioAcento } from "@/components/admin/FioAcento";
 import { useServidores } from "@/data/servidores";
 import { useUnidades } from "@/data/unidades";
 import { useEquipamentosCatalogo, useUnidadeEquipamentos } from "@/data/equipamentos";
-import { useOcorrencias } from "@/data/ocorrencias";
+import { useChamados } from "@/data/chamados";
 import { useContratos, statusFromVigencia } from "@/data/contratos";
 import { useResultadosOperacionais } from "@/data/boletim";
 import { usePeriod } from "@/contexts/PeriodContext";
@@ -221,8 +221,8 @@ export function ResultadosOperacionaisPie({
   );
 }
 
-export function OcorrenciasPorMes() {
-  const ocorrencias = useOcorrencias();
+export function ChamadosPorMes() {
+  const chamados = useChamados();
 
   const data = useMemo(() => {
     const hoje = new Date();
@@ -230,20 +230,20 @@ export function OcorrenciasPorMes() {
       const d = new Date(hoje.getFullYear(), hoje.getMonth() - 5 + i, 1);
       const mes = d.getMonth();
       const ano = d.getFullYear();
-      const total = ocorrencias.filter((o) => {
-        if (!o.data_abertura) return false;
-        const dt = new Date(o.data_abertura);
+      const total = chamados.filter((c) => {
+        if (!c.aberto_em) return false;
+        const dt = new Date(c.aberto_em);
         return dt.getMonth() === mes && dt.getFullYear() === ano;
       }).length;
       return { mes: MESES_ABREV[mes], total };
     });
-  }, [ocorrencias]);
+  }, [chamados]);
 
   return (
     <Card className="overflow-hidden border-border/80 shadow-sm">
       <FioAcento />
       <CardHeader className="border-b border-border px-3 py-2">
-        <CardTitle className="text-[11px] font-medium uppercase tracking-[0.14em] text-foreground/70">Ocorrências por Mês</CardTitle>
+        <CardTitle className="text-[11px] font-medium uppercase tracking-[0.14em] text-foreground/70">Chamados por Mês</CardTitle>
         <p className="text-[11px] text-muted-foreground">Últimos 6 meses</p>
       </CardHeader>
       <CardContent className="p-3">

@@ -18,7 +18,7 @@ export type MapaComarcaResumo = {
   quantidadeTotal: number;
   valorEstimado: number;
   cobertura: number;
-  ocorrenciasAbertas: number;
+  chamadosAbertos: number;
   possuiDerso: boolean;
 };
 
@@ -47,7 +47,7 @@ export function useMapaComarcasResumo(): MapaComarcaResumo[] {
         quantidadeTotal: r.quantidade_total ?? 0,
         valorEstimado: Number(r.valor_estimado ?? 0),
         cobertura: r.cobertura ?? 0,
-        ocorrenciasAbertas: r.ocorrencias_abertas ?? 0,
+        chamadosAbertos: r.chamados_abertos ?? 0,
         possuiDerso: !!r.possui_derso,
       }));
     },

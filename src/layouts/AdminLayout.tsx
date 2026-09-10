@@ -86,7 +86,7 @@ export default function AdminLayout() {
                       variant="outline"
                       size="sm"
                       className="w-full text-xs"
-                      onClick={() => navigate("/ocorrencias")}
+                      onClick={() => navigate("/chamados")}
                     >
                       Ver todas as ocorrências
                     </Button>

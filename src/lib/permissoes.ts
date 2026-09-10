@@ -10,7 +10,7 @@ export type Recurso =
   | "comarcas"
   | "unidades"
   | "contratos"
-  | "ocorrencias"
+  | "chamados"
   | "equipamentos"
   | "portoes"
   | "servidores"
@@ -30,7 +30,7 @@ const ESCRITA: Record<Recurso, Regra> = {
   comarcas: "gestor",
   unidades: "gestor",
   contratos: "gestor",
-  ocorrencias: "gestor",
+  chamados: "unidade",
   equipamentos: "gestor",
   portoes: "unidade",
   servidores: "unidade",
@@ -44,7 +44,9 @@ const EXCLUSAO: Record<Recurso, Regra> = {
   comarcas: "admin",
   unidades: "admin",
   contratos: "admin",
-  ocorrencias: "gestor",
+  // Operador abre e movimenta chamado da propria unidade, mas nao apaga:
+  // o historico do atendimento nao pode sumir por decisao da unidade.
+  chamados: "gestor",
   equipamentos: "gestor",
   portoes: "admin",
   servidores: "unidade",
