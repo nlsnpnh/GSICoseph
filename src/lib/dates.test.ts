@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   addAnosISO,
   addDiasISO,
+  anoAtual,
   anosCompletosISO,
   diffDiasISO,
   hojeISO,
@@ -33,6 +34,26 @@ describe("toISODate / hojeISO", () => {
 
   it("formata um instante qualquer como YYYY-MM-DD", () => {
     expect(toISODate(new Date("2026-01-05T18:30:00Z"))).toBe("2026-01-05");
+  });
+});
+
+describe("anoAtual", () => {
+  it("nao vira o ano antes de Rondonia virar", () => {
+    // 01/01/2027 as 02:00 UTC ainda e 31/12/2026 as 22:00 em Rondonia.
+    // O exercicio orcamentario tem de continuar em 2026.
+    congelar("2027-01-01T02:00:00Z");
+    expect(anoAtual()).toBe(2026);
+  });
+
+  it("vira o ano quando Rondonia vira", () => {
+    // 01/01/2027 as 04:00 UTC = meia-noite em Rondonia.
+    congelar("2027-01-01T04:00:00Z");
+    expect(anoAtual()).toBe(2027);
+  });
+
+  it("no meio do ano nao ha ambiguidade", () => {
+    congelar("2026-06-15T12:00:00Z");
+    expect(anoAtual()).toBe(2026);
   });
 });
 
