@@ -5,6 +5,23 @@ Versionamento semântico: `MAIOR.MENOR.CORREÇÃO`.
 
 ---
 
+## [1.2.1] — 2026-09-10
+
+> **Requer a migration `20260910130000_remove_super_admin.sql`**, aplicada pelo
+> SQL Editor **depois** de publicar este frontend — a versão anterior lê a
+> coluna removida e quebraria a tela de Configurações.
+>
+> `src/integrations/supabase/types.ts` foi ajustado à mão, pelo mesmo motivo da
+> 1.2.0.
+
+### Removido
+
+- **Administrador protegido** (`profiles.super_admin`), com o gatilho
+  `proteger_super_admin` e o cadeado em Configurações. A proteção era contornável:
+  excluir o usuário apagava o perfil antes do papel e levava a flag junto. Todos
+  os admins passam a ter o mesmo nível; continua valendo a trava que impede o
+  último admin de tirar o próprio papel.
+
 ## [1.2.0] — 2026-09-09
 
 Substitui o módulo de Manutenção por uma Central de Chamados de prestação de

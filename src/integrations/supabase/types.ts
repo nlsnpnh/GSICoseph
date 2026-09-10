@@ -709,7 +709,6 @@ export type Database = {
           lotacao: string | null
           matricula: string | null
           nome_completo: string | null
-          super_admin: boolean
           unidade_id: string | null
           updated_at: string
           user_id: string
@@ -722,7 +721,6 @@ export type Database = {
           lotacao?: string | null
           matricula?: string | null
           nome_completo?: string | null
-          super_admin?: boolean
           unidade_id?: string | null
           updated_at?: string
           user_id: string
@@ -735,7 +733,6 @@ export type Database = {
           lotacao?: string | null
           matricula?: string | null
           nome_completo?: string | null
-          super_admin?: boolean
           unidade_id?: string | null
           updated_at?: string
           user_id?: string
