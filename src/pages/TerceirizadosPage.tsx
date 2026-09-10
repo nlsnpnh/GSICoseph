@@ -35,6 +35,7 @@ import {
   useTerceirizados, addTerceirizado, updateTerceirizado, removeTerceirizado,
 } from "@/data/terceirizados";
 import { toast } from "@/hooks/use-toast";
+import { SecaoFormulario as Section } from "@/components/admin/SecaoFormulario";
 
 const schema = z.object({
   nome: z.string().trim().min(2, "Mínimo 2 caracteres").max(120),
@@ -489,15 +490,6 @@ export default function TerceirizadosPage() {
         }}
         description={deleting ? `Excluir o terceirizado "${deleting.nome}"?` : undefined}
       />
-    </div>
-  );
-}
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="space-y-3 rounded-md border border-border bg-muted/20 p-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</p>
-      {children}
     </div>
   );
 }

@@ -32,6 +32,7 @@ import {
 } from "@/data/equipamentos";
 import { useUnidades } from "@/data/unidades";
 import { toast } from "@/hooks/use-toast";
+import { SecaoFormulario as Section } from "@/components/admin/SecaoFormulario";
 
 const schema = z.object({
   unidade_id: z.string().min(1, "Selecione a unidade"),
@@ -292,43 +293,49 @@ export default function EquipamentosPage() {
             <DialogTitle>{editing ? "Editar quantidade" : "Vincular equipamento à unidade"}</DialogTitle>
           </DialogHeader>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <Field label="Unidade predial" error={form.formState.errors.unidade_id?.message}>
-              <Select
-                value={form.watch("unidade_id")}
-                onValueChange={(v) => form.setValue("unidade_id", v, { shouldValidate: true })}
-                disabled={!!editing}
-              >
-                <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-                <SelectContent>
-                  {unidades.map((u) => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </Field>
+            {/* Na edição o vínculo é imutável — trocar unidade ou item aqui
+                seria outro registro, não uma correção deste. */}
+            <Section title={editing ? "Vínculo (não editável)" : "Vínculo"}>
+              <Field label="Unidade predial" error={form.formState.errors.unidade_id?.message}>
+                <Select
+                  value={form.watch("unidade_id")}
+                  onValueChange={(v) => form.setValue("unidade_id", v, { shouldValidate: true })}
+                  disabled={!!editing}
+                >
+                  <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                  <SelectContent>
+                    {unidades.map((u) => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </Field>
 
-            <Field label="Equipamento (item do catálogo)" error={form.formState.errors.equipamento_id?.message}>
-              <Select
-                value={form.watch("equipamento_id")}
-                onValueChange={(v) => form.setValue("equipamento_id", v, { shouldValidate: true })}
-                disabled={!!editing}
-              >
-                <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-                <SelectContent className="max-h-[300px]">
-                  {[...catalogo].sort((a, b) => a.item_num - b.item_num).map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      #{padItem(c.item_num)} — {c.descricao}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
+              <Field label="Equipamento (item do catálogo)" error={form.formState.errors.equipamento_id?.message}>
+                <Select
+                  value={form.watch("equipamento_id")}
+                  onValueChange={(v) => form.setValue("equipamento_id", v, { shouldValidate: true })}
+                  disabled={!!editing}
+                >
+                  <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                  <SelectContent className="max-h-[300px]">
+                    {[...catalogo].sort((a, b) => a.item_num - b.item_num).map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        #{padItem(c.item_num)} — {c.descricao}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
+            </Section>
 
-            <Field label="Quantidade" error={form.formState.errors.quantidade?.message}>
-              <Input type="number" min={1} {...form.register("quantidade")} />
-            </Field>
+            <Section title="Quantidade">
+              <Field label="Quantidade" error={form.formState.errors.quantidade?.message}>
+                <Input type="number" min={1} {...form.register("quantidade")} />
+              </Field>
 
-            <Field label="Observações">
-              <Textarea rows={2} {...form.register("observacoes")} placeholder="Notas opcionais..." />
-            </Field>
+              <Field label="Observações">
+                <Textarea rows={2} {...form.register("observacoes")} placeholder="Notas opcionais..." />
+              </Field>
+            </Section>
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>

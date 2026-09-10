@@ -27,12 +27,13 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  type UnidadePredial,
+  type UnidadePredial, type IndicadorSeguranca,
   useUnidades, addUnidade, updateUnidade, removeUnidade,
 } from "@/data/unidades";
 import { useComarcas } from "@/data/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import { SecaoFormulario as Section } from "@/components/admin/SecaoFormulario";
 
 const schema = z.object({
   nome: z.string().trim().min(2, "Mínimo 2 caracteres").max(140),
@@ -41,9 +42,10 @@ const schema = z.object({
   telefone: z.string().trim().max(30).optional().or(z.literal("")),
   responsavel_local: z.string().trim().min(2).max(120),
   responsavel_substituto: z.string().trim().max(120).optional().or(z.literal("")),
-  possui_derso: z.boolean(),
-  controle_acesso: z.boolean(),
-  vigilancia_eletronica: z.boolean(),
+  // Tri-estado: null é "não informado", e é um valor válido — não campo vazio.
+  possui_derso: z.boolean().nullable(),
+  controle_acesso: z.boolean().nullable(),
+  vigilancia_eletronica: z.boolean().nullable(),
   observacoes: z.string().max(2000).optional().or(z.literal("")),
   lat: z.preprocess(
     (v) => {
@@ -67,7 +69,8 @@ type FormData = z.infer<typeof schema>;
 const defaults: FormData = {
   nome: "", comarca_id: "", endereco: "", telefone: "",
   responsavel_local: "", responsavel_substituto: "",
-  possui_derso: false, controle_acesso: false, vigilancia_eletronica: false,
+  // Unidade nova nasce sem resposta: quem cadastra precisa afirmar, nao herdar um "nao".
+  possui_derso: null, controle_acesso: null, vigilancia_eletronica: null,
   observacoes: "", lat: undefined, lng: undefined,
 };
 
@@ -353,15 +356,6 @@ export default function UnidadesPage() {
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="space-y-3 rounded-md border border-border bg-muted/20 p-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</p>
-      {children}
-    </div>
-  );
-}
-
 function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
@@ -372,11 +366,49 @@ function Field({ label, error, children }: { label: string; error?: string; chil
   );
 }
 
-function ToggleField({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
+/**
+ * Indicador de segurança em três estados. Substituiu um `Switch`, que só sabia
+ * dizer sim/não e obrigava toda unidade nova a nascer com "não" — o que o mapa
+ * lia como cobertura zero e pintava a comarca de vermelho sem ninguém ter
+ * afirmado nada. "Não informado" agora é uma resposta possível, e visível.
+ */
+function ToggleField({
+  label, value, onChange,
+}: {
+  label: string;
+  value: IndicadorSeguranca;
+  onChange: (v: IndicadorSeguranca) => void;
+}) {
+  const opcoes: { rotulo: string; valor: IndicadorSeguranca; ativo: string }[] = [
+    { rotulo: "Sim",           valor: true,  ativo: "bg-adequate/15 text-adequate border-adequate/40" },
+    { rotulo: "Não",           valor: false, ativo: "bg-muted text-foreground border-border" },
+    { rotulo: "Não informado", valor: null,  ativo: "bg-transparent text-muted-foreground border-dashed border-muted-foreground/50" },
+  ];
+
   return (
-    <div className="flex items-center justify-between rounded-md border border-border bg-card px-3 py-2">
+    <div className="space-y-1.5 rounded-md border border-border bg-card px-3 py-2">
       <Label className="text-xs">{label}</Label>
-      <Switch checked={value} onCheckedChange={onChange} />
+      <div className="flex flex-wrap gap-1" role="radiogroup" aria-label={label}>
+        {opcoes.map((o) => {
+          const selecionado = value === o.valor;
+          return (
+            <button
+              key={o.rotulo}
+              type="button"
+              role="radio"
+              aria-checked={selecionado}
+              onClick={() => onChange(o.valor)}
+              className={`rounded border px-2 py-0.5 text-[11px] transition-colors ${
+                selecionado
+                  ? o.ativo
+                  : "border-border bg-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {o.rotulo}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

@@ -22,6 +22,7 @@ import {
 } from "@/data/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import { SecaoFormulario as Section } from "@/components/admin/SecaoFormulario";
 
 const schema = z.object({
   nome: z.string().trim().min(2).max(120),
@@ -155,15 +156,6 @@ export default function ComarcasPage() {
         }}
         description={deleting ? `Excluir a comarca "${deleting.nome}"?` : undefined}
       />
-    </div>
-  );
-}
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="space-y-3 rounded-md border border-border bg-muted/20 p-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</p>
-      {children}
     </div>
   );
 }
