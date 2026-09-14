@@ -2,7 +2,7 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Building2, Map, Users, UserCog, Cpu, DoorOpen,
   FileText, Ticket, BarChart3, Settings, Search, HelpCircle, ClipboardList,
-  CalendarCheck, Wallet,
+  CalendarCheck, Wallet, History,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -12,7 +12,10 @@ import {
 import { APP_VERSION } from "@/lib/versao";
 import { useAuth } from "@/contexts/AuthContext";
 
-type NavItem = { title: string; url: string; icon: LucideIcon; adminOnly?: boolean };
+// `adminOnly` só esconde do operador — o gestor ainda vê. `somenteAdmin` é
+// literal: a trilha de auditoria é lida só por admin (RLS), e mostrar o item
+// ao gestor levaria a uma tela que o devolve para o painel.
+type NavItem = { title: string; url: string; icon: LucideIcon; adminOnly?: boolean; somenteAdmin?: boolean };
 
 const items: NavItem[] = [
   { title: "Painel Executivo",          url: "/",              icon: LayoutDashboard },
@@ -29,6 +32,7 @@ const items: NavItem[] = [
   { title: "Chamados",                  url: "/chamados",      icon: Ticket },
   { title: "Consultas",                 url: "/consultas",     icon: Search,        adminOnly: true },
   { title: "Relatórios",                url: "/relatorios",    icon: BarChart3,     adminOnly: true },
+  { title: "Auditoria",                 url: "/auditoria",     icon: History,       adminOnly: true, somenteAdmin: true },
   { title: "Configurações",             url: "/configuracoes", icon: Settings,      adminOnly: true },
 ];
 
@@ -37,10 +41,12 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const { isOperador } = useAuth();
+  const { isOperador, isAdmin } = useAuth();
   const isActive = (path: string) => (path === "/" ? pathname === "/" : pathname.startsWith(path));
 
-  const visibleItems = isOperador ? items.filter((i) => !i.adminOnly) : items;
+  const visibleItems = items.filter(
+    (i) => !(isOperador && i.adminOnly) && !(i.somenteAdmin && !isAdmin),
+  );
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar">

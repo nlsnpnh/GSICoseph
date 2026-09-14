@@ -11,6 +11,7 @@ import { ConfirmDelete } from "@/components/ConfirmDelete";
 import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
 import { AcoesLinha } from "@/components/admin/AcoesLinha";
+import { usePainelHistorico } from "@/components/auditoria/usePainelHistorico";
 import { SUB } from "@/components/admin/estilos";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -75,6 +76,7 @@ const defaults: FormData = {
 
 export default function ServidoresPage() {
   const { isOperador, unidadeId: authUnidadeId, unidadeNome: authUnidadeNome, podeEditar, podeExcluir } = useAuth();
+  const historicoAuditoria = usePainelHistorico();
   // Operador escreve so na propria unidade — mesma regra da RLS.
   const podeCriar = podeEditar("servidores");
   const navigate = useNavigate();
@@ -331,6 +333,7 @@ export default function ServidoresPage() {
                         rotulo={s.nome}
                         onEditar={podeEditar("servidores", s.unidade_id) ? () => openEdit(s) : undefined}
                         onExcluir={podeExcluir("servidores", s.unidade_id) ? () => setDeleting(s) : undefined}
+                        onHistorico={historicoAuditoria.acao("servidores", s.id, s.nome)}
                       />
                     </TableCell>
                   </TableRow>
@@ -480,6 +483,8 @@ export default function ServidoresPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {historicoAuditoria.painel}
 
       <ConfirmDelete
         open={!!deleting}

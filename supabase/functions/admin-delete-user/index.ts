@@ -51,9 +51,16 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "cannot_delete_self" }), { status: 400, headers: corsHeaders });
     }
 
-    // Apaga papéis e perfil (auth.users normalmente cascata, mas garantimos)
-    await admin.from("user_roles").delete().eq("user_id", user_id);
-    await admin.from("profiles").delete().eq("user_id", user_id);
+    // Apaga papéis e perfil numa função do banco, e não por dois deletes
+    // soltos: com a service role o trigger de auditoria não sabe quem agiu, e
+    // a função declara o autor na mesma transação da escrita.
+    const { error: rpcErr } = await admin.rpc("admin_excluir_usuario", {
+      p_alvo: user_id,
+      p_ator: callerId,
+    });
+    if (rpcErr) {
+      return new Response(JSON.stringify({ error: rpcErr.message }), { status: 500, headers: corsHeaders });
+    }
 
     const { error: delErr } = await admin.auth.admin.deleteUser(user_id);
     if (delErr) {

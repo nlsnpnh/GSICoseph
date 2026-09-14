@@ -37,6 +37,7 @@ const ContratosPage = lazy(() => import("./pages/ContratosPage"));
 const PlanejamentoPage = lazy(() => import("./pages/PlanejamentoPage"));
 const OrcamentoPage = lazy(() => import("./pages/OrcamentoPage"));
 const ConsultasPage = lazy(() => import("./pages/ConsultasPage"));
+const AuditoriaPage = lazy(() => import("./pages/AuditoriaPage"));
 const AjudaPage = lazy(() => import("./pages/AjudaPage"));
 const CadastroPendentePage = lazy(() => import("./pages/CadastroPendentePage"));
 const BootstrapAdminPage = lazy(() => import("./pages/BootstrapAdminPage"));
@@ -86,6 +87,7 @@ const App = () => (
                 <Route element={<ProtectedRoute requireRole="admin" />}>
                   <Route path="/planejamento" element={<PlanejamentoPage />} />
                   <Route path="/orcamento" element={<OrcamentoPage />} />
+                  <Route path="/auditoria" element={<AuditoriaPage />} />
                 </Route>
                 <Route path="/chamados" element={<ChamadosPage />} />
                 <Route path="/chamados/novo" element={<ChamadoNovoPage />} />

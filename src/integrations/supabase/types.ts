@@ -39,6 +39,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      auditoria: {
+        Row: {
+          antes: Json | null
+          campos_alterados: string[]
+          depois: Json | null
+          id: number
+          ocorrido_em: string
+          operacao: string
+          origem: string
+          registro_id: string | null
+          registro_rotulo: string | null
+          tabela: string
+          transacao: number
+          usuario_id: string | null
+          usuario_nome: string | null
+          usuario_papel: string | null
+        }
+        Insert: {
+          antes?: Json | null
+          campos_alterados?: string[]
+          depois?: Json | null
+          id?: never
+          ocorrido_em?: string
+          operacao: string
+          origem: string
+          registro_id?: string | null
+          registro_rotulo?: string | null
+          tabela: string
+          transacao?: number
+          usuario_id?: string | null
+          usuario_nome?: string | null
+          usuario_papel?: string | null
+        }
+        Update: {
+          antes?: Json | null
+          campos_alterados?: string[]
+          depois?: Json | null
+          id?: never
+          ocorrido_em?: string
+          operacao?: string
+          origem?: string
+          registro_id?: string | null
+          registro_rotulo?: string | null
+          tabela?: string
+          transacao?: number
+          usuario_id?: string | null
+          usuario_nome?: string | null
+          usuario_papel?: string | null
+        }
+        Relationships: []
+      }
       boletim_itens_catalogo: {
         Row: {
           categoria: string | null
@@ -1016,6 +1067,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_excluir_usuario: {
+        Args: { p_alvo: string; p_ator: string }
+        Returns: undefined
+      }
+      auditoria_tabelas_descobertas: { Args: never; Returns: string[] }
+      bootstrap_promover_admin: {
+        Args: { p_usuario: string }
+        Returns: boolean
+      }
       current_user_can_write: { Args: never; Returns: boolean }
       current_user_is_admin: { Args: never; Returns: boolean }
       get_user_comarca_nome: { Args: never; Returns: string }

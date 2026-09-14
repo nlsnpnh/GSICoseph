@@ -10,6 +10,7 @@ import { ConfirmDelete } from "@/components/ConfirmDelete";
 import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
 import { AcoesLinha } from "@/components/admin/AcoesLinha";
+import { usePainelHistorico } from "@/components/auditoria/usePainelHistorico";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
@@ -82,6 +83,7 @@ const fmtMoney = (v: number) =>
 
 export default function ContratosPage() {
   const { podeEditar, podeExcluir } = useAuth();
+  const historicoAuditoria = usePainelHistorico();
   const podeGravar = podeEditar("contratos");
   const podeApagar = podeExcluir("contratos"); // RLS: exclusao de contrato e so do admin
   const items = useContratos();
@@ -243,6 +245,7 @@ export default function ContratosPage() {
                         rotulo={c.numero}
                         onEditar={podeGravar ? () => openEdit(c) : undefined}
                         onExcluir={podeApagar ? () => setDeleting(c) : undefined}
+                        onHistorico={historicoAuditoria.acao("contratos", c.id, `Contrato ${c.numero}`)}
                       />
                     </TableCell>
                   </TableRow>
@@ -393,6 +396,8 @@ export default function ContratosPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {historicoAuditoria.painel}
 
       <ConfirmDelete
         open={!!deleting}

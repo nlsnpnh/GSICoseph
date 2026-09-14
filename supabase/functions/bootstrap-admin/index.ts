@@ -56,11 +56,19 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Promove o usuário atual a admin
-    const { error: insErr } = await admin
-      .from("user_roles")
-      .insert({ user_id: userData.user.id, role: "admin" });
-    if (insErr) throw insErr;
+    // Promove pela função do banco: ela refaz a checagem com a tabela travada
+    // (dois cadastros simultâneos não viram admin juntos) e registra o próprio
+    // usuário como autor na trilha de auditoria.
+    const { data: promovido, error: rpcErr } = await admin.rpc("bootstrap_promover_admin", {
+      p_usuario: userData.user.id,
+    });
+    if (rpcErr) throw rpcErr;
+    if (!promovido) {
+      return new Response(
+        JSON.stringify({ error: "Já existe um admin no sistema. Peça a ele para promover você." }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
     return new Response(JSON.stringify({ ok: true, message: "Você agora é admin." }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
