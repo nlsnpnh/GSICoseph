@@ -7,6 +7,7 @@ import { z } from "zod";
 import { PageHeader } from "@/components/PageHeader";
 import { CrudTableLayout } from "@/components/CrudTableLayout";
 import { AcoesLinha } from "@/components/admin/AcoesLinha";
+import { usePainelHistorico } from "@/components/auditoria/usePainelHistorico";
 import { SinalSeguranca } from "@/components/admin/SinalSeguranca";
 import { comparaComarca, comparaTexto } from "@/lib/ordenacao";
 import { SUB } from "@/components/admin/estilos";
@@ -76,6 +77,7 @@ const defaults: FormData = {
 
 export default function UnidadesPage() {
   const { isOperador, podeEditar, podeExcluir } = useAuth();
+  const historicoAuditoria = usePainelHistorico();
   const podeGravar = podeEditar("unidades");
   const podeApagar = podeExcluir("unidades"); // RLS: exclusao de unidade e so do admin
   const items = useUnidades();
@@ -233,6 +235,7 @@ export default function UnidadesPage() {
                         rotulo={u.nome}
                         onEditar={podeGravar ? () => openEdit(u) : undefined}
                         onExcluir={podeApagar ? () => setDeleting(u) : undefined}
+                        onHistorico={historicoAuditoria.acao("unidades", u.id, u.nome)}
                       />
                     </TableCell>
                   )}
@@ -336,6 +339,8 @@ export default function UnidadesPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {historicoAuditoria.painel}
 
       <ConfirmDelete
         open={!!deleting}

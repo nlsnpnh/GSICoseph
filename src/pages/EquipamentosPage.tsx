@@ -11,6 +11,7 @@ import { ConfirmDelete } from "@/components/ConfirmDelete";
 import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
 import { AcoesLinha } from "@/components/admin/AcoesLinha";
+import { usePainelHistorico } from "@/components/auditoria/usePainelHistorico";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
@@ -49,6 +50,7 @@ const fmtMoney = (n: number) =>
 
 export default function EquipamentosPage() {
   const { isOperador, unidadeId, podeEditar, podeExcluir } = useAuth();
+  const historicoAuditoria = usePainelHistorico();
   const podeGravar = podeEditar("equipamentos");
   const podeApagar = podeExcluir("equipamentos");
   const distribuicao = useUnidadeEquipamentos();
@@ -224,6 +226,7 @@ export default function EquipamentosPage() {
                         rotulo={d.descricao}
                         onEditar={podeGravar ? () => openEdit(d) : undefined}
                         onExcluir={podeApagar ? () => setDeleting(d) : undefined}
+                        onHistorico={historicoAuditoria.acao("unidade_equipamentos", d.id, `${d.descricao} em ${d.unidade_nome}`)}
                       />
                         </TableCell>
                       )}
@@ -344,6 +347,8 @@ export default function EquipamentosPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {historicoAuditoria.painel}
 
       <ConfirmDelete
         open={!!deleting}

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, LayoutDashboard, Building2, Map, Users, UserCog, Cpu, DoorOpen, FileText, Ticket, BarChart3, Settings } from "lucide-react";
+import { ArrowLeft, LayoutDashboard, Building2, Map, Users, UserCog, Cpu, DoorOpen, FileText, Ticket, BarChart3, Settings, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FioAcento } from "@/components/admin/FioAcento";
@@ -131,6 +131,22 @@ const passos = [
     ],
   },
   {
+    icon: History,
+    titulo: "Trilha de Auditoria",
+    descricao: "Quem alterou o quê, quando, e como estava antes.",
+    // A trilha é lida só por admin (RLS): ensinar o caminho a quem não pode
+    // abri-la seria só frustração.
+    somenteAdmin: true,
+    steps: [
+      "Acesse Auditoria no menu. Cada linha é uma inclusão, alteração ou exclusão, com data, hora, usuário e o registro afetado.",
+      "Clique numa linha para ver o detalhe campo a campo: o valor anterior aparece riscado ao lado do novo.",
+      "Filtre por período, tabela, usuário ou operação, ou busque pelo nome do registro. O botão 'Exportar planilha' leva o resultado filtrado para o Excel.",
+      "Nas listagens de cadastro (Unidades, Servidores, Contratos…), o ícone de relógio ao lado de Editar abre o histórico só daquele registro. Na tela do chamado, é o botão 'Auditoria'.",
+      "A trilha não pode ser alterada nem apagada — nem por administrador. A exclusão de um registro também fica guardada, com o conteúdo que ele tinha.",
+      "O histórico começa na ativação da trilha. O 'Retrato inicial' mostra como cada registro estava nesse dia; o que aconteceu antes não foi registrado.",
+    ],
+  },
+  {
     icon: Settings,
     titulo: "Configurações",
     descricao: "Gerenciamento de usuários e permissões.",
@@ -164,7 +180,7 @@ export default function AjudaPage() {
       {isAdmin && <CoberturaSegurancaCard />}
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {passos.map(({ icon: Icon, titulo, descricao, steps }) => (
+        {passos.filter((p) => !p.somenteAdmin || isAdmin).map(({ icon: Icon, titulo, descricao, steps }) => (
           <Card key={titulo} className="overflow-hidden border-border/80 shadow-sm">
             <FioAcento />
             <CardHeader className="border-b border-border pb-3">

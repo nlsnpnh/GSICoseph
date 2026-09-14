@@ -9,6 +9,7 @@ import { ConfirmDelete } from "@/components/ConfirmDelete";
 import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
 import { AcoesLinha } from "@/components/admin/AcoesLinha";
+import { usePainelHistorico } from "@/components/auditoria/usePainelHistorico";
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
@@ -31,6 +32,7 @@ type FormData = z.infer<typeof schema>;
 
 export default function ComarcasPage() {
   const { podeEditar, podeExcluir } = useAuth();
+  const historicoAuditoria = usePainelHistorico();
   const podeCriar = podeEditar("comarcas");
   const podeApagar = podeExcluir("comarcas");
   const { data: items = [], isLoading } = useComarcas();
@@ -113,6 +115,7 @@ export default function ComarcasPage() {
                         rotulo={c.nome}
                         onEditar={podeCriar ? () => openEdit(c) : undefined}
                         onExcluir={podeApagar ? () => setDeleting(c) : undefined}
+                        onHistorico={historicoAuditoria.acao("comarcas", c.id, c.nome)}
                       />
                   </TableCell>
                 </TableRow>
@@ -144,6 +147,8 @@ export default function ComarcasPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {historicoAuditoria.painel}
 
       <ConfirmDelete
         open={!!deleting}

@@ -11,6 +11,7 @@ import { ConfirmDelete } from "@/components/ConfirmDelete";
 import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
 import { AcoesLinha } from "@/components/admin/AcoesLinha";
+import { usePainelHistorico } from "@/components/auditoria/usePainelHistorico";
 import { SUB } from "@/components/admin/estilos";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -83,6 +84,7 @@ function certStatus(d: string): { label: string; tone: string } | null {
 
 export default function TerceirizadosPage() {
   const { isOperador, unidadeId: authUnidadeId, unidadeNome: authUnidadeNome, podeEditar, podeExcluir } = useAuth();
+  const historicoAuditoria = usePainelHistorico();
   // Operador escreve so na propria unidade — mesma regra da RLS.
   const podeCriar = podeEditar("terceirizados");
   const navigate = useNavigate();
@@ -329,6 +331,7 @@ export default function TerceirizadosPage() {
                         rotulo={t.nome}
                         onEditar={podeEditar("terceirizados", t.unidade_id) ? () => openEdit(t) : undefined}
                         onExcluir={podeExcluir("terceirizados", t.unidade_id) ? () => setDeleting(t) : undefined}
+                        onHistorico={historicoAuditoria.acao("terceirizados", t.id, t.nome)}
                       />
                     </TableCell>
                   </TableRow>
@@ -474,6 +477,8 @@ export default function TerceirizadosPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {historicoAuditoria.painel}
 
       <ConfirmDelete
         open={!!deleting}

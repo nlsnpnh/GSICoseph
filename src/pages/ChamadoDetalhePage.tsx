@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, RotateCcw, Send } from "lucide-react";
+import { ArrowLeft, History, RotateCcw, Send } from "lucide-react";
 import { getErrorMessage } from "@/lib/utils";
 import { PageHeader } from "@/components/PageHeader";
 import { AnexosSection } from "@/components/chamados/AnexosSection";
 import { LinhaDoTempo } from "@/components/chamados/LinhaDoTempo";
+import { usePainelHistorico } from "@/components/auditoria/usePainelHistorico";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,6 +48,7 @@ export default function ChamadoDetalhePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user, unidadeId, podeEditar, podeExcluir } = useAuth();
+  const historicoAuditoria = usePainelHistorico();
 
   const { chamado, carregando } = useChamado(id);
   const eventos = useChamadoEventos(id);
@@ -160,6 +162,10 @@ export default function ChamadoDetalhePage() {
     }
   };
 
+  // A linha do tempo conta o atendimento; a auditoria conta as mudanças de
+  // campo (contrato trocado, prioridade, prazo) e quem as fez. Só admin.
+  const abrirAuditoria = historicoAuditoria.acao("chamados", chamado.id, `Chamado ${chamado.numero}`);
+
   return (
     <div>
       <PageHeader
@@ -167,11 +173,19 @@ export default function ChamadoDetalhePage() {
         title={chamado.assunto}
         description={`${unidade?.nome ?? "—"} · ${chamado.servico} · ${chamado.categoria}`}
         actions={
-          <Button variant="outline" onClick={() => navigate("/chamados")}>
-            <ArrowLeft className="mr-1 h-4 w-4" />Voltar
-          </Button>
+          <>
+            {abrirAuditoria && (
+              <Button variant="outline" onClick={abrirAuditoria}>
+                <History className="mr-1 h-4 w-4" />Auditoria
+              </Button>
+            )}
+            <Button variant="outline" onClick={() => navigate("/chamados")}>
+              <ArrowLeft className="mr-1 h-4 w-4" />Voltar
+            </Button>
+          </>
         }
       />
+      {historicoAuditoria.painel}
 
       <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
         {/* ── Barra lateral: a ficha do chamado ── */}

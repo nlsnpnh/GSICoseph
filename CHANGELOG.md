@@ -5,6 +5,63 @@ Versionamento semântico: `MAIOR.MENOR.CORREÇÃO`.
 
 ---
 
+## [1.3.0] — 2026-09-14
+
+Trilha de auditoria: toda inclusão, alteração e exclusão feita no sistema passa
+a ser registrada com autor, data e hora, e os valores de antes e depois. Fecha a
+lacuna de risco alto apontada no Dossiê GSI/STIC.
+
+> **Requer a migration `20260914120000_trilha_auditoria.sql`**, aplicada pelo
+> SQL Editor. Ela roda numa transação única: cria a tabela, liga os triggers e
+> grava o retrato inicial juntos.
+>
+> **Requer publicar as edge functions `admin-delete-user` e `bootstrap-admin`**
+> depois da migration (elas chamam funções que a migration cria). Sem a nova
+> versão, o sistema funciona, mas a exclusão de usuário fica registrada sem
+> autor.
+>
+> `src/integrations/supabase/types.ts` foi ajustado à mão, pelo mesmo motivo da
+> 1.2.0.
+
+### Adicionado
+
+- **Tabela `auditoria`**, alimentada por um trigger em todas as tabelas de
+  `public`. Guarda a linha inteira antes e depois, a lista de campos
+  alterados, o usuário (com nome e papel copiados no momento do fato) e a
+  origem: tela do sistema, função administrativa, cadastro de acesso ou
+  alteração direta no banco.
+- **Imutável**: sem policy de escrita, privilégios revogados e um trigger que
+  recusa UPDATE, DELETE e TRUNCATE — inclusive para a service role.
+- **Leitura só para admin**, pela RLS.
+- **Retrato inicial**: na ativação, o estado de cada registro existente é
+  gravado como ponto de partida da reconstituição.
+- **Tela `/auditoria`** (só admin): filtros por período, tabela, usuário e
+  operação, busca por registro ou usuário, detalhe campo a campo com o valor
+  anterior riscado ao lado do novo, paginação no servidor e exportação para
+  planilha.
+- **Histórico por registro**: botão de relógio nas listagens de Unidades,
+  Comarcas, Servidores, Terceirizados, Equipamentos e Contratos, e botão
+  "Auditoria" na tela do chamado. Abre um painel lateral com tudo que
+  aconteceu com aquele registro.
+- **Aviso de tabela descoberta**: a tela aponta tabelas de `public` sem o
+  trigger, com o comando para incluí-las.
+- **Guia do Sistema**: seção "Trilha de Auditoria", exibida só para admin.
+- Script de conferência em `supabase/verificacao/20260914_trilha_auditoria.sql`.
+
+### Corrigido
+
+- **Exclusão de chamado apagava a linha do tempo sem rastro.** Os eventos saem
+  junto, por cascade; agora cada um fica guardado na auditoria.
+- **Primeiro admin por concorrência.** A checagem "já existe admin?" da
+  `bootstrap-admin` e a promoção eram duas chamadas separadas; dois cadastros
+  simultâneos podiam passar os dois. Agora acontecem numa função só, com a
+  tabela travada.
+
+### Alterado
+
+- O item "Auditoria" do menu aparece só para admin. `adminOnly` escondia itens
+  apenas do operador; o gestor via e era devolvido ao painel.
+
 ## [1.2.1] — 2026-09-10
 
 > **Requer a migration `20260910130000_remove_super_admin.sql`**, aplicada pelo

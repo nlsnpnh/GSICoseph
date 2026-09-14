@@ -18,8 +18,8 @@ e orçamento.
 React Router 6 · TanStack Query 5 · Supabase (autenticação, Postgres com RLS,
 storage e edge functions). Publicado na Vercel.
 
-**Escala.** 25 rotas, 18 tabelas, 38 migrations, 111 arquivos de código
-(fora os 49 primitivos de `components/ui`), 123 testes.
+**Escala.** 26 rotas, 19 tabelas, 40 migrations, 111 arquivos de código
+(fora os 49 primitivos de `components/ui` e os testes), 147 testes.
 
 ---
 
@@ -65,7 +65,7 @@ Cada entidade tem um arquivo em `src/data/` que exporta seus próprios hooks:
 ```
 unidades.ts · servidores.ts · terceirizados.ts · contratos.ts
 chamados.ts · chamadoEventos.ts · portoes.ts · equipamentos.ts · boletim.ts
-planejamento.ts · orcamento.ts · mapa.ts
+planejamento.ts · orcamento.ts · mapa.ts · auditoria.ts
 api.ts   → só comarcas e anexos de chamado
 ```
 
@@ -158,6 +158,50 @@ em `TRANSICOES` (`src/data/chamados.ts`) — impedem saltos incoerentes, como ir
 de "Novo" direto para "Fechado". "Pendente" é tudo que não é `Fechado` nem
 `Cancelado`.
 
+### Trilha de auditoria
+
+Toda escrita em qualquer tabela de `public` gera uma linha em `auditoria`, por um
+trigger genérico (`registrar_auditoria()`). A linha guarda o registro inteiro
+**antes** e **depois** (jsonb), os campos que mudaram, o usuário — com nome e
+papel **copiados** no momento do fato — e a origem.
+
+**Por que trigger, e não o front.** Se o registro dependesse da tela, uma
+alteração pelo SQL Editor, por uma edge function ou por um cliente que fale
+direto com a API não deixaria rastro. O trigger pega tudo que passa pelo banco.
+
+**Imutável, em três camadas.** Nenhuma policy de escrita; privilégios de
+INSERT/UPDATE/DELETE/TRUNCATE revogados; e um trigger que recusa UPDATE, DELETE
+e TRUNCATE mesmo para a `service_role`, que ignora RLS. Só o dono do projeto,
+desligando o trigger no SQL Editor, passa daqui — e nenhuma trilha dentro do
+próprio banco impede isso. Leitura: **só admin**.
+
+**Quem agiu.** Pela tela, `auth.uid()`. As edge functions usam a service role,
+em que `auth.uid()` é nulo — por isso não escrevem direto nas tabelas: chamam
+`admin_excluir_usuario` e `bootstrap_promover_admin`, que declaram o autor com
+`set_config('auditoria.ator', …)` **na mesma transação** da escrita. Cada
+chamada do supabase-js é uma transação separada; um `set_config` numa chamada e
+o DELETE em outra não se enxergariam.
+
+**O que não entra.** UPDATE que só mexe em `updated_at` ou `ultima_movimentacao`
+— são carimbos que o banco atualiza sozinho, e sem o filtro cada mensagem num
+chamado duplicaria o log. Em `chamado_eventos` só a **exclusão** é auditada: a
+inclusão já é a própria linha do tempo, mas a exclusão de um chamado leva os
+eventos junto, por cascade, e isso precisa ficar guardado.
+
+**Retrato inicial.** Na ativação, cada registro existente foi gravado como
+`RETRATO`. É o ponto de partida da reconstituição: o que aconteceu antes da
+ativação não existe na trilha. A listagem esconde os retratos por padrão.
+
+**Tabela nova precisa ser ligada.** O trigger foi ligado por varredura na
+migration; uma tabela criada depois fica de fora até rodar
+`SELECT public.auditoria_ativar('nome');`. A tela de auditoria avisa quando
+encontra tabela descoberta (`auditoria_tabelas_descobertas()`).
+
+**Na interface.** A regra de apresentação (rótulos, formatação, diff) mora em
+`src/lib/auditoria.ts`, com testes. `usePainelHistorico()` liga o painel de
+histórico a qualquer listagem: `AcoesLinha` ganha o botão de relógio só para
+admin.
+
 ---
 
 ## 4. Controle de acesso
@@ -190,6 +234,7 @@ Matriz vigente:
 | portões, boletim | admin, gestor, operador (própria unidade) | admin |
 | servidores, terceirizados | admin, gestor, operador (própria unidade) | admin, gestor, operador (própria unidade) |
 | planejamento, orçamento | admin | admin |
+| auditoria | ninguém — só o trigger do banco | ninguém; **leitura só admin** |
 
 Uso na tela:
 
@@ -311,10 +356,11 @@ Carga inicial de **818 kB → ~208 kB** compactados.
 
 ## 8. Testes
 
-Vitest + jsdom. **89 testes**, todos sobre funções puras:
+Vitest + jsdom. **147 testes**, todos sobre funções puras:
 
 | Arquivo | Cobre |
 |---|---|
+| `lib/auditoria.test.ts` | diff campo a campo, formatação de valores (data, instante, moeda, id), janela de período em Rondônia, busca segura no PostgREST |
 | `lib/dates.test.ts` | fuso de Rondônia, bissexto, viradas de mês e ano |
 | `lib/permissoes.test.ts` | a matriz de papéis inteira |
 | `lib/utils.test.ts` | mensagens de erro, composição de classes |
@@ -344,7 +390,7 @@ estrutura reescrita sem essa rede de proteção; a verificação foi visual.
 ```bash
 npx tsc --noEmit -p tsconfig.app.json   # tipos
 npm run lint                            # deve terminar limpo
-npm test                                # 89 testes
+npm test                                # 147 testes
 npm run build                           # sem aviso de chunk grande
 ```
 
